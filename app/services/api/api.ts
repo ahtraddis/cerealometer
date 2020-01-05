@@ -2,6 +2,20 @@ import { ApisauceInstance, create, ApiResponse } from "apisauce"
 import { getGeneralApiProblem } from "./api-problem"
 import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
 import * as Types from "./api.types"
+//import uuid from "react-native-uuid"
+
+const API_PAGE_SIZE = 1
+
+const convertDevice = (raw: any): DeviceSnapshot => {
+  console.log("raw.name: ", raw.name, "raw.id: ", raw.id);
+  //const id = uuid.v1()
+  return {
+    //id: raw.id,
+    name: raw.name,
+    led_state: raw.led_state,
+    slots: raw.slots,
+  }
+}
 
 /**
  * Manages all requests to the API.
@@ -99,4 +113,67 @@ export class Api {
       return { kind: "bad-data" }
     }
   }
+
+  /**
+   * Gets a list of devices
+   */
+  async getDevices(): Promise<Types.GetDevicesResult> {
+    // make the api call
+    //const response: ApiResponse<any> = await this.apisauce.get("", { amount: API_PAGE_SIZE })
+    const response: ApiResponse<any> = await this.apisauce.get("", {})
+    // the typical ways to die when calling an api
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+
+    // transform the data into the format we are expecting
+    try {
+      const rawDevices = response.data
+      
+      console.log("rawDevices: ", rawDevices)
+
+
+      
+      /*const convertedDevices: DeviceSnapshot[] = Object.keys(rawDevices).forEach(function(key) {
+        convertDevice(rawDevices[key])
+      })*/
+
+      const result = [
+        {
+          name: "Device 11",
+          id: "1",
+          led_state: 0, 
+          slots: [
+            {
+              //id: "1",
+              name: "Slot 1",
+              status: "vacant",
+              weight_kg: 0.2
+            }
+          ]
+        },
+        {
+          name: "Device 2",
+          id: "2",
+          led_state: 1,
+          slots: [
+            {
+              name: "Slot 1",
+              status: "vacant",
+              weight_kg: 0.4
+            }
+          ]
+        }
+      ];
+      console.log("result: ", JSON.stringify(result))
+      
+
+      return { kind: "ok", devices: result }
+    } catch (e) {
+      __DEV__ && console.tron.log(e.message)
+      return { kind: "bad-data" }
+    }
+  }
+
 }

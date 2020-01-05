@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react'
 import auth from '@react-native-firebase/auth'
 import database from '@react-native-firebase/database'
 
-const bowserLogo = require("./bowser.png")
+const BASE_URL = "http://10.1.1.17";
 
 const FULL: ViewStyle = { flex: 1 }
 const CONTAINER: ViewStyle = {
@@ -40,34 +40,10 @@ const TITLE_WRAPPER: TextStyle = {
   ...TEXT,
   textAlign: "center",
 }
-const TITLE: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 28,
-  lineHeight: 38,
-  textAlign: "center",
-}
-const ALMOST: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 26,
-  fontStyle: "italic",
-}
-const BOWSER: ImageStyle = {
-  alignSelf: "center",
-  marginVertical: spacing[5],
-  maxWidth: "100%",
-}
-const CONTENT: TextStyle = {
-  ...TEXT,
-  color: "#BAB6C8",
-  fontSize: 15,
-  lineHeight: 22,
-  marginBottom: spacing[5],
-}
 const FETCH: ViewStyle = {
   paddingVertical: spacing[4],
   paddingHorizontal: spacing[4],
+  marginBottom: 10,
   backgroundColor: "#5D2555",
 }
 const FETCH_TEXT: TextStyle = {
@@ -76,49 +52,158 @@ const FETCH_TEXT: TextStyle = {
   fontSize: 13,
   letterSpacing: 2,
 }
-const FOOTER: ViewStyle = { backgroundColor: "#20162D" }
-const FOOTER_CONTENT: ViewStyle = {
-  paddingVertical: spacing[4],
-  paddingHorizontal: spacing[4],
+const FOOTER: ViewStyle = {
+  backgroundColor: "#20162D"
 }
-const METER: ViewStyle = { backgroundColor: "#ffffff", paddingBottom: 80 }
+const METER: ViewStyle = {
+  backgroundColor: "#ffffff",
+  paddingTop: 10,
+  paddingBottom: 70,
+  marginBottom: 10,
+}
 const SWITCH_CONTAINER: ViewStyle = {
   padding: 20,
   alignItems: "center"
 }
 const SWITCH: ViewStyle = {
+  textAlign: "center",
   paddingVertical: spacing[100],
   backgroundColor: "#000",
   padding: 80,
   border: "1px solid red",
   margin: 10,
   width: 100,
-  //transform: [{scaleX: 2}, {scaleY: 2}],
 }
-const DATA: ViewStyle = {
-  paddingTop: 10,
+const DEVICE: ViewStyle = {
+  marginBottom: 10,
 }
-const BASE_URL = "http://10.1.1.17";
+const DEVICE_NAME: ViewStyle = {
+  alignItems: "center",
+  backgroundColor: "darkgreen",
+  padding: 10,
+}
+const DEVICE_TEXT: ViewStyle = {
+  color: "#fff",
+}
+const SLOT: ViewStyle = {
+  flex: 1,
+  flexDirection: "row",
+  width: "100%",
+  backgroundColor: "green",
+}
+const SLOT_NUMBER: ViewStyle = {
+  width: "10%",
+  alignItems: "center",
+  backgroundColor: "forestgreen",
+  padding: 10,
+}
+const SLOT_NAME: ViewStyle = {
+  width: "45%",
+  padding: 10
+}
+const SLOT_STATUS: ViewStyle = {
+  width: "45%",
+  padding: 10,
+  alignItems: "flex-end"
+}
+
+function kilogramsToOunces(kilograms) {
+  return (kilograms * 2.2046 * 16.0).toFixed(1);
+}
+
+
+function Items({ userId }) {
+  const [initializing, setInitializing] = useState(true);
+  const [items, setItems] = useState(null);
+ 
+  // Subscriber handler
+  function onItemsChange(snapshot) {
+    // Set the items state from the snapshot
+    console.log("onItemsChange fired: ", snapshot.val());
+    setItems(snapshot.val());
+ 
+    // Connection established
+    if (initializing) setInitializing(false);
+  }
+ 
+  useEffect(() => {
+    // Create reference
+    const ref = database().ref(`/items/${deviceId}`);
+ 
+    // Subscribe to value changes
+    ref.on('value', onDeviceChange);
+ 
+    // Unsubscribe from changes on unmount
+    return () => ref.off('value', onDeviceChange);
+  }, [deviceId]);
+ 
+  // Wait for first connection
+  if (initializing) return null;
+
+  return (
+    <View><Text>test</Text></View>
+  )
+}
+
+function Device({ deviceId }) {
+  const [initializing, setInitializing] = useState(true);
+  const [device, setDevice] = useState(null);
+ 
+  // Subscriber handler
+  function onDeviceChange(snapshot) {
+    // Set the device state from the snapshot
+    console.log("onDeviceChange fired: ", snapshot.val());
+    setDevice(snapshot.val());
+ 
+    // Connection established
+    if (initializing) setInitializing(false);
+  }
+ 
+  useEffect(() => {
+    // Create reference
+    const ref = database().ref(`/devices/${deviceId}`);
+ 
+    // Subscribe to value changes
+    ref.on('value', onDeviceChange);
+ 
+    // Unsubscribe from changes on unmount
+    return () => ref.off('value', onDeviceChange);
+  }, [deviceId]);
+ 
+  // Wait for first connection
+  if (initializing) return null;
+
+  return (
+    <View style={DEVICE}>
+      <View style={DEVICE_NAME}>
+        <Text style={DEVICE_TEXT}>
+          {device.name}
+        </Text>
+      </View>
+      { device.slots.map((slot, index) => {
+        return (
+          <View style={SLOT}>
+            <View style={SLOT_NUMBER}>
+              <Text>{index + 1}</Text>
+            </View>
+            <View style={SLOT_NAME}>
+              <Text>
+                {kilogramsToOunces(slot.weight_kg)} oz
+              </Text>
+            </View>
+            <View style={SLOT_STATUS}>
+              <Text>
+                {slot.status}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
 
 export interface WelcomeScreenProps extends NavigationScreenProps<{}> {}
-
-export default class Slot extends Component {
-  render() {
-    return <Text>slot: weight_kg = {this.props.weight_kg}, status = {this.props.status}</Text>
-  }
-}
-
-export default class Device extends Component {
-  render() {
-    return (
-      <View>
-        { this.props.slots.map(slot => {
-          return <Slot weight_kg={slot.weight_kg} status={slot.status}></Slot>
-        })}
-      </View>
-    )
-  }
-}
 
 export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = props => {
   const nextScreen = React.useMemo(() => () => props.navigation.navigate("demo"), [
@@ -127,10 +212,32 @@ export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = props 
 
   const [state, setState] = useState({
     fullDeflectionWeightKg: 0.387,
-    deflectionPct: 0,
+    deflectionPct: 57,
     ledState: 0,
     weightKg: 0,
     devices: [],
+    // Placeholder values until I figure out where state belongs and how to do auth
+    //userId: encodeURIComponent("eric@whyanext,com"), // note the comma
+    userId: "eric%40whyanext,com",
+    deviceId: "-LxNyE47HCaN9ojmR3D2",
+  });
+
+  const [items, setItems] = useState(null);
+  const [name, setName] = useState(null);
+
+  //var userId = auth().currentUser.uid;
+  var userId = state.userId;
+  database().ref('/users/' + userId).once('value').then(function(snapshot) {
+    console.log("user snapshot.val(): ", snapshot.val());
+    var name = (snapshot.val() && snapshot.val().name) || 'Anonymous';
+    setName(name);
+  });
+
+
+
+  database().ref('/items').orderByChild('user').equalTo(state.userId).once('value').then(function(snapshot) {
+    console.log("items snapshot.val(): ", snapshot.val());
+    //setItems(snapshot.val());
   });
 
   const getPercentage = (weightKg) => {
@@ -138,13 +245,14 @@ export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = props 
     return Math.min(Math.max(parseInt(100.0 * weightKg / state.fullDeflectionWeightKg), 0), 100);
   }
 
+  // For testing. App won't normally fetch data directly from the ESP8266.
   const fetchData = () => {
     fetch(BASE_URL + '/status', {
       method: 'GET',
     })
       .then(response => response.json())
       .then(json => {
-        console.log("json: " + JSON.stringify(json));
+        //console.log("json: " + JSON.stringify(json));
         setState({
           ...state,
           ledState: json.led_state,
@@ -194,38 +302,44 @@ export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = props 
         <SafeAreaView style={METER}>
           <RNSpeedometer value={state.deflectionPct} size={275}/>
         </SafeAreaView>
-        <SafeAreaView style={SWITCH_CONTAINER}>
+        {/*<SafeAreaView style={SWITCH_CONTAINER}>
           <Switch
-            style={{textAlign: "center"}}
+            style={SWITCH}
             value={state.ledState}
             onToggle={updateLedState}
           />
-        </SafeAreaView>
-        <SafeAreaView>
+        </SafeAreaView>*/}
+        {/*<SafeAreaView>
           <Button
             style={FETCH}
             textStyle={FETCH_TEXT}
             tx="welcomeScreen.fetch"
             onPress={fetchData}
           />
-          <Text style={DATA}>
-            ledState = {state.ledState}{"\n"}
-            weightKg = {state.weightKg} ({(state.weightKg * 2.2046 * 16.0).toFixed(2)} oz){"\n"}
-            devices = {JSON.stringify(state.devices)}
-
-            
-
-          </Text>
-          {state.devices.map((device, i) => {
-              return <Device key={i}
-                device_id={device.device_id}
-                led_state={device.led_state}
-                slots={device.slots}
-              />
-          })}
+        </SafeAreaView>*/}
+        <SafeAreaView>
+          <Device key={0} style={DEVICE} deviceId={state.deviceId} />
         </SafeAreaView>
+        <SafeAreaView>
+          <View>
+            <Text>userId: "{state.userId}"</Text>
+            <Text>deviceId: "{state.deviceId}"</Text>
+            <Text>name: "{name}"</Text>
+          </View>
+        </SafeAreaView>
+        { items &&
+          <SafeAreaView>
+            <View>
+                { Object.keys(items).map(function(key, index) {
+                  return (
+                    <Text key={index}>{items[key].name}</Text>
+                  );
+                })}
+              
+            </View>
+          </SafeAreaView>
+        }
       </Screen>
-      
     </View>
   )
 }
