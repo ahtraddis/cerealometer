@@ -1,5 +1,5 @@
 import { Instance, SnapshotOut, types } from "mobx-state-tree"
-import { SlotModel } from "../slot/slot"
+import { withEnvironment } from "../extensions"
 
 /**
  * Model description here for TypeScript hints.
@@ -8,10 +8,12 @@ export const DeviceModel = types
   .model("Device")
   .props({
     id: types.identifier,
+    device_id: types.string,
     led_state: types.integer,
     name: types.maybe(types.string),
-    slots: types.maybe(types.array(SlotModel), []),
+    user: types.string,
   })
+  .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
 

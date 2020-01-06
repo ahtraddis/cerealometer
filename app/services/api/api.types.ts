@@ -1,9 +1,4 @@
 import { GeneralApiProblem } from "./api-problem"
+import { DeviceSnapshot } from "../../models/device"
 
-export interface User {
-  id: number
-  name: string
-}
-
-export type GetUsersResult = { kind: "ok"; users: User[] } | GeneralApiProblem
-export type GetUserResult = { kind: "ok"; user: User } | GeneralApiProblem
+export type GetDevicesResult = { kind: "ok"; devices: DeviceSnapshot[] } | GeneralApiProblem

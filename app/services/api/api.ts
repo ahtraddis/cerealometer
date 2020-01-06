@@ -2,20 +2,20 @@ import { ApisauceInstance, create, ApiResponse } from "apisauce"
 import { getGeneralApiProblem } from "./api-problem"
 import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
 import * as Types from "./api.types"
-//import uuid from "react-native-uuid"
+import { DeviceSnapshot } from "../../models/device"
+import uuid from "uuid"
 
-const API_PAGE_SIZE = 1
+const API_PAGE_SIZE = 50
 
-const convertDevice = (raw: any): DeviceSnapshot => {
-  console.log("raw.name: ", raw.name, "raw.id: ", raw.id);
-  //const id = uuid.v1()
+/*const convertDevice = (raw: any): DeviceSnapshot => {
+  const id = uuid()
   return {
-    //id: raw.id,
-    name: raw.name,
+    id: id,
     led_state: raw.led_state,
-    slots: raw.slots,
+    name: raw.name,
+    user: raw.user,
   }
-}
+}*/
 
 /**
  * Manages all requests to the API.
@@ -59,68 +59,13 @@ export class Api {
   }
 
   /**
-   * Gets a list of users.
-   */
-  async getUsers(): Promise<Types.GetUsersResult> {
-    // make the api call
-    const response: ApiResponse<any> = await this.apisauce.get(`/users`)
-
-    // the typical ways to die when calling an api
-    if (!response.ok) {
-      const problem = getGeneralApiProblem(response)
-      if (problem) return problem
-    }
-
-    const convertUser = raw => {
-      return {
-        id: raw.id,
-        name: raw.name,
-      }
-    }
-
-    // transform the data into the format we are expecting
-    try {
-      const rawUsers = response.data
-      const resultUsers: Types.User[] = rawUsers.map(convertUser)
-      return { kind: "ok", users: resultUsers }
-    } catch {
-      return { kind: "bad-data" }
-    }
-  }
-
-  /**
-   * Gets a single user by ID
-   */
-
-  async getUser(id: string): Promise<Types.GetUserResult> {
-    // make the api call
-    const response: ApiResponse<any> = await this.apisauce.get(`/users/${id}`)
-
-    // the typical ways to die when calling an api
-    if (!response.ok) {
-      const problem = getGeneralApiProblem(response)
-      if (problem) return problem
-    }
-
-    // transform the data into the format we are expecting
-    try {
-      const resultUser: Types.User = {
-        id: response.data.id,
-        name: response.data.name,
-      }
-      return { kind: "ok", user: resultUser }
-    } catch {
-      return { kind: "bad-data" }
-    }
-  }
-
-  /**
    * Gets a list of devices
    */
   async getDevices(): Promise<Types.GetDevicesResult> {
+    //console.log("api: getting devices...")
     // make the api call
-    //const response: ApiResponse<any> = await this.apisauce.get("", { amount: API_PAGE_SIZE })
-    const response: ApiResponse<any> = await this.apisauce.get("", {})
+    const response: ApiResponse<any> = await this.apisauce.get("/devices.json", { amount: API_PAGE_SIZE })
+    //console.log("response: ", response);
     // the typical ways to die when calling an api
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
@@ -130,46 +75,15 @@ export class Api {
     // transform the data into the format we are expecting
     try {
       const rawDevices = response.data
-      
-      console.log("rawDevices: ", rawDevices)
-
-
-      
-      /*const convertedDevices: DeviceSnapshot[] = Object.keys(rawDevices).forEach(function(key) {
-        convertDevice(rawDevices[key])
-      })*/
-
-      const result = [
-        {
-          name: "Device 11",
-          id: "1",
-          led_state: 0, 
-          slots: [
-            {
-              //id: "1",
-              name: "Slot 1",
-              status: "vacant",
-              weight_kg: 0.2
-            }
-          ]
-        },
-        {
-          name: "Device 2",
-          id: "2",
-          led_state: 1,
-          slots: [
-            {
-              name: "Slot 1",
-              status: "vacant",
-              weight_kg: 0.4
-            }
-          ]
-        }
-      ];
-      console.log("result: ", JSON.stringify(result))
-      
-
-      return { kind: "ok", devices: result }
+      //console.log("rawDevices: ", rawDevices)
+      const convertedDevices: DeviceSnapshot[] = Object.keys(rawDevices).map(s => {
+        var result = rawDevices[s]
+        result.id = uuid()
+        result.device_id = s
+        return result
+      })
+      //console.log("convertedDevices: ", JSON.stringify(convertedDevices))
+      return { kind: "ok", devices: convertedDevices }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
       return { kind: "bad-data" }
