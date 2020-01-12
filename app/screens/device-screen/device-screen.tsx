@@ -1,14 +1,15 @@
 import * as React from "react"
-import { observer } from "mobx-react-lite"
-import { ViewStyle, View, FlatList, TextStyle, SafeAreaView } from "react-native"
-import { Text, Screen, Button, Wallpaper, Switch } from "../../components"
 import { useStores } from "../../models/root-store"
 import { useState, useEffect } from 'react'
+import { observer } from "mobx-react-lite"
+import { DeviceStore } from "../../models/device-store"
+import { ItemDefinitionStore } from "../../models/item-definition-store"
+import { UserStore } from "../../models/user-store"
+import { ViewStyle, View, FlatList, TextStyle } from "react-native"
+import { Text, Screen, Button, Wallpaper, Switch } from "../../components"
 import { color, spacing } from "../../theme"
 import { NavigationScreenProps } from "react-navigation"
-import { DeviceStore } from "../../models/device-store"
-import { Device } from "../../components"
-import RNSpeedometer from 'react-native-speedometer'
+import { Device, User } from "../../components"
 
 import auth from '@react-native-firebase/auth'
 import database from '@react-native-firebase/database'
@@ -68,12 +69,6 @@ const BUTTON_TEXT: TextStyle = {
 const FOOTER: ViewStyle = {
   backgroundColor: "#20162D"
 }
-const METER: ViewStyle = {
-  backgroundColor: "#ffffff",
-  paddingTop: 10,
-  paddingBottom: 70,
-  marginBottom: 10,
-}
 const SWITCH_CONTAINER: ViewStyle = {
   padding: 20,
   alignItems: "center"
@@ -121,7 +116,6 @@ const SLOT_STATUS: ViewStyle = {
 }
 
 const getPercentage = (weightKg) => {
-  console.log("getPercentage(): state = ", state);
   return Math.min(Math.max(parseInt(100.0 * weightKg / state.fullDeflectionWeightKg), 0), 100);
 }
 
@@ -176,19 +170,24 @@ const updateLedState = (value) => {
 }
 
 export interface DeviceScreenProps extends NavigationScreenProps<{}> {
-  deviceStore: DeviceStore
+  deviceStore: DeviceStore,
+  itemDefinitionStore: ItemDefinitionStore,
+  userStore: UserStore,
 }
 
 export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer((props) => {
-  const { deviceStore } = useStores()
+  const { deviceStore, itemDefinitionStore, userStore } = useStores()
 
   useEffect(() => {
     deviceStore.getDevices();
+    itemDefinitionStore.getItemDefinitions();
+    userStore.getUser();
     //console.log("deviceStore: ", JSON.stringify(deviceStore));
+    //console.log("itemDefinitionStore: ", JSON.stringify(itemDefinitionStore));
+    //console.log("userStore: ", JSON.stringify(userStore));
   });
 
   renderDevice = ({ item }) => {
-    const device: Device = item
     return (
       <Device {...item} />
     )
@@ -197,10 +196,7 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
   return (
     <View style={FULL}>
       <Wallpaper />
-      <Screen style={CONTAINER} preset="scroll" backgroundColor={color.transparent}>
-        <SafeAreaView style={METER}>
-          <RNSpeedometer value={53} size={275}/>
-        </SafeAreaView>
+      <Screen style={CONTAINER} backgroundColor={color.transparent}>
         <FlatList
           style={DEVICE_LIST}
           data={deviceStore.devices}

@@ -19,17 +19,21 @@ export const DeviceStoreModel = types
       // create model instances from the plain objects
       const deviceModels: Device[] = deviceSnapshots.map(c => DeviceModel.create(c)) 
       self.devices.replace(deviceModels) // Replace the existing data with the new data
+      //console.log("self.devices: ", self.devices)
     },
   }))
   .actions(self => ({
     getDevices: flow(function*() {
       const result: GetDevicesResult = yield self.environment.api.getDevices()
+      //console.log("getDevices: result: ", result)
       if (result.kind === "ok") {
         self.saveDevices(result.devices)
       } else {
         __DEV__ && console.tron.log(result.kind)
       }
     }),
+  }))
+  .actions(self => ({
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**

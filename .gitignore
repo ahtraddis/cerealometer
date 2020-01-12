@@ -23,4 +23,4 @@ package-lock.json
 #
 android/app/build
 android/app/google-services.json
-android/.gradle
+android/.gradle/*

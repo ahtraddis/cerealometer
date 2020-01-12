@@ -10,7 +10,7 @@ export const PortModel = types
     slot: types.integer,
     item: types.string,
     status: types.string,
-    weight_kg: types.float,
+    weight_kg: types.number,
   })
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

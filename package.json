@@ -43,6 +43,8 @@
     "react-native-screens": "^2.0.0-alpha.6",
     "react-native-speedometer": "^1.0.3",
     "react-native-splash-screen": "3.1.1",
+    "react-native-swiper": "^1.6.0-nightly.5",
+    "react-native-swiper-flatlist": "^2.0.3",
     "react-navigation": "3.11.1",
     "reactotron-mst": "^3.1.1",
     "reactotron-react-native": "^4.0.0-beta.1",
