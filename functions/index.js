@@ -11,41 +11,31 @@ const nodemailer = require('nodemailer');
 
 const PRESENCE_THRESHOLD_KG = 0.03
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+async function getItemDefinitionByUpc(upc) {
+  //const snap = await firebase.database().ref(`/item_definitions`).orderByChild('upc').equalTo(upc).once('value');
+  console.log("getItemDefinitionByUpc(): upc: ", upc);
+  const snap = await admin.database().ref(`/item_definitions`).orderByChild('upc').equalTo(upc).once('value');
+  //const snap = await admin.database().ref(`/item_definitions`).once('value');
+  console.log("getItemDefinitionByUpc(): snap: ", snap.val());
+  return snap.val()
+}
 
-// Take the text parameter passed to this HTTP endpoint and insert it into the
-// Realtime Database under the path /messages/:pushId/original
-exports.addMessage = functions.https.onRequest(async (req, res) => {
-  // Grab the text parameter.
-  const original = req.query.text;
-  // Push the new message into the Realtime Database using the Firebase Admin SDK.
-  const snapshot = await admin.database().ref('/messages').push({original: original});
-  // Redirect with 303 SEE OTHER to the URL of the pushed object in the Firebase console.
-  res.redirect(303, snapshot.ref.toString());
+exports.getUpcData = functions.https.onRequest(async (req, res) => {
+  // Grab the upc parameter (GET)
+  const upc = req.query.upc;
+  const snap = await admin.database().ref(`/item_definitions`).orderByChild('upc').equalTo(upc).once('value');
+  let response = {}
+  if (snap.val()) {
+    let data = snap.val()
+    let key = Object.keys(data)[0]
+    console.log("item_definition: ", data[key])
+    data[key].id = key
+    response.item_definition = data[key]
+  }
+  res.status(200).send(response);
 });
 
-// Listens for new messages added to /messages/:pushId/original and creates an
-// uppercase version of the message to /messages/:pushId/uppercase
-exports.makeUppercase = functions.database.ref('/messages/{pushId}/original')
-  .onCreate((snapshot, context) => {
-    // Grab the current value of what was written to the Realtime Database.
-    const original = snapshot.val();
-    console.log('Uppercasing', context.params.pushId, original);
-    const uppercase = original.toUpperCase();
-    // You must return a Promise when performing asynchronous tasks inside a Functions such as
-    // writing to the Firebase Realtime Database.
-    // Setting an "uppercase" sibling in the Realtime Database returns a Promise.
-    return snapshot.ref.parent.child('uppercase').set(uppercase);
-  });
-
-
 // Log event when cereal scale status changes, e.g. box is removed or returned
-
 exports.slotStatusChanged = functions.database.ref('/ports/{deviceId}/{slotId}/weight_kg')
   .onUpdate((change, context) => {
     const prev_weight_kg = change.before.val();
@@ -59,17 +49,17 @@ exports.slotStatusChanged = functions.database.ref('/ports/{deviceId}/{slotId}/w
     let user_key = ""
     let user_snapshot = {}
 
-
     console.log(`device '${context.params.deviceId}' slot ${context.params.slotId}: weight_kg changed from '${prev_weight_kg}' to '${new_weight_kg}'`);
 
     const rootRef = change.before.ref.root
+    const epoch = Math.floor(new Date().getTime() / 1000)
 
     return change.before.ref.parent.child('status').once('value')
       .then(snap => {
         prev_status = snap.val()
         //console.log("prev_status: ", prev_status);
       }).then(() => {
-        return change.after.ref.parent.child('item').once('value')
+        return change.after.ref.parent.child('item_id').once('value')
           .then(snap => {
             item_key = snap.val()
             //console.log("item_key: ", item_key);
@@ -78,8 +68,8 @@ exports.slotStatusChanged = functions.database.ref('/ports/{deviceId}/{slotId}/w
         return rootRef.child(`/items/${item_key}`).once('value')
           .then(snap => {
             item_snapshot = snap.val()
-            item_definition_key = item_snapshot.item_definition
-            user_key = item_snapshot.user
+            item_definition_key = item_snapshot.item_definition_id
+            user_key = item_snapshot.user_id
             //console.log("item_snapshot: ", item_snapshot)
           })
       }).then(() => {
@@ -108,6 +98,9 @@ exports.slotStatusChanged = functions.database.ref('/ports/{deviceId}/{slotId}/w
               return rootRef.child(`/items/${item_key}/last_known_weight_kg`).set(new_weight_kg)
                 .then(snap => {
                   console.log(`copied new_weight_kg '${new_weight_kg}' to /items entry`)
+                  return rootRef.child(`/items/${item_key}/last_checkin`).set(epoch)
+                }).then(() => {
+                  console.log(`updated last_checkin epoch time to ${epoch}`)
                   // recompute stats
                   // for now, update the main 'meter' percentage based on percentage remaining for this item only
                   // get item_definition (for weight_grams)
@@ -118,57 +111,9 @@ exports.slotStatusChanged = functions.database.ref('/ports/{deviceId}/{slotId}/w
                     })
                 })
             }
-          }) 
+          })
     })
-  })
-
-// exports.slotStatusChanged = functions.database.ref('/ports/{deviceId}/{slotId}/weight_kg')
-//   .onUpdate((change, context) => {
-//     const prev_weight_kg = change.before.val();
-//     const new_weight_kg = change.after.val();
-//     console.log("Device '" + context.params.deviceId + "' Slot '" + context.params.slotId +
-//       "' weight_kg changed from " + prev_weight_kg + " to " + new_weight_kg);
-//     return change.after.ref.parent.child('item').once('value').then(item_snapshot => {
-//       console.log("item_snapshot: '" + item_snapshot.val() + "'");
-
-
-//       return change.after.ref.parent.child('status').once('value').then(status_snapshot => {
-//         console.log("status_snapshot.val(): ", status_snapshot.val());
-
-//         if (item_snapshot.val() == "") {
-//           console.log("setting status to vacant");
-//           return change.after.ref.parent.child('status').set("vacant").then(snapshot => {
-//             console.log("snapshot after setting status to vacant: ", snapshot);
-//           });
-          
-//         } else {
-
-
-//           if (status_snapshot.val() == "present") {
-//             console.log("setting weight on item ", item_snapshot.val());
-//             return change.after.ref.parent.parent.parent.parent.child('items/' + item_snapshot.val() + '/last_known_weight_kg').set(new_weight_kg);
-//           }
-
-
-//         }
-
-//       })
-
-
-        
-//     });
-
-
-
-
-//     if (new_weight_kg < PRESENCE_THRESHOLD_KG) {
-//       return change.after.ref.parent.child('status').set("absent");
-//     } else {
-//       return change.after.ref.parent.child('status').set("present");
-//     }
-//     // Next line is redundant, placeholder to return a promise
-//     //return change.after.ref.parent.child('weight_kg').set(new_weight_kg);
-//   });
+  });
 
 // Configure the email transport using the default SMTP transport and a GMail account.
 // For Gmail, enable these:

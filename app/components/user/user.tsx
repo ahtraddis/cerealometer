@@ -1,7 +1,5 @@
 import * as React from "react"
-import { useState, useEffect } from 'react'
 import { useStores } from "../../models/root-store"
-import { UserStore } from "../../models/user-store"
 import { observer } from "mobx-react-lite"
 import { View, ViewStyle } from "react-native"
 import { Text } from "../"
@@ -24,9 +22,10 @@ export interface UserProps {
 
   name: string
   email: string
-  meter: float
+  meter: number
   user_id: string
-  //devices
+  // [eschwartz-TODO] Not sure how to handle device list
+  //devices:
 }
 
 const Info = observer(() => {
@@ -43,23 +42,15 @@ const Info = observer(() => {
 })
 
 /**
- * Stateless functional component for your needs
- *
- * Component description here for TypeScript tips.
+ * Display some user info for debugging
  */
 export function User(props: UserProps) {
   // grab the props
-  const { tx, text, style, ...rest } = props
-  const textStyle = { }
-
-  const { userStore } = useStores()
-
-  useEffect(() => {
-    //console.log("user.tsx props : ", props)
-  })
+  const { tx, text, style, name, email, meter, user_id, ...rest } = props
+  //const textStyle = { }
 
   return (
     <Info />
   )
-  
+
 }

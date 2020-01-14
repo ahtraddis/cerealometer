@@ -7,11 +7,12 @@ import { withEnvironment } from "../extensions"
 export const DeviceModel = types
   .model("Device")
   .props({
-    id: types.identifier,
+    //id: types.identifier,
     device_id: types.string,
     led_state: types.integer,
     name: types.maybe(types.string),
-    user: types.string,
+    port_count: types.integer,
+    user_id: types.string,
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

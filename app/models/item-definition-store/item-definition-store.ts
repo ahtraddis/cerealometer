@@ -1,8 +1,7 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemDefinitionModel, ItemDefinitionSnapshot, ItemDefinition } from "../item-definition/item-definition"
 import { withEnvironment } from "../extensions"
-import { GetItemDefinitionsResult } from "../../services/api"
-
+import { GetItemDefinitionsResult, GetUpcDataResult } from "../../services/api"
 /**
  * Model description here for TypeScript hints.
  */
@@ -17,7 +16,7 @@ export const ItemDefinitionStoreModel = types
     saveItemDefinitions: (itemDefinitionSnapshots: ItemDefinitionSnapshot[]) => {
       //console.log("itemDefinitionSnapshots: ", itemDefinitionSnapshots);
       // create model instances from the plain objects
-      const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c)) 
+      const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c))
       self.itemDefinitions.replace(itemDefinitionModels) // Replace the existing data with the new data
     },
   }))
@@ -26,6 +25,16 @@ export const ItemDefinitionStoreModel = types
       const result: GetItemDefinitionsResult = yield self.environment.api.getItemDefinitions()
       if (result.kind === "ok") {
         self.saveItemDefinitions(result.item_definitions)
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
+    }),
+  }))
+  .actions(self => ({
+    getUpcData: flow(function*(upc) {
+      const result: GetUpcDataResult = yield self.environment.api.getUpcData(upc)
+      if (result.kind === "ok") {
+        return result.item_definition
       } else {
         __DEV__ && console.tron.log(result.kind)
       }

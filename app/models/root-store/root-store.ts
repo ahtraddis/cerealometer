@@ -1,3 +1,4 @@
+import { ItemStoreModel } from "../../models/item-store"
 import { UserStoreModel } from "../../models/user-store"
 import { ItemDefinitionStoreModel } from "../../models/item-definition-store"
 import { DeviceStoreModel } from "../../models/device-store"
@@ -8,6 +9,7 @@ import { NavigationStoreModel } from "../../navigation/navigation-store"
  * A RootStore model.
  */
 export const RootStoreModel = types.model("RootStore").props({
+  itemStore: types.optional(ItemStoreModel, {}),
   userStore: types.optional(UserStoreModel, {}),
   itemDefinitionStore: types.optional(ItemDefinitionStoreModel, {}),
   deviceStore: types.optional(DeviceStoreModel, {}),

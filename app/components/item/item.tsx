@@ -1,61 +1,52 @@
 import * as React from "react"
-import { useState, useEffect } from 'react'
-import { View, ViewStyle, ImageStyle, TextStyle, Image, StyleSheet } from "react-native"
+import { View, ViewStyle, ImageStyle, TextStyle, Image } from "react-native"
 import { Text } from "../"
-import { spacing } from "../../theme"
-import * as conversion from "../../utils/conversion"
+import { ItemDefinition } from "../../models/item-definition"
 
 const ITEM: ViewStyle = {
   flex: 1,
-  flexDirection: "row",
-  //height: 150,
+  flexDirection: 'row',
   backgroundColor: "#333",
-  marginTop: 10
+  paddingTop: 10,
+  paddingBottom: 25,
+  paddingLeft: 10,
+  paddingRight: 25,
 }
 const ITEM_IMAGE_VIEW: ViewStyle = {
-  flex: 1,
+  flex: 4,
+  justifyContent: 'flex-start',
   height: 200,
   borderTopWidth: 5,
   borderBottomWidth: 5,
-  borderColor: 'transparent'
-}
-const ITEM_IMAGE: ViewStyle = {
-  flex: 1,
-  resizeMode: 'contain',
+  borderColor: 'transparent',
+  //backgroundColor: 'yellow',
+  padding: 5,
 }
 const ITEM_INFO_VIEW: ViewStyle = {
-  flex: 1,
+  flex: 8,
   height: 200,
-  justifyContent: "center"
+  //backgroundColor: 'red',
+}
+const ITEM_IMAGE: ImageStyle = {
+  flex: 1,
+  resizeMode: 'cover',
 }
 const ITEM_INFO: ViewStyle = {
-  padding: 10
+  padding: 10,
 }
-const ITEM_ITEM: ViewStyle = {
-  
+const ITEM_NAME: ViewStyle = {
+  marginBottom: 10,
 }
-const ITEM_DEVICE: ViewStyle = {
-
+const ITEM_NAME_TEXT: TextStyle = {
+  fontFamily: "Montserrat-Regular",
+  fontSize: 20,
 }
-const ITEM_SLOT: ViewStyle = {
-
+const TEXT_LABEL: TextStyle = {
+  color: '#aaa',
 }
-
-const ITEM_WEIGHT: ViewStyle = {
-  //width: "45%",
-  //padding: 10
+const TEXT_VALUE: TextStyle = {
+  color: '#eee',
 }
-const ITEM_STATUS: ViewStyle = {
-  //width: "45%",
-  //padding: 10,
-  //alignItems: "flex-end"
-}
-const styles = StyleSheet.create({
-  text: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  }
-});
 
 export interface ItemProps {
   /**
@@ -74,78 +65,55 @@ export interface ItemProps {
   style?: ViewStyle
 
   //id: identifier,
-  device: string,
-  item_definition: string,
-  last_known_weight_kg: float,
-  slot: integer,
-  user: string,
-
-  item_definition_obj: object,
+  device_id: string,
+  item_definition_id: string,
+  last_known_weight_kg: number,
+  last_checkin: number,
+  slot: number,
+  user_id: string,
+  item_definition: ItemDefinition,
 }
 
 /**
- * Stateless functional component for your needs
- *
- * Component description here for TypeScript tips.
+ * Display a single user item
  */
 export function Item(props: ItemProps) {
   // grab the props
-  const { tx, text, style, ...rest } = props
-  const textStyle = { }
-
-  useEffect(() => {
-    //console.log("(item) props: ", props)
-  });
-
+  const { tx, text, style, device_id, item_definition_id, last_known_weight_kg, last_checkin, slot, user_id, item_definition, ...rest } = props
+  //const textStyle = { }
+  const itemdef = item_definition
+  
   return (
     <View style={ITEM}>
       <View style={ITEM_IMAGE_VIEW}>
-        <Image style={ITEM_IMAGE} source={{uri: props.item_definition_obj.image_url}} />
+        <Image style={ITEM_IMAGE} source={{uri: itemdef.image_url}} />
       </View>
       <View style={ITEM_INFO_VIEW}>
         <View style={ITEM_INFO}>
-          {/*<View style={ITEM_DEVICE}>
-            <Text>
-              device_id: {props.device_id}
-            </Text>
-          </View>*/}
-          {/*<View style={ITEM_SLOT}>
-            <Text>
-              slot: {props.slot.toString()}
-            </Text>
-          </View>*/}
-          { props.item_definition && (
-              <View style={ITEM_ITEM}>
-                {/*<Text>
-                  item_definition: {props.item_definition},
-                </Text>*/}
-                <Text>
-                  name: {props.item_definition_obj.name}
+          { itemdef && (
+              <View style={ITEM_NAME}>
+                <Text style={ITEM_NAME_TEXT}>
+                  {itemdef.name}
                 </Text>
               </View>
             )
           }
-          <View style={ITEM_WEIGHT}>
-            <Text>
-              net weight: {parseFloat(props.item_definition_obj.weight_grams / 1000).toFixed(3)} kg
+          <View>
+            <Text style={TEXT_LABEL}>
+              net weight:  <Text style={TEXT_VALUE}>{parseFloat(itemdef.weight_grams / 1000).toFixed(3)} kg</Text>
+            </Text>
+            <Text style={TEXT_LABEL}>
+              last_checkin:  <Text style={TEXT_VALUE}>{last_checkin ? last_checkin : "never" }</Text>
+            </Text>
+            <Text style={TEXT_LABEL}>
+              last_known_weight_kg: <Text style={TEXT_VALUE}>{parseFloat(last_known_weight_kg).toFixed(3)} kg</Text>
+            </Text>
+            <Text style={TEXT_LABEL}>
+              remaining: <Text style={TEXT_VALUE}>{parseFloat(100000 * last_known_weight_kg / itemdef.weight_grams).toFixed(0)}%</Text>
             </Text>
           </View>
-          <View style={ITEM_WEIGHT}>
-            <Text>
-              last_known_weight_kg: {parseFloat(props.last_known_weight_kg).toFixed(3)} kg
-            </Text>
-            <Text>
-              remaining: {parseFloat(100000 * props.last_known_weight_kg / props.item_definition_obj.weight_grams).toFixed(1)}%
-            </Text>
-          </View>
-          {/*<View style={ITEM_STATUS}>
-            <Text>
-              status: {props.status}
-            </Text>
-          </View>*/}
         </View>
       </View>
     </View>
   )
 }
-

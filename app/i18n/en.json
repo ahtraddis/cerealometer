@@ -11,6 +11,13 @@
   "deviceScreen": {
     "header": "Devices",
     "navigate": "Other screen",
+    "goToScanScreen": "Go to Scan Screen",
+  },
+  "scanScreen": {
+    "header": "Scan your barcode",
+    "goToDeviceScreen": "Go to Device Screen",
+    "takePicture": "SNAP",
+    "addItemButton": "Add to inventory",
   },
   "storybook": {
     "placeholder": "Placeholder",

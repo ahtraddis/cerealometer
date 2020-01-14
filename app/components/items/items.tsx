@@ -1,36 +1,30 @@
 import * as React from "react"
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
 import { useStores } from "../../models/root-store"
-import { View, ViewStyle, ImageStyle, TextStyle, StyleSheet, SafeAreaView, Image, Dimensions } from "react-native"
-import { Text, Icon } from "../"
-import { spacing } from "../../theme"
+import { View, ViewStyle, StyleSheet, Dimensions } from "react-native"
+import { Text } from "../"
 import { Item } from "../item/item"
-import { ScrollItem } from "../../components"
-//import Swiper from 'react-native-swiper'
 import SwiperFlatList from 'react-native-swiper-flatlist';
 
 import database from '@react-native-firebase/database'
 
-const ITEMS: ViewStyle = {
-  backgroundColor: "#555",
-}
 export const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: 250,
+    backgroundColor: 'green'
   },
   child: {
     height: height * 0.5,
-    width,
-    justifyContent: 'center'
+    width
   },
   text: {
-    fontSize: width * 0.5,
-    textAlign: 'center'
+    fontSize: width * 0.5
   }
 });
 
-export interface ItemsProps extends NavigationScreenProps<{}> {
+export interface ItemsProps {
   /**
    * Text which is looked up via i18n.
    */
@@ -46,25 +40,18 @@ export interface ItemsProps extends NavigationScreenProps<{}> {
    */
   style?: ViewStyle
 
-  device_id: string,
-
-  //deviceStore: DeviceStore,
-  //itemDefinitionStore: ItemDefinitionStore,
+  device_id: string
 }
 
 /**
- * Stateless functional component for your needs
- *
- * Component description here for TypeScript tips.
+ * Display list of user's items
  */
-export const Items: React.FunctionComponent<ItemsProps> = props => {
-
-  const { deviceStore, itemDefinitionStore } = useStores()
-
+export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   // grab the props
-  const { tx, text, style, ...rest } = props
-  const textStyle = { }
+  const { tx, text, style, device_id, ...rest } = props
+  //const textStyle = { }
 
+  const { itemDefinitionStore } = useStores()
   const [initializing, setInitializing] = useState(true);
   const [items, setItems] = useState(null);
 
@@ -84,18 +71,20 @@ export const Items: React.FunctionComponent<ItemsProps> = props => {
     // [eschwartz-TODO] mount all items for now (don't care about device or user yet)
     const ref = database().ref(`/items`);
     ref.on('value', onItemsChange);
-
     // Unsubscribe from changes on unmount
     return () => ref.off('value', onItemsChange);
-  }, [props.deviceId]); // dummy value
- 
+  }, [props.device_id]); // dummy value
+
   const renderItem = ({ item }) => {
-    const matchFunction = (element) => (element.item_definition_id == item.item_definition)
+    const matchFunction = (element) => (element.item_definition_id == item.item_definition_id)
     let matchIndex = itemDefinitionStore.itemDefinitions.findIndex(matchFunction)
     return (
       <View style={styles.child}>
-        <Item {...item} item_definition_obj={itemDefinitionStore.itemDefinitions[matchIndex]} />
-      </View> 
+        <Item
+          {...item}
+          item_definition={itemDefinitionStore.itemDefinitions[matchIndex]}
+        />
+      </View>
     )
   }
 
@@ -103,7 +92,11 @@ export const Items: React.FunctionComponent<ItemsProps> = props => {
   if (initializing) return null;
 
   if (!items) {
-    return <View><Text>No items</Text></View>
+    return (
+      <View>
+        <Text>No items</Text>
+      </View>
+    )
   }
 
   return (
@@ -114,22 +107,23 @@ export const Items: React.FunctionComponent<ItemsProps> = props => {
         //autoplayLoop
         //index={2}
         showPagination
-        style={{height: 250}}
+        style={{}}
         data={Object.keys(items).map((key, index) => {
           var obj = items[key]
           return {
             key: key,
             device_id: props.device_id,
-            item_definition: obj.item_definition,
+            item_definition_id: obj.item_definition_id,
             last_known_weight_kg: obj.last_known_weight_kg,
+            last_checkin: obj.last_checkin,
             slot: obj.slot,
-            user: obj.user, // prob won't need this
+            user_id: obj.user_id, // prob won't need this
           }
         })}
         renderItem={renderItem}
         //extraData={{ extraDataForMobX: devices.length > 0 ? devices[0].device : "" }}
-        keyExtractor={item => item.key}
+        keyExtractor={(item: { key: any; }) => item.key}
       />
-    </View> 
+    </View>
   )
 }

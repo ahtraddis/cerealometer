@@ -13,7 +13,8 @@ export const UserModel = types
     email: types.maybe(types.string),
     meter: types.maybe(types.number),
     user_id: types.maybe(types.string),
-    //devices: types.optional(types.map(<map of key-value pairs>) {}), // not sure how to do this yet!
+    // [eschwartz-TODO] not sure how to do this for devices yet!
+    //devices: types.optional(types.map(<map of key-value pairs>) {}),
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -21,6 +22,7 @@ export const UserModel = types
     setUser: flow(function*(user) {
       //console.log("userStore: curr val for user: ", JSON.stringify(self))
       //console.log("userStore: new user: ", user)
+      // [eschwartz-TODO] Use merge? from React immutability helper?
       self.name = user.name
       self.meter = user.meter
       self.email = user.email
@@ -40,4 +42,3 @@ type UserType = Instance<typeof UserModel>
 export interface User extends UserType {}
 type UserSnapshotType = SnapshotOut<typeof UserModel>
 export interface UserSnapshot extends UserSnapshotType {}
-

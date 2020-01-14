@@ -8,7 +8,7 @@ export const PortModel = types
   .props({
     //id: types.identifier,
     slot: types.integer,
-    item: types.string,
+    item_id: types.string,
     status: types.string,
     weight_kg: types.number,
   })

@@ -17,7 +17,7 @@ export const DeviceStoreModel = types
     saveDevices: (deviceSnapshots: DeviceSnapshot[]) => {
       //console.log("deviceSnapshots: ", deviceSnapshots);
       // create model instances from the plain objects
-      const deviceModels: Device[] = deviceSnapshots.map(c => DeviceModel.create(c)) 
+      const deviceModels: Device[] = deviceSnapshots.map(c => DeviceModel.create(c))
       self.devices.replace(deviceModels) // Replace the existing data with the new data
       //console.log("self.devices: ", self.devices)
     },
@@ -33,8 +33,7 @@ export const DeviceStoreModel = types
       }
     }),
   }))
-  .actions(self => ({
-  })) // eslint-disable-line @typescript-eslint/no-unused-vars
+  //.actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).

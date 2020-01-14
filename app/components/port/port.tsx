@@ -1,16 +1,12 @@
 import * as React from "react"
-import { View, ViewStyle, ImageStyle, TextStyle, Image, StyleSheet } from "react-native"
-import { Text, Icon } from "../"
-import { spacing } from "../../theme"
+import { View, ViewStyle, Image, ImageStyle, StyleSheet } from "react-native"
+import { Text } from "../"
 
 import * as conversion from "../../utils/conversion"
 
 const PORT: ViewStyle = {
   flex: 1,
-  //width: 300,
-  //borderRadius: 10,
-  flexDirection: "row",
-  //height: 150,
+  flexDirection: 'row',
   backgroundColor: "#333",
   marginTop: 10
 }
@@ -21,38 +17,22 @@ const PORT_IMAGE_VIEW: ViewStyle = {
   borderBottomWidth: 5,
   borderColor: 'transparent'
 }
-const PORT_IMAGE: ViewStyle = {
+const PORT_IMAGE: ImageStyle = {
   flex: 1,
   resizeMode: 'contain',
 }
 const PORT_INFO_VIEW: ViewStyle = {
-  flex: 1, height: 200, justifyContent: "center"
+  flex: 1,
+  height: 200,
+  justifyContent: "center",
 }
 const PORT_INFO: ViewStyle = {
   padding: 10
 }
 const PORT_ITEM: ViewStyle = {}
-const PORT_SLOT: ViewStyle = {
-  //width: "10%",
-  //alignItems: "center",
-  //backgroundColor: "forestgreen",
-  //padding: 10,
-}
-const PORT_WEIGHT: ViewStyle = {
-  //width: "45%",
-  //padding: 10
-}
-const PORT_STATUS: ViewStyle = {
-  //width: "45%",
-  //padding: 10,
-  //alignItems: "flex-end"
-}
-const styles = StyleSheet.create({
-  text: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  }
-});
+const PORT_SLOT: ViewStyle = {}
+const PORT_WEIGHT: ViewStyle = {}
+const PORT_STATUS: ViewStyle = {}
 
 export interface PortProps {
   /**
@@ -70,18 +50,18 @@ export interface PortProps {
    */
   style?: ViewStyle
 
-  id: identifier,
-  slot: integer,
-  item: string,
-  status: string,
-  weight_kg: float,
+  //id: identifier,
+  slot: number
+  item_id: string
+  status: string
+  weight_kg: number
 }
 
 export function Port(props: PortProps) {
 
   // grab the props
-  const { tx, text, style, ...rest } = props
-  const textStyle = { }
+  const { tx, text, style, slot, item_id, status, weight_kg, ...rest } = props
+  //const textStyle = { }
 
   let statusColor = "transparent";
   if (props.status == "present") {

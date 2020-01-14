@@ -1,1 +1,2 @@
-export * from "./device-screen/device-screen"
+export * from "./device-screen"
+export * from "./scan-screen"

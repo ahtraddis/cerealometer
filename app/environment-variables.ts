@@ -28,3 +28,5 @@ declare var process: any
  * An example importing an environment variable.
  */
 export const API: string | undefined = process.env.API
+
+export const HARDCODED_TEST_USER_ID: string = "1"

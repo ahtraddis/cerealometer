@@ -23,3 +23,5 @@ export const DEFAULT_API_CONFIG: ApiConfig = {
   url: env.API || "https://my-project-1518494092131.firebaseio.com",
   timeout: 10000,
 }
+
+export const HTTP_FUNCTION_BASEURL: string = "https://us-central1-my-project-1518494092131.cloudfunctions.net/getUpcData";

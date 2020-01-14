@@ -1,11 +1,11 @@
 import * as React from "react"
 import { observer } from "mobx-react-lite"
 import { useStores } from "../../models/root-store"
-import { UserStore } from "../../models/user-store"
-import { View, ViewStyle, SafeAreaView } from "react-native"
-import { Text } from "../"
+import { ViewStyle, SafeAreaView, Dimensions } from "react-native"
 
 import RNSpeedometer from 'react-native-speedometer'
+
+
 
 const METER: ViewStyle = {
   backgroundColor: "#ffffff",
@@ -31,26 +31,65 @@ export interface MeterProps {
   style?: ViewStyle
 }
 
-// [TODO] Rewrite with observer wrapper on Meter (syntax?)
+const labels = [
+  {
+    name: "TOAST. 😢",
+    labelColor: '#ff2900',
+    activeBarColor: '#ff2900',
+  },
+  {
+    name: 'Oh My God',
+    labelColor: '#ff5400',
+    activeBarColor: '#ff5400',
+  },
+  {
+    name: 'Getting Desperate',
+    labelColor: '#f4ab44',
+    activeBarColor: '#f4ab44',
+  },
+  {
+    name: 'Fair',
+    labelColor: '#f2cf1f',
+    activeBarColor: '#f2cf1f',
+  },
+  {
+    name: 'Strong',
+    labelColor: '#14eb6e',
+    activeBarColor: '#14eb6e',
+  },
+  {
+    name: 'Unbelievably Strong',
+    labelColor: '#00ff6b',
+    activeBarColor: '#00ff6b',
+  },
+]
+
+// [eschwartz-TODO] Rewrite with observer wrapper on Meter (syntax?)
 const Display = observer(() => {
   const { userStore } = useStores()
+  const { width, height } = Dimensions.get("window");
   return (
     <SafeAreaView style={METER}>
-      <RNSpeedometer value={userStore.user.meter} size={265} />
+      <RNSpeedometer
+        easeDuration={500}
+        maxValue={125}
+        defaultValue={0}
+        labelWrapperStyle={{marginVertical: 5}}
+        labelStyle={{fontSize: 28, fontWeight: 'bold', position: 'relative', top: -5, textAlign: 'center'}}
+        labelNoteStyle={{fontSize: 20, fontWeight: 'bold', position: 'relative', top: -5, backgroundColor: '#fff', width: '100%', textAlign: 'center'}}
+        allowedDecimals={0}
+        labels={labels} value={userStore.user.meter} size={width-70} />
     </SafeAreaView>
   )
 })
 
 /**
- * Stateless functional component for your needs
- *
- * Component description here for TypeScript tips.
+ * Display the cereal safety meter using the cloud-computed metrics in userStore
  */
 export function Meter(props: MeterProps) {
   // grab the props
   const { tx, text, style, ...rest } = props
-  const textStyle = { }
+  //const textStyle = { }
 
   return <Display />
 }
-

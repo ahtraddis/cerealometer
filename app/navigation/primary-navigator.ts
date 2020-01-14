@@ -1,11 +1,13 @@
 import createNativeStackNavigator from "react-native-screens/createNativeStackNavigator"
 import {
   DeviceScreen,
+  ScanScreen,
 } from "../screens"
 
 export const PrimaryNavigator = createNativeStackNavigator(
   {
     device: { screen: DeviceScreen },
+    scan: { screen: ScanScreen },
   },
   {
     headerMode: "none",
@@ -19,4 +21,4 @@ export const PrimaryNavigator = createNativeStackNavigator(
  * Anything not on this list will be a standard `back` action in
  * react-navigation.
  */
-export const exitRoutes: string[] = ["device"]
+export const exitRoutes: string[] = ["device", "scan"]
