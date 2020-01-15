@@ -2,30 +2,14 @@ import * as React from "react"
 import { useStores } from "../models/root-store"
 import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
-import { ViewStyle, View, FlatList, TextStyle, SafeAreaView } from "react-native"
-import { Screen, Button, Wallpaper } from "../components"
-import { color, spacing } from "../theme"
+import * as env from "../environment-variables"
 import { NavigationScreenProps } from "react-navigation"
+import { color, spacing } from "../theme"
+import { ViewStyle, View, FlatList, Text } from "react-native"
+import { Screen, Wallpaper } from "../components"
 import { Device } from "../components"
+import { FULL } from "../styles/common"
 
-const HARDCODED_TEST_USER_ID = "1"
-
-const TEXT: TextStyle = {
-  color: color.palette.white,
-  fontFamily: "Montserrat",
-}
-const BOLD: TextStyle = { fontWeight: "bold" }
-const BUTTON: ViewStyle = {
-  backgroundColor: "#5D2555",
-  padding: 15,
-}
-const BUTTON_TEXT: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 13,
-  letterSpacing: 2,
-}
-const FULL: ViewStyle = { flex: 1 }
 const CONTAINER: ViewStyle = {
   backgroundColor: color.transparent,
   paddingHorizontal: spacing[4],
@@ -33,81 +17,27 @@ const CONTAINER: ViewStyle = {
 const DEVICE_LIST: ViewStyle = {
   marginBottom: spacing.large,
 }
-const FOOTER: ViewStyle = { backgroundColor: "#20162D" }
-const FOOTER_CONTENT: ViewStyle = {
-  padding: 10,
-}
-
-// For local testing. App won't normally fetch data directly from the ESP8266.
-// const fetchData = () => {
-//   fetch(BASE_URL + '/status', {
-//     method: 'GET',
-//   })
-//   .then(response => response.json())
-//   .then(json => {
-//     //console.log("json: " + JSON.stringify(json));
-//     setState({
-//       ...state,
-//       ledState: json.led_state,
-//       weightKg: json.weight_kg,
-//       deflectionPct: getPercentage(json.weight_kg),
-//       devices: [json],
-//     })
-//   })
-//   .catch(error => {
-//     console.error(error);
-//   });
-// }
-
-// For local testing.
-// const updateLedState = (value) => {
-//   //alert("updateLedState(): value=" + (value ? "on" : "off"));
-//   // update state optimistically
-//   setState({
-//     ...state,
-//     ledState: value,
-//   });
-//   fetch(BASE_URL + '/led/' + (value ? "on" : "off"), {
-//     method: 'POST',
-//     headers: {
-//       Accept: 'application/json',
-//       'Content-Type': 'application/json',
-//     }
-//   })
-//   .then(response => response.json())
-//   .then(json => {
-//     setState({
-//       ...state,
-//       ledState: json.led_state,
-//       weightKg: json.weight_kg,
-//       deflectionPct: getPercentage(json.weight_kg),
-//     })
-//   })
-//   .catch(error => {
-//     console.error(error);
-//   });
-// }
 
 export interface DeviceScreenProps extends NavigationScreenProps<{}> {}
 
 export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer((props) => {
-  const { deviceStore, itemDefinitionStore, userStore } = useStores()
+  const { deviceStore, itemDefinitionStore, itemStore, userStore } = useStores()
 
   useEffect(() => {
-    deviceStore.getDevices();
+    deviceStore.getDevices(env.HARDCODED_TEST_USER_ID);
+    // [eschwartz-TODO] Hardcoded user ID
+    itemStore.getItems(env.HARDCODED_TEST_USER_ID);
     itemDefinitionStore.getItemDefinitions();
     // [eschwartz-TODO] Hardcoded user ID
-    userStore.getUser(HARDCODED_TEST_USER_ID);
-    //console.log("deviceStore: ", JSON.stringify(deviceStore));
-    //console.log("itemDefinitionStore: ", JSON.stringify(itemDefinitionStore));
-    console.log("userStore: ", JSON.stringify(userStore));
-  });
-
-  const goToScanScreen = React.useMemo(() => () => props.navigation.navigate("scan"), [
-   props.navigation,
-  ])
+    userStore.getUser(env.HARDCODED_TEST_USER_ID);
+    //console.log("device-screen: deviceStore: ", JSON.stringify(deviceStore, null, 2));
+    //console.log("device-screen: itemDefinitionStore: ", JSON.stringify(itemDefinitionStore, null, 2));
+    //console.log("device-screen: userStore: ", JSON.stringify(userStore, null, 2));
+    //console.log("device-screen: itemStore: ", JSON.stringify(itemStore, null, 2));
+  }, [])
 
   const renderDevice = ({ item }) => {
+    //console.log("device-screen: renderDevice(): item: ", item)
     return (
       <Device {...item} />
     )
@@ -117,24 +47,19 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
     <View style={FULL}>
       <Wallpaper />
       <Screen style={CONTAINER}>
+        { (deviceStore.devices.length == 0) &&
+          <View style={{backgroundColor: 'white', padding: 50}}>
+            <Text>No devices</Text>
+          </View>
+        }
         <FlatList
           style={DEVICE_LIST}
           data={deviceStore.devices}
           renderItem={renderDevice}
-          //extraData={{ extraDataForMobX: devices.length > 0 ? devices[0].device : "" }}
-          keyExtractor={item => item.id}
+          //extraData={{ extraDataForMobX: deviceStore.devices.length > 0 ? deviceStore.devices[0] : "" }}
+          keyExtractor={device => device.device_id}
         />
       </Screen>
-      <SafeAreaView style={FOOTER}>
-        <View style={FOOTER_CONTENT}>
-          <Button
-            style={BUTTON}
-            textStyle={BUTTON_TEXT}
-            tx="deviceScreen.goToScanScreen"
-            onPress={goToScanScreen}
-          />
-        </View>
-      </SafeAreaView>
     </View>
   )
 })

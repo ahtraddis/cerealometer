@@ -5,13 +5,26 @@ import { ViewStyle, SafeAreaView, Dimensions } from "react-native"
 
 import RNSpeedometer from 'react-native-speedometer'
 
-
-
 const METER: ViewStyle = {
   backgroundColor: "#ffffff",
   paddingTop: 10,
   paddingBottom: 70,
   marginBottom: 10,
+}
+
+const LABEL = {
+  position: 'relative',
+  top: -5,
+  textAlign: 'center',
+}
+const LABEL_NOTE = {
+  fontSize: 20,
+  fontWeight: 'bold',
+  position: 'relative',
+  top: -5,
+  backgroundColor: '#fff',
+  width: '100%',
+  textAlign: 'center',
 }
 
 export interface MeterProps {
@@ -67,7 +80,7 @@ const labels = [
 // [eschwartz-TODO] Rewrite with observer wrapper on Meter (syntax?)
 const Display = observer(() => {
   const { userStore } = useStores()
-  const { width, height } = Dimensions.get("window");
+  const { width } = Dimensions.get("window");
   return (
     <SafeAreaView style={METER}>
       <RNSpeedometer
@@ -75,10 +88,13 @@ const Display = observer(() => {
         maxValue={125}
         defaultValue={0}
         labelWrapperStyle={{marginVertical: 5}}
-        labelStyle={{fontSize: 28, fontWeight: 'bold', position: 'relative', top: -5, textAlign: 'center'}}
-        labelNoteStyle={{fontSize: 20, fontWeight: 'bold', position: 'relative', top: -5, backgroundColor: '#fff', width: '100%', textAlign: 'center'}}
+        labelStyle={LABEL}
+        labelNoteStyle={LABEL_NOTE}
         allowedDecimals={0}
-        labels={labels} value={userStore.user.meter} size={width-70} />
+        labels={labels}
+        value={userStore.user.meter}
+        size={width-70}
+      />
     </SafeAreaView>
   )
 })

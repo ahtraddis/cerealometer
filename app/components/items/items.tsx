@@ -1,8 +1,9 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
+import { observer, useObserver } from "mobx-react-lite"
 import { useStores } from "../../models/root-store"
-import { View, ViewStyle, StyleSheet, Dimensions } from "react-native"
-import { Text } from "../"
+import * as env from "../../environment-variables"
+import { Text, View, ViewStyle, StyleSheet, Dimensions } from "react-native"
 import { Item } from "../item/item"
 import SwiperFlatList from 'react-native-swiper-flatlist';
 
@@ -12,8 +13,8 @@ export const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    height: 250,
-    backgroundColor: 'green'
+    //height: 250,
+    //backgroundColor: 'green'
   },
   child: {
     height: height * 0.5,
@@ -40,7 +41,10 @@ export interface ItemsProps {
    */
   style?: ViewStyle
 
-  device_id: string
+  /**
+   * Use this optionally to filter query by device_id?
+   */
+  device_id?: string
 }
 
 /**
@@ -51,33 +55,38 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   const { tx, text, style, device_id, ...rest } = props
   //const textStyle = { }
 
-  const { itemDefinitionStore } = useStores()
+  const { itemStore, itemDefinitionStore } = useStores()
   const [initializing, setInitializing] = useState(true);
   const [items, setItems] = useState(null);
 
   function onItemsChange(snapshot) {
-    console.log(`onItemsChange fired:`, snapshot);
-    setItems(snapshot.val());
+    console.log(`items: onItemsChange() fired`, snapshot);
+    //setItems(snapshot.val());
+    itemStore.updateItems(snapshot)
+    //console.log("items: onItemsChange(): items: ", JSON.stringify(items, null, 2))
+    //console.log("items: onItemsChange(): itemStore: ", JSON.stringify(itemStore));
     // Connection established
     if (initializing) setInitializing(false);
   }
 
   useEffect(() => {
-    //console.log("items.tsx: props: ", props)
+    //console.log("items: props: ", props)
     //itemDefinitionStore.getItemDefinitions();
-    //console.log("deviceStore: ", JSON.stringify(deviceStore));
-    //console.log("itemDefinitionStore: ", JSON.stringify(itemDefinitionStore));
+    console.log("items: itemStore:", JSON.stringify(itemStore, null, 2))
+    //console.log("items: itemDefinitionStore:", JSON.stringify(itemDefinitionStore, null, 2))
 
-    // [eschwartz-TODO] mount all items for now (don't care about device or user yet)
-    const ref = database().ref(`/items`);
+    // [eschwartz-TODO] hardcoded email
+    const ref = database().ref('/items').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
     ref.on('value', onItemsChange);
     // Unsubscribe from changes on unmount
     return () => ref.off('value', onItemsChange);
   }, [props.device_id]); // dummy value
 
   const renderItem = ({ item }) => {
+    //console.log("items: renderItem(): item: ", item)
     const matchFunction = (element) => (element.item_definition_id == item.item_definition_id)
     let matchIndex = itemDefinitionStore.itemDefinitions.findIndex(matchFunction)
+
     return (
       <View style={styles.child}>
         <Item
@@ -89,9 +98,9 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   }
 
   // Wait for first connection
-  if (initializing) return null;
+  //if (initializing) return null;
 
-  if (!items) {
+  if (!itemStore.items.length) {
     return (
       <View>
         <Text>No items</Text>
@@ -108,22 +117,12 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
         //index={2}
         showPagination
         style={{}}
-        data={Object.keys(items).map((key, index) => {
-          var obj = items[key]
-          return {
-            key: key,
-            device_id: props.device_id,
-            item_definition_id: obj.item_definition_id,
-            last_known_weight_kg: obj.last_known_weight_kg,
-            last_checkin: obj.last_checkin,
-            slot: obj.slot,
-            user_id: obj.user_id, // prob won't need this
-          }
-        })}
+        data={itemStore.items}
         renderItem={renderItem}
-        //extraData={{ extraDataForMobX: devices.length > 0 ? devices[0].device : "" }}
-        keyExtractor={(item: { key: any; }) => item.key}
+        //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
+        //keyExtractor={(item: { key: any; }) => item.key}
       />
     </View>
   )
+
 }

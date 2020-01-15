@@ -7,8 +7,7 @@ import { withEnvironment } from "../extensions"
 export const DeviceModel = types
   .model("Device")
   .props({
-    //id: types.identifier,
-    device_id: types.string,
+    device_id: types.string, // key
     led_state: types.integer,
     name: types.maybe(types.string),
     port_count: types.integer,

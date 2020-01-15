@@ -50,7 +50,6 @@ export interface PortProps {
    */
   style?: ViewStyle
 
-  //id: identifier,
   slot: number
   item_id: string
   status: string

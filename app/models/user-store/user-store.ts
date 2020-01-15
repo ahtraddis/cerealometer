@@ -15,7 +15,7 @@ export const UserStoreModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     saveUser: (userSnapshot: UserSnapshot) => {
-      //console.log("userSnapshot: ", userSnapshot);
+      //console.log("user-store: saveUser(): userSnapshot:", JSON.stringify(userSnapshot, null, 2))
       // create model instances from the plain objects
       const userModel: User = UserModel.create(userSnapshot)
       self.user = userModel
@@ -24,7 +24,7 @@ export const UserStoreModel = types
   .actions(self => ({
     getUser: flow(function*(user_id) {
       const result: GetUserResult = yield self.environment.api.getUser(user_id)
-      console.log(`getUser: result for user_id '${user_id}': `, result)
+      //console.log(`user-store: getUser(): result for user_id '${user_id}': `, JSON.stringify(result, null, 2))
       if (result.kind === "ok") {
         self.saveUser(result.user)
       } else {
@@ -32,7 +32,6 @@ export const UserStoreModel = types
       }
     }),
   }))
-  //.actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).

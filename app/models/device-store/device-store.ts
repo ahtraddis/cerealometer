@@ -15,22 +15,29 @@ export const DeviceStoreModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     saveDevices: (deviceSnapshots: DeviceSnapshot[]) => {
-      //console.log("deviceSnapshots: ", deviceSnapshots);
+      //console.log("device-store: saveDevices(): deviceSnapshots:", JSON.stringify(deviceSnapshots, null, 2))
       // create model instances from the plain objects
       const deviceModels: Device[] = deviceSnapshots.map(c => DeviceModel.create(c))
       self.devices.replace(deviceModels) // Replace the existing data with the new data
-      //console.log("self.devices: ", self.devices)
+      //console.log("device-store: saveDevices(): self.devices:", JSON.stringify(self.devices, null, 2))
     },
   }))
   .actions(self => ({
-    getDevices: flow(function*() {
-      const result: GetDevicesResult = yield self.environment.api.getDevices()
-      //console.log("getDevices: result: ", result)
+    getDevices: flow(function*(user_id: string) {
+      const result: GetDevicesResult = yield self.environment.api.getDevices(user_id)
+      //console.log("device-store: getDevices(): result:", JSON.stringify(result, null, 2))
       if (result.kind === "ok") {
         self.saveDevices(result.devices)
       } else {
         __DEV__ && console.tron.log(result.kind)
       }
+    }),
+  }))
+  .actions(self => ({
+    updateDevice: flow(function*(device: DeviceSnapshot) {
+      //console.log("device-store: updateDevices(): self.devices:", JSON.stringify(self.devices, null, 2))
+      //console.log("device-store: updateDevices(): new device snapshot:", JSON.stringify(device, null, 2))
+      // [eschwartz-TODO] Merge updated device into store
     }),
   }))
   //.actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

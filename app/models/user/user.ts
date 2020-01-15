@@ -8,11 +8,10 @@ import { withEnvironment } from "../extensions"
 export const UserModel = types
   .model("User")
   .props({
-    //id: types.identifier,
+    user_id: types.maybe(types.string), // key
     name: types.maybe(types.string),
     email: types.maybe(types.string),
-    meter: types.maybe(types.number),
-    user_id: types.maybe(types.string),
+    meter: types.maybe(types.number)
     // [eschwartz-TODO] not sure how to do this for devices yet!
     //devices: types.optional(types.map(<map of key-value pairs>) {}),
   })
@@ -20,15 +19,14 @@ export const UserModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     setUser: flow(function*(user) {
-      //console.log("userStore: curr val for user: ", JSON.stringify(self))
-      //console.log("userStore: new user: ", user)
+      console.log("user: setUser(): self: ", JSON.stringify(self, null, 2))
+      console.log("user: setUser(): new user: ", JSON.stringify(user, null, 2))
       // [eschwartz-TODO] Use merge? from React immutability helper?
       self.name = user.name
       self.meter = user.meter
       self.email = user.email
     }),
   }))
-  //.actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).

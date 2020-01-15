@@ -3,59 +3,18 @@ import update from 'immutability-helper';
 import { useState, useEffect } from "react"
 import { useStores } from "../models/root-store"
 import { ItemDefinition } from "../models/item-definition"
+import { NavigationScreenProps } from "react-navigation"
 import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle } from "react-native"
 //import { TouchableOpacity } from "react-native"
 import { Screen, Text, Header, Wallpaper, Button } from "../components"
 import { color, spacing } from "../theme"
-import { NavigationScreenProps } from "react-navigation"
+
+import { BOLD, HIDDEN, BLACK, WHITE, FULL, HEADER, HEADER_CONTENT, HEADER_TITLE } from "../styles/common"
 
 import { RNCamera } from 'react-native-camera';
 
-const FULL: ViewStyle = {
-  flex: 1,
-}
 const CONTAINER: ViewStyle = {
   paddingHorizontal: spacing[4],
-}
-const HEADER: TextStyle = {
-  paddingTop: 20,
-  paddingBottom: 20,
-}
-const HEADER_CONTENT: ViewStyle = {
-  paddingBottom: 0,
-  paddingTop: 0,
-}
-const TEXT: TextStyle = {
-  color: color.palette.white,
-  fontFamily: "Montserrat",
-}
-const BOLD: TextStyle = { fontWeight: "bold" }
-const BLACK: TextStyle = { color: '#000' }
-const WHITE: TextStyle = { color: '#fff' }
-const HIDDEN: TextStyle = { display: 'none' }
-const HEADER_TITLE: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 24,
-  lineHeight: 30,
-  textAlign: "center",
-  letterSpacing: 1.5,
-}
-const FOOTER: ViewStyle = {
-  backgroundColor: "#20162D"
-}
-const FOOTER_CONTENT: ViewStyle = {
-  padding: 10,
-}
-const BUTTON: ViewStyle = {
-  backgroundColor: "#5D2555",
-  padding: 15,
-}
-const BUTTON_TEXT: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 13,
-  letterSpacing: 2,
 }
 const CAMERA_CONTAINER: ViewStyle = {
   marginTop: 100,
@@ -147,9 +106,9 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
   let user = userStore.user
 
   async function addItem(user_id: string, item_definition_id: string) {
-    console.log(`addItem(): adding item_definition_id ${item_definition_id}`)
+    console.log(`scan-screen: addItem(): adding item_definition_id ${item_definition_id}`)
     const response = await itemStore.addItem(user_id, item_definition_id)
-    console.log("addItem(): response: ", response)
+    console.log("scan-screen: addItem(): response:", JSON.stringify(response, null, 2))
   }
 
   return (
@@ -167,9 +126,12 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
               style={ITEM_BUTTON}
               textStyle={ITEM_BUTTON_TEXT}
               tx="scanScreen.addItemButton"
-              onPress={async() => {
-                const result = await addItem(user.user_id, itemDefinition.id)
-              }}
+              onPress={
+                async() => {
+                  const result = await addItem(user.user_id, itemDefinition.item_definition_id)
+                  console.log("scan-screen: addItem result:", JSON.stringify(result, null, 2))
+                }
+              }
             />
           </View>
         </View>
@@ -195,13 +157,8 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
   //   if (this.camera) {
   //     const options = { quality: 0.5, base64: true };
   //     const data = await this.camera.takePictureAsync(options);
-  //     console.log(data.uri);
   //   }
-  // };
-
-  const goToDeviceScreen = React.useMemo(() => () => props.navigation.navigate("device"), [
-    props.navigation,
-  ])
+  // }
 
   async function lookupUpc(upc) {
     console.log(`lookupUpc(): looking up upc ${upc}`)
@@ -231,7 +188,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
       Object.keys(lookupItems).map(key => {
         let item = lookupItems[key]
         if ((item.processed == false) && (item.processing == false)) {
-          console.log(`calling lookupUpc() for item ${item.data.data}`);
+          console.log(`scan-screen: calling lookupUpc() for item ${item.data.data}`);
           (async () => {
             // set processing to true before sending async request
             let newLookupItems = update(lookupItems, {$merge: {}});
@@ -301,24 +258,15 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
         <Text style={HIDDEN}>[HACK] count: {count}</Text>
         <View style={FOUND}>
           { Object.keys(lookupItems).map((key, i) => {
-            let result = lookupItems[key].result
-            return (
-              <ItemLookupResult
-                key={i}
-                itemDefinition={result}
-              />
-            )
-          })}
-        </View>
-      </SafeAreaView>
-      <SafeAreaView style={FOOTER}>
-        <View style={FOOTER_CONTENT}>
-          <Button
-            style={BUTTON}
-            textStyle={BUTTON_TEXT}
-            tx="scanScreen.goToDeviceScreen"
-            onPress={goToDeviceScreen}
-          />
+              let result = lookupItems[key].result
+              return (
+                <ItemLookupResult
+                  key={i}
+                  itemDefinition={result}
+                />
+              )
+            })
+          }
         </View>
       </SafeAreaView>
     </View>

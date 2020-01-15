@@ -75,10 +75,10 @@ export const Ports: React.FunctionComponent<PortsProps> = props => {
         //index={2}
         showPagination
         style={{height: 250}}
-        data={Object.keys(ports).map(key => {
+        data={Object.keys(ports).map((key, index) => {
           var obj = ports[key]
           return {
-            key: key,
+            key: index,
             device_id: props.device_id,
             slot: key,
             weight_kg: obj.weight_kg,
@@ -89,7 +89,7 @@ export const Ports: React.FunctionComponent<PortsProps> = props => {
         })}
         renderItem={renderPort}
         //extraData={{ extraDataForMobX: devices.length > 0 ? devices[0].device : "" }}
-        keyExtractor={(item: { key: any; }) => item.key}
+        //keyExtractor={(item: { key: any; }) => item.key}
       />
     </View>
   )

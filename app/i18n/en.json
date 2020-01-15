@@ -13,11 +13,17 @@
     "navigate": "Other screen",
     "goToScanScreen": "Go to Scan Screen",
   },
+  "overstockScreen": {
+    "header": "Overstock",
+  },
   "scanScreen": {
     "header": "Scan your barcode",
     "goToDeviceScreen": "Go to Device Screen",
     "takePicture": "SNAP",
     "addItemButton": "Add to inventory",
+  },
+  "alarmScreen": {
+    "header": "Alarms",
   },
   "storybook": {
     "placeholder": "Placeholder",

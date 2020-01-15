@@ -14,10 +14,10 @@ export const ItemDefinitionStoreModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     saveItemDefinitions: (itemDefinitionSnapshots: ItemDefinitionSnapshot[]) => {
-      //console.log("itemDefinitionSnapshots: ", itemDefinitionSnapshots);
+      //console.log("item-definition-store: saveItemDefinitions(): itemDefinitionSnapshots: ", JSON.stringify(itemDefinitionSnapshots, null, 2))
       // create model instances from the plain objects
       const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c))
-      self.itemDefinitions.replace(itemDefinitionModels) // Replace the existing data with the new data
+      self.itemDefinitions.replace(itemDefinitionModels)
     },
   }))
   .actions(self => ({
@@ -39,7 +39,7 @@ export const ItemDefinitionStoreModel = types
         __DEV__ && console.tron.log(result.kind)
       }
     }),
-  })) // eslint-disable-line @typescript-eslint/no-unused-vars
+  }))
 
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).

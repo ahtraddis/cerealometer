@@ -7,8 +7,7 @@ import { withEnvironment } from "../extensions"
 export const ItemDefinitionModel = types
   .model("ItemDefinition")
   .props({
-    //id: types.identifier,
-    item_definition_id: types.string,
+    item_definition_id: types.string, // key
     brand: types.string,
     description: types.string,
     image_url: types.string,

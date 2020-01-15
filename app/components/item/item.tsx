@@ -64,7 +64,7 @@ export interface ItemProps {
    */
   style?: ViewStyle
 
-  //id: identifier,
+  item_id: string, // key
   device_id: string,
   item_definition_id: string,
   last_known_weight_kg: number,
@@ -79,10 +79,10 @@ export interface ItemProps {
  */
 export function Item(props: ItemProps) {
   // grab the props
-  const { tx, text, style, device_id, item_definition_id, last_known_weight_kg, last_checkin, slot, user_id, item_definition, ...rest } = props
+  const { tx, text, style, item_id, device_id, item_definition_id, last_known_weight_kg, last_checkin, slot, user_id, item_definition, ...rest } = props
   //const textStyle = { }
   const itemdef = item_definition
-  
+
   return (
     <View style={ITEM}>
       <View style={ITEM_IMAGE_VIEW}>
