@@ -1,5 +1,5 @@
 import { Instance, SnapshotOut, types } from "mobx-state-tree"
-import { withEnvironment } from "../extensions"
+//import { withEnvironment } from "../extensions"
 
 /**
  * Model description here for TypeScript hints.
@@ -13,7 +13,7 @@ export const DeviceModel = types
     port_count: types.integer,
     user_id: types.string,
   })
-  .extend(withEnvironment)
+  //.extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
 

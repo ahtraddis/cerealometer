@@ -2,7 +2,7 @@ import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemModel, ItemSnapshot, Item } from "../item/item"
 import { withEnvironment } from "../extensions"
 import { AddItemResult, GetItemsResult } from "../../services/api"
-
+import update from 'immutability-helper'
 var _ = require('underscore');
 
 /**
@@ -37,21 +37,28 @@ export const ItemStoreModel = types
   }))
   .actions(self => ({
     updateItems: flow(function*(snapshot) {
-      //console.log("item-store: updateItems(): snapshot: ", JSON.stringify(snapshot, null, 2))
+      //console.log("item-store: updateItems(): snapshot.val(): ", JSON.stringify(snapshot.val(), null, 2))
       //console.log("item-store: updateItems(): self.items:", JSON.stringify(self.items, null, 2))
-      Object.keys(snapshot.val()).map((key) => {
-        //console.log(`looking for key '${key}' in self.items`)
-        var obj = snapshot.val()[key]
-        obj.item_id = key
-        var index = _.findIndex(self.items, {item_id: key});
-        if (index >= 0) {
-          //console.log(`found key '${key}' as index '${index}', obj: `, obj)
-          self.items[index] = obj
-        } else {
-          //console.log(`did NOT find key '${key}'`)
-          self.items.push(obj)
-        }
-      })
+      if (_.isEmpty(snapshot.val())) {
+        self.items = []
+      } else {
+        Object.keys(snapshot.val()).map((key) => {
+          console.log(`looking for key '${key}' in self.items`)
+          var obj = snapshot.val()[key]
+          obj.item_id = key
+
+          let index = self.items.findIndex(i => (i.item_id == key))
+          //let new_obj = update(self.items[index], {$merge: {}});
+          //new_obj.item_id = key
+          if (index != -1) {
+            console.log("updating obj: ", obj)
+            self.items[index] = obj
+          } else {
+            console.log("adding obj: ", obj)
+            self.items.push(obj)
+          }
+        })
+      }
       //console.log("item-store: updateItems(): itemStore:", JSON.stringify(self.items, null, 2))
     }),
   }))

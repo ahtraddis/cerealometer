@@ -17,16 +17,7 @@ export const UserModel = types
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
-  .actions(self => ({
-    setUser: flow(function*(user) {
-      console.log("user: setUser(): self: ", JSON.stringify(self, null, 2))
-      console.log("user: setUser(): new user: ", JSON.stringify(user, null, 2))
-      // [eschwartz-TODO] Use merge? from React immutability helper?
-      self.name = user.name
-      self.meter = user.meter
-      self.email = user.email
-    }),
-  }))
+  .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).

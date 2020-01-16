@@ -32,7 +32,16 @@ export const UserStoreModel = types
       }
     }),
   }))
-
+  .actions(self => ({
+    setUser: flow(function*(user) {
+      console.log("user: setUser(): self: ", JSON.stringify(self, null, 2))
+      console.log("user: setUser(): new user: ", JSON.stringify(user, null, 2))
+      // [eschwartz-TODO] Use merge? from React immutability helper?
+      self.user.name = user.name
+      self.user.meter = user.meter
+      self.user.email = user.email
+    }),
+  }))
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).
   * Useful for sensitive data like passwords, or transitive state like whether a modal is open.

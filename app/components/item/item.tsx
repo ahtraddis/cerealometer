@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useStores } from "../../models/root-store"
 import { View, ViewStyle, ImageStyle, TextStyle, Image } from "react-native"
 import { Text } from "../"
 import { ItemDefinition } from "../../models/item-definition"
@@ -82,6 +83,7 @@ export function Item(props: ItemProps) {
   const { tx, text, style, item_id, device_id, item_definition_id, last_known_weight_kg, last_checkin, slot, user_id, item_definition, ...rest } = props
   //const textStyle = { }
   const itemdef = item_definition
+  const { userStore, itemStore } = useStores()
 
   return (
     <View style={ITEM}>
@@ -99,6 +101,11 @@ export function Item(props: ItemProps) {
             )
           }
           <View>
+            <Text>meter = {(userStore && userStore.user && userStore.user.meter) ? userStore.user.meter.toFixed(1) : 0}</Text>
+            <Text>item count = {(itemStore && itemStore.items.length) ? itemStore.items.length : 0}</Text>
+            <Text style={TEXT_LABEL}>
+              item_id:  <Text style={TEXT_VALUE}>{item_id}</Text>
+            </Text>
             <Text style={TEXT_LABEL}>
               net weight:  <Text style={TEXT_VALUE}>{parseFloat(itemdef.weight_grams / 1000).toFixed(3)} kg</Text>
             </Text>

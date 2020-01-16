@@ -24,6 +24,7 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
   const { deviceStore, itemDefinitionStore, itemStore, userStore } = useStores()
 
   useEffect(() => {
+    //deviceStore.clearDevices()
     deviceStore.getDevices(env.HARDCODED_TEST_USER_ID);
     // [eschwartz-TODO] Hardcoded user ID
     itemStore.getItems(env.HARDCODED_TEST_USER_ID);

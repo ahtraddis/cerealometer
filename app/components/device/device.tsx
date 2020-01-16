@@ -32,17 +32,23 @@ export const Device: React.FunctionComponent<DeviceProps> = props => {
   const [device, setDevice] = useState(null);
 
   function onDeviceChange(snapshot) {
-    console.log("device: onDeviceChange(): snapshot.val(): ", JSON.stringify(snapshot.val(), null, 2))
-    //console.log("device: onDeviceChange(): deviceStore: ", JSON.stringify(deviceStore))
+
+    //console.log("device: onDeviceChange(): snapshot: ", JSON.stringify(snapshot, null, 2))
+    //console.log("device: onDeviceChange(): deviceStore.devices: ", JSON.stringify(deviceStore.devices, null, 2))
     setDevice(snapshot.val());
-    deviceStore.updateDevice(snapshot.val())
+    deviceStore.updateDevice(device_id, snapshot.val())
+    //console.log("device from state: ", device)
 
     // Connection established
-    if (initializing) setInitializing(false);
+    //if (initializing) setInitializing(false);
   }
 
   useEffect(() => {
-    //console.log("device: deviceStore: ", JSON.stringify(deviceStore, null, 2))
+    console.log("device: deviceStore.devices: ", JSON.stringify(deviceStore.devices, null, 2))
+    const initial = deviceStore.devices.findIndex(device => device.device_id == device_id)
+    console.log("initial val: ", deviceStore.devices[initial])
+    setDevice(deviceStore.devices[initial])
+
     const ref = database().ref(`/devices/${device_id}`);
     ref.on('value', onDeviceChange)
 
@@ -51,7 +57,9 @@ export const Device: React.FunctionComponent<DeviceProps> = props => {
   }, []);
 
   // Wait for first connection
-  if (initializing) return null;
+  //if (initializing) return null;
+  //console.log("device: ", device)
+  if (device == null) return <View><Text>No device state yet</Text></View>
 
   return (
     <View style={DEVICE}>

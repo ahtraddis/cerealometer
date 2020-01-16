@@ -1,5 +1,5 @@
 import * as React from "react"
-import update from 'immutability-helper';
+import update from 'immutability-helper'
 import { useState, useEffect } from "react"
 import { useStores } from "../models/root-store"
 import { ItemDefinition } from "../models/item-definition"

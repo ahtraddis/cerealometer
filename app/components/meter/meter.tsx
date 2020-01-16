@@ -85,7 +85,7 @@ const Display = observer(() => {
     <SafeAreaView style={METER}>
       <RNSpeedometer
         easeDuration={500}
-        maxValue={125}
+        maxValue={100}
         defaultValue={0}
         labelWrapperStyle={{marginVertical: 5}}
         labelStyle={LABEL}

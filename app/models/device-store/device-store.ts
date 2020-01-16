@@ -2,6 +2,7 @@ import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { DeviceModel, DeviceSnapshot, Device } from "../device/device"
 import { withEnvironment } from "../extensions"
 import { GetDevicesResult } from "../../services/api"
+import update from 'immutability-helper';
 
 /**
  * Model description here for TypeScript hints.
@@ -34,13 +35,21 @@ export const DeviceStoreModel = types
     }),
   }))
   .actions(self => ({
-    updateDevice: flow(function*(device: DeviceSnapshot) {
+    updateDevice: flow(function*(in_device_id: string, snapshot: DeviceSnapshot) {
+      const new_snapshot = update(snapshot, {$merge: {}});
+      new_snapshot['device_id'] = in_device_id
       //console.log("device-store: updateDevices(): self.devices:", JSON.stringify(self.devices, null, 2))
-      //console.log("device-store: updateDevices(): new device snapshot:", JSON.stringify(device, null, 2))
-      // [eschwartz-TODO] Merge updated device into store
+      //console.log("device-store: updateDevices(): new device snapshot:", JSON.stringify(snapshot, null, 2))
+      const index = self.devices.findIndex(device => device.device_id == in_device_id)
+      console.log("new_snapshot: ", JSON.stringify(new_snapshot, null, 2))
+      self.devices[index] = new_snapshot
     }),
   }))
-  //.actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+  .actions(self => ({
+    clearDevices: () => {
+      self.devices = []
+    }
+  }))
 
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).
