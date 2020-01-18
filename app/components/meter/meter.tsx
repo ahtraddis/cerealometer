@@ -92,7 +92,8 @@ const Display = observer(() => {
         labelNoteStyle={LABEL_NOTE}
         allowedDecimals={0}
         labels={labels}
-        value={userStore.user.meter}
+        //value={5}
+        value={userStore.user.metrics.overallPercentage || 0}
         size={width-70}
       />
     </SafeAreaView>

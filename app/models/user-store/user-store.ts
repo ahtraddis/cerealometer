@@ -1,7 +1,8 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
-import { UserModel, UserSnapshot, User } from "../user/user"
+import { UserModel, UserSnapshot, User, UserMetricsModel } from "../user/user"
 import { withEnvironment } from "../extensions"
 import { GetUserResult } from "../../services/api"
+import * as env from "../../environment-variables"
 
 /**
  * Model description here for TypeScript hints.
@@ -34,13 +35,22 @@ export const UserStoreModel = types
   }))
   .actions(self => ({
     setUser: flow(function*(user) {
-      console.log("user: setUser(): self: ", JSON.stringify(self, null, 2))
-      console.log("user: setUser(): new user: ", JSON.stringify(user, null, 2))
+      //console.log("user: setUser(): self: ", JSON.stringify(self, null, 2))
+      //console.log("user: setUser(): new user: ", JSON.stringify(user, null, 2))
       // [eschwartz-TODO] Use merge? from React immutability helper?
-      self.user.name = user.name
-      self.user.meter = user.meter
-      self.user.email = user.email
+      self.user = UserModel.create({
+        // [eschwartz-TODO] Hardcoded email id
+        id: env.HARDCODED_TEST_USER_ID,
+        name: user.name,
+        metrics: UserMetricsModel.create(user.metrics),
+        email: user.email,
+      })
     }),
+  }))
+  .actions(self => ({
+    clearUser: flow(function*(user) {
+      self.user = {}
+    })
   }))
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).

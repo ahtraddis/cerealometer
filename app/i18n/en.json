@@ -25,6 +25,11 @@
   "alarmScreen": {
     "header": "Alarms",
   },
+
+  "item": {
+    "moveToShelf": "Move to Shelf",
+  },
+
   "storybook": {
     "placeholder": "Placeholder",
     "field": "Field"

@@ -2,7 +2,7 @@ import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemModel, ItemSnapshot, Item } from "../item/item"
 import { withEnvironment } from "../extensions"
 import { AddItemResult, GetItemsResult } from "../../services/api"
-import update from 'immutability-helper'
+//import update from 'immutability-helper'
 var _ = require('underscore');
 
 /**
@@ -20,7 +20,7 @@ export const ItemStoreModel = types
       //console.log("item-store: saveItems(): itemSnapshots:", JSON.stringify(itemSnapshots, null, 2))
       // create model instances from the plain objects
       const itemModels: Item[] = itemSnapshots.map(c => ItemModel.create(c))
-      self.items.replace(itemModels) // Replace the existing data with the new data
+      self.items.replace(itemModels)
       //console.log("item-store: saveItems(): self.items:", JSON.stringify(self.items, null, 2))
     },
   }))
@@ -43,18 +43,17 @@ export const ItemStoreModel = types
         self.items = []
       } else {
         Object.keys(snapshot.val()).map((key) => {
-          console.log(`looking for key '${key}' in self.items`)
+          //console.log(`looking for key '${key}' in self.items`)
           var obj = snapshot.val()[key]
-          obj.item_id = key
+          obj.id = key
 
-          let index = self.items.findIndex(i => (i.item_id == key))
+          let index = self.items.findIndex(i => (i.id == key))
           //let new_obj = update(self.items[index], {$merge: {}});
-          //new_obj.item_id = key
           if (index != -1) {
-            console.log("updating obj: ", obj)
+            //console.log("updating obj: ", obj)
             self.items[index] = obj
           } else {
-            console.log("adding obj: ", obj)
+            //console.log("adding obj: ", obj)
             self.items.push(obj)
           }
         })
@@ -69,7 +68,7 @@ export const ItemStoreModel = types
   }))
   .actions(self => ({
     addItem: flow(function*(user_id, item_definition_id) {
-      console.log(`item-store: addItem(): user_id = '${user_id}', item_definition_id = '${item_definition_id}'`, item_definition_id)
+      //console.log(`item-store: addItem(): user_id = '${user_id}', item_definition_id = '${item_definition_id}'`, item_definition_id)
       const result: AddItemResult = yield self.environment.api.addItem(user_id, item_definition_id)
       if (result.kind === "ok") {
         return result.item

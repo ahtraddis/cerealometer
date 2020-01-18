@@ -7,7 +7,7 @@ import { Instance, SnapshotOut, types } from "mobx-state-tree"
 export const DeviceModel = types
   .model("Device")
   .props({
-    device_id: types.string, // key
+    id: types.string,
     led_state: types.integer,
     name: types.maybe(types.string),
     port_count: types.integer,

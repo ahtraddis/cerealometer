@@ -7,7 +7,7 @@ import { NavigationScreenProps } from "react-navigation"
 import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle } from "react-native"
 //import { TouchableOpacity } from "react-native"
 import { Screen, Text, Header, Wallpaper, Button } from "../components"
-import { color, spacing } from "../theme"
+import { spacing } from "../theme"
 
 import { BOLD, HIDDEN, BLACK, WHITE, FULL, HEADER, HEADER_CONTENT, HEADER_TITLE } from "../styles/common"
 
@@ -93,15 +93,12 @@ const FOUND: ViewStyle = {
 }
 
 export interface ItemLookupResultProps {
-  tx?: string
-  text?: string
-  style?: ViewStyle
   itemDefinition: ItemDefinition
 }
 
 export function ItemLookupResult(props: ItemLookupResultProps) {
   // grab the props
-  const { tx, text, style, itemDefinition, ...rest } = props
+  const { itemDefinition } = props
   const { itemStore, userStore } = useStores()
   let user = userStore.user
 
@@ -128,8 +125,9 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
               tx="scanScreen.addItemButton"
               onPress={
                 async() => {
-                  const result = await addItem(user.user_id, itemDefinition.item_definition_id)
-                  console.log("scan-screen: addItem result:", JSON.stringify(result, null, 2))
+                  //console.log("itemDefinition: ", itemDefinition)
+                  const result = await addItem(user.id, itemDefinition.id)
+                  //console.log("scan-screen: addItem result:", JSON.stringify(result, null, 2))
                 }
               }
             />
@@ -161,9 +159,9 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
   // }
 
   async function lookupUpc(upc) {
-    console.log(`lookupUpc(): looking up upc ${upc}`)
+    //console.log(`scan-screen: lookupUpc(): looking up upc ${upc}`)
     let response = await itemDefinitionStore.getUpcData(upc)
-    console.log("lookupUpc(): response: ", response)
+    //console.log("scan-screen: lookupUpc(): response:", JSON.stringify(response, null, 2))
     return response
   }
 
@@ -172,7 +170,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
     barcodes.map((code: { data: any; }) => {
       let key = code.data
       if (!(key in lookupItems)) {
-        console.log(`adding ${key} to lookupItems`)
+        console.log(`scan-screen: adding ${key} to lookupItems`)
         let newLookupItems = update(lookupItems, {$merge: {}});
         newLookupItems[key] = {
           data: code,
@@ -196,7 +194,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
             setLookupItems(newLookupItems)
             // send async lookup request to cloud function
             let result = await lookupUpc(item.data.data);
-            console.log("scan-screen: got lookupUpc result: ", result)
+            console.log("scan-screen: got lookupUpc result:", JSON.stringify(result, null, 2))
             // update result in state and set processed true
             newLookupItems = update(lookupItems, {$merge: {}});
             newLookupItems[key].processed = true

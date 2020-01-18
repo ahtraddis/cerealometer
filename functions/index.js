@@ -35,85 +35,105 @@ exports.getUpcData = functions.https.onRequest(async (req, res) => {
   res.status(200).send(response);
 });
 
+
+
 // Log event when cereal scale status changes, e.g. box is removed or returned
 exports.slotStatusChanged = functions.database.ref('/ports/{deviceId}/{slotId}/weight_kg')
-  .onUpdate((change, context) => {
-    const prev_weight_kg = change.before.val();
-    const new_weight_kg = change.after.val();
-    let prev_status = "";
-    let new_status = "";
-    let item_key = "";
-    let item_snapshot = {}
-    let item_definition_key = "";
-    let item_definition_snapshot = {}
-    let user_key = ""
-    let user_snapshot = {}
+  .onUpdate(async (change, context) => {
+    console.log("change: ", JSON.stringify(change, null, 2))
+    const device_id = context.params.deviceId
+    const slot_id = context.params.slotId
 
-    console.log(`device '${context.params.deviceId}' slot ${context.params.slotId}: weight_kg changed from '${prev_weight_kg}' to '${new_weight_kg}'`);
+    const weightKgBefore = change.before.val()
+    // get all current values for the changed port
+    const portSnap = await change.after.ref.parent.once('value')
+    const port = portSnap.val()
+    console.log(`port for device '${device_id}' slot '${slot_id}':`, JSON.stringify(port, null, 2))
+
+    const item_id = port.item_id
+    let item = {}
+    let item_definition_id = "";
+    let new_status = "unknown"
 
     const rootRef = change.before.ref.root
     const epoch = Math.floor(new Date().getTime() / 1000)
 
-    return change.before.ref.parent.child('status').once('value')
-      .then(snap => {
-        prev_status = snap.val()
-        //console.log("prev_status: ", prev_status);
-      }).then(() => {
-        return change.after.ref.parent.child('item_id').once('value')
-          .then(snap => {
-            item_key = snap.val()
-            //console.log("item_key: ", item_key);
-          })
-      }).then(() => {
-        return rootRef.child(`/items/${item_key}`).once('value')
-          .then(snap => {
-            item_snapshot = snap.val()
-            item_definition_key = item_snapshot.item_definition_id
-            user_key = item_snapshot.user_id
-            //console.log("item_snapshot: ", item_snapshot)
-          })
-      }).then(() => {
-        return rootRef.child(`/item_definitions/${item_definition_key}`).once('value')
-          .then(snap => {
-            item_definition_snapshot = snap.val()
-            //console.log("item_definition_snapshot: ", item_definition_snapshot)
-          })
-      }).then(() => {
-        // update status
-        if (item_key && (new_weight_kg >= PRESENCE_THRESHOLD_KG)) {
-          new_status = "present"
-        } else if (item_key) {
-          new_status = "absent"
-        } else {
-          new_status = "vacant"
-        }
+    if (item_id) {
+      const itemSnap = await rootRef.child(`/items/${item_id}`).once('value')
+      item = itemSnap.val()
+      //console.log(`item:`, JSON.stringify(item, null, 2))
+      if (!item) {
+        console.log(`ERROR: item_id '${item_id}' not found in /items`)
+        return null
+      }
+      item_definition_id = item.item_definition_id
+    }
 
-        //console.log(`updating status from prev_status '${prev_status}' to new_status '${new_status}'`)
-        return change.after.ref.parent.child('status').set(new_status)
-          .then(snap => {
-            console.log(`updated status from prev_status '${prev_status}' to new_status '${new_status}'`);
-          }).then(() => {
-            if (new_status == "present") {
-              //console.log("known item present, copying weight to item node")
-              return rootRef.child(`/items/${item_key}/last_known_weight_kg`).set(new_weight_kg)
-                .then(snap => {
-                  console.log(`copied new_weight_kg '${new_weight_kg}' to /items entry`)
-                  return rootRef.child(`/items/${item_key}/last_checkin`).set(epoch)
-                }).then(() => {
-                  console.log(`updated last_checkin epoch time to ${epoch}`)
-                  // recompute stats
-                  // for now, update the main 'meter' percentage based on percentage remaining for this item only
-                  // get item_definition (for weight_grams)
-                  let pct_remaining = (100000 * new_weight_kg / item_definition_snapshot.weight_grams)
-                  return rootRef.child(`/users/${user_key}/meter`).set(pct_remaining)
-                    .then(snap => {
-                      console.log(`set meter to ${pct_remaining}`)
-                    })
-                })
-            }
-          })
+    // get all item_definitions since we need weight values to compute metrics
+    const itemDefinitionSnap = await rootRef.child(`/item_definitions`).once('value')
+    const itemDefinitions = itemDefinitionSnap.val()
+    //console.log(`itemDefinitions:`, JSON.stringify(itemDefinitions, null, 2))
+
+    // Determine new slot status (state) based on changes and item presence.
+    // Slot States:
+    // LOADABLE = no assigned item
+    // LOADED = known item present
+    // UNLOADED = known item, currently not on scale
+    // LOADING = known/expected item, waiting to be put on scale
+    // UNLOADING = known item, waiting to be removed
+    if (item_id && (port.weight_kg >= PRESENCE_THRESHOLD_KG)) {
+      new_status = "present"
+    } else if (item_id) {
+      new_status = "absent"
+    } else {
+      new_status = "vacant"
+    }
+
+    if (new_status != port.status) {
+      const updateStatusSnap = await rootRef.child(`/ports/${device_id}/${slot_id}/status`).set(new_status)
+      console.log(`updated status from prev_status '${port.status}' to new_status '${new_status}'`);
+    }
+
+    if ((port.weight_kg != weightKgBefore)
+        && item
+        && (port.weight_kg >= PRESENCE_THRESHOLD_KG)) {
+      const newItem = item
+      item.last_known_weight_kg = port.weight_kg
+      item.last_checkin = epoch
+      const updateItemSnap = await rootRef.child(`/items/${item_id}`).set(newItem)
+      console.log(`updated item:`, JSON.stringify(newItem, null, 2))
+    }
+
+    const deviceSnap = await rootRef.child(`/devices/${device_id}`).once('value')
+    const device = deviceSnap.val()
+    //console.log("device:", JSON.stringify(device, null, 2))
+    const user_id = device.user_id
+
+    const itemsSnap = await rootRef.child('/items').orderByChild('user_id').equalTo(user_id).once('value')
+    const items = itemsSnap.val()
+    //console.log("items:", JSON.stringify(items, null, 2))
+
+    let totalGrams = 0
+    let totalItemWeightKg = 0
+    Object.keys(items).forEach(key => {
+      let item = items[key]
+      let name = itemDefinitions[item.item_definition_id].name
+      if (item.last_known_weight_kg > 0) {
+        totalItemWeightKg += item.last_known_weight_kg
+        totalGrams += itemDefinitions[item.item_definition_id].weight_grams
+      }
     })
-  });
+    let pctRemaining = 100000 * totalItemWeightKg / totalGrams
+    let metrics = {
+      totalGrams: totalGrams,
+      totalItemWeightKg: totalItemWeightKg,
+      overallPercentage: pctRemaining,
+    }
+    const updateMeterSnap = await rootRef.child(`/users/${user_id}/meter`).set(pctRemaining)
+    const updateMetricsSnap = await rootRef.child(`/users/${user_id}/metrics`).set(metrics)
+    console.log(`updated metrics:`, JSON.stringify(metrics, null, 2))
+  }
+);
 
 // Configure the email transport using the default SMTP transport and a GMail account.
 // For Gmail, enable these:

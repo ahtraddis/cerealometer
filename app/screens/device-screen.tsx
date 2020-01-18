@@ -31,16 +31,16 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
     itemDefinitionStore.getItemDefinitions();
     // [eschwartz-TODO] Hardcoded user ID
     userStore.getUser(env.HARDCODED_TEST_USER_ID);
-    //console.log("device-screen: deviceStore: ", JSON.stringify(deviceStore, null, 2));
+    //console.log("device-screen: deviceStore.devices: ", JSON.stringify(deviceStore.devices, null, 2));
     //console.log("device-screen: itemDefinitionStore: ", JSON.stringify(itemDefinitionStore, null, 2));
     //console.log("device-screen: userStore: ", JSON.stringify(userStore, null, 2));
     //console.log("device-screen: itemStore: ", JSON.stringify(itemStore, null, 2));
   }, [])
 
-  const renderDevice = ({ item }) => {
-    //console.log("device-screen: renderDevice(): item: ", item)
+  const renderDevice = ({ device }) => {
+    //console.log("device-screen: renderDevice(): device: ", device)
     return (
-      <Device {...item} />
+      <Device {...device} />
     )
   }
 
@@ -53,13 +53,15 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
             <Text>No devices</Text>
           </View>
         }
-        <FlatList
-          style={DEVICE_LIST}
-          data={deviceStore.devices}
-          renderItem={renderDevice}
-          //extraData={{ extraDataForMobX: deviceStore.devices.length > 0 ? deviceStore.devices[0] : "" }}
-          keyExtractor={device => device.device_id}
-        />
+        { (deviceStore.devices.length > 0) &&
+          <FlatList
+            style={DEVICE_LIST}
+            data={deviceStore.devices}
+            renderItem={renderDevice}
+            //extraData={{ extraDataForMobX: deviceStore.devices.length > 0 ? deviceStore.devices[0] : "" }}
+            keyExtractor={device => device.id}
+          />
+        }
       </Screen>
     </View>
   )

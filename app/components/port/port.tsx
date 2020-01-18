@@ -35,21 +35,6 @@ const PORT_WEIGHT: ViewStyle = {}
 const PORT_STATUS: ViewStyle = {}
 
 export interface PortProps {
-  /**
-   * Text which is looked up via i18n.
-   */
-  tx?: string
-
-  /**
-   * The text to display if not using `tx` or nested components.
-   */
-  text?: string
-
-  /**
-   * An optional style override useful for padding & margin.
-   */
-  style?: ViewStyle
-
   slot: number
   item_id: string
   status: string
@@ -59,8 +44,7 @@ export interface PortProps {
 export function Port(props: PortProps) {
 
   // grab the props
-  const { tx, text, style, slot, item_id, status, weight_kg, ...rest } = props
-  //const textStyle = { }
+  const { slot, item_id, status, weight_kg, ...rest } = props
 
   let statusColor = "transparent";
   if (props.status == "present") {

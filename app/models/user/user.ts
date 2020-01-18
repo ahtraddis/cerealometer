@@ -5,13 +5,25 @@ import { withEnvironment } from "../extensions"
  * Model description here for TypeScript hints.
  */
 
+export const UserMetricsModel = types
+  .model("UserMetrics")
+  .props({
+      totalItemWeightKg: types.maybe(types.number),
+      totalGrams: types.maybe(types.number),
+      overallPercentage: types.maybe(types.number),
+  })
+  .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+  .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+
+//const map = types.map(types.string, types.boolean)
+
 export const UserModel = types
   .model("User")
   .props({
-    user_id: types.maybe(types.string), // key
+    id: types.maybe(types.string),
     name: types.maybe(types.string),
     email: types.maybe(types.string),
-    meter: types.maybe(types.number)
+    metrics: types.maybe(UserMetricsModel),
     // [eschwartz-TODO] not sure how to do this for devices yet!
     //devices: types.optional(types.map(<map of key-value pairs>) {}),
   })
@@ -31,3 +43,6 @@ type UserType = Instance<typeof UserModel>
 export interface User extends UserType {}
 type UserSnapshotType = SnapshotOut<typeof UserModel>
 export interface UserSnapshot extends UserSnapshotType {}
+
+type UserMetricsType = Instance<typeof UserMetricsModel>
+export interface UserMetrics extends UserMetricsType {}

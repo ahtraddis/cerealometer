@@ -1,14 +1,14 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { observer, useObserver } from "mobx-react-lite"
 import { useStores } from "../../models/root-store"
 import * as env from "../../environment-variables"
-import { Text, View, ViewStyle, StyleSheet, Dimensions, Button } from "react-native"
+import { View, ViewStyle, StyleSheet, Dimensions, Text } from "react-native"
 import { Item } from "../item/item"
-import { Meter } from "../../components"
-import { HIDDEN } from "../../styles/common"
+import { UserSnapshot } from "../../models/user"
+import { ItemSnapshot } from "../../models/item"
+import { PortSnapshot } from "../../models/port"
 import SwiperFlatList from 'react-native-swiper-flatlist';
-
+import { BOLD, HIDDEN, BLACK, WHITE, FULL, HEADER, HEADER_CONTENT, HEADER_TITLE, MESSAGE } from "../../styles/common"
 
 import database from '@react-native-firebase/database'
 
@@ -16,8 +16,6 @@ export const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //height: 250,
-    //backgroundColor: 'green'
   },
   child: {
     height: height * 0.5,
@@ -27,126 +25,131 @@ const styles = StyleSheet.create({
     fontSize: width * 0.5
   }
 });
+const LIST_STYLE: ViewStyle = {
+}
 
 export interface ItemsProps {
-  /**
-   * Text which is looked up via i18n.
-   */
-  tx?: string
-
-  /**
-   * The text to display if not using `tx` or nested components.
-   */
-  text?: string
-
-  /**
-   * An optional style override useful for padding & margin.
-   */
-  style?: ViewStyle
-
   /**
    * Use this optionally to filter query by device_id?
    */
   device_id?: string
+
   dummyUserProp?: any
   dummyItemProp?: any
+  listType?: string
+  vertical?: boolean
+  showSlotHeader?: boolean
+
 }
 
 /**
  * Display list of user's items
  */
 export const Items: React.FunctionComponent<ItemsProps> = (props) => {
-  // grab the props
-  const { tx, text, style, device_id, ...rest } = props
-  //const textStyle = { }
+  const { device_id, vertical, showSlotHeader, listType, ...rest } = props
 
-  const { userStore, itemStore, itemDefinitionStore } = useStores()
-  const [initializing, setInitializing] = useState(true);
-  //const [items, setItems] = useState(null);
-  //const [count, setCount] = useState(0);
+  const { userStore, itemStore, itemDefinitionStore, portStore } = useStores()
 
-  function onUserChange(snapshot) {
+  function onUserChange(snapshot: UserSnapshot) {
     //console.log("items: onUserChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
     userStore.setUser(snapshot.val())
   }
 
-  function onItemsChange(snapshot) {
-    console.log("items: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+  function onItemsChange(snapshot: ItemSnapshot[]) {
+    //console.log("items: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
     itemStore.updateItems(snapshot)
     //console.log("items: onItemsChange(): items: ", JSON.stringify(items, null, 2))
-    console.log("items: onItemsChange(): itemStore.items: ", JSON.stringify(itemStore.items, null, 2))
-    // Connection established
-    //if (initializing) setInitializing(false);
+    //console.log("items: onItemsChange(): itemStore.items: ", JSON.stringify(itemStore.items, null, 2))
+  }
+
+  function onPortsChange(snapshot: PortSnapshot[]) {
+    console.log("items: onPortsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    portStore.updatePorts(snapshot)
   }
 
   useEffect(() => {
-    //setCount(1)
     //console.log("items: props: ", props)
-    //itemStore.clearItems()
-    //itemDefinitionStore.getItemDefinitions();
-    console.log("items: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
+    itemDefinitionStore.getItemDefinitions()
+    // [eschwartz-TODO] Hardcoded user id
+    portStore.getPorts(env.HARDCODED_TEST_USER_ID)
+    //console.log("items: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
     //console.log("items: itemDefinitionStore:", JSON.stringify(itemDefinitionStore, null, 2))
 
     // [eschwartz-TODO] hardcoded user id
-    const ref = database().ref('/items').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
-    ref.on('value', onItemsChange);
+    const itemsRef = database().ref('/items').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
+    itemsRef.on('value', onItemsChange);
 
-    const ref2 = database().ref(`/users/${env.HARDCODED_TEST_USER_ID}`)
-    ref2.on('value', onUserChange);
+    const userRef = database().ref(`/users/${env.HARDCODED_TEST_USER_ID}`)
+    userRef.on('value', onUserChange);
+
+    const portsRef = database().ref('/ports')
+    portsRef.on('value', onPortsChange);
 
     // Unsubscribe from changes on unmount
     return () => {
-      ref.off('value', onItemsChange)
-      ref2.off('value', onUserChange)
+      itemsRef.off('value', onItemsChange)
+      userRef.off('value', onUserChange)
+      portsRef.off('value', onPortsChange)
     }
-
-
-
   }, []); // run once
 
   const renderItem = ({ item }) => {
     //console.log("items: renderItem(): item: ", item)
-    const matchFunction = (element) => (element.item_definition_id == item.item_definition_id)
-    let matchIndex = itemDefinitionStore.itemDefinitions.findIndex(matchFunction)
-
+    const matchFunction = (obj) => (obj.id == item.item_definition_id)
+    let itemDefIndex = itemDefinitionStore.itemDefinitions.findIndex(matchFunction)
+    //console.log("portStore.ports: ", portStore.ports)
+    let portIndex = portStore.ports.findIndex((obj) => (obj.item_id == item.id))
+    //console.log(`portIndex: ${portIndex}`)
     return (
       <View style={styles.child}>
         <Item
+          buttonCallback={(e) => console.log("buttonCallback!")}
+          buttonLabel={"item.moveToShelf"}
+          showSlotHeader={showSlotHeader}
           {...item}
-          item_definition={itemDefinitionStore.itemDefinitions[matchIndex]}
+          item_definition={itemDefinitionStore.itemDefinitions[itemDefIndex]}
+          port={portStore.ports[portIndex]}
         />
       </View>
     )
   }
 
-  // Wait for first connection
-  //if (initializing) return null;
+  if (!itemStore.items.length) {
+    return (
+      <View>
+        <Text>No items</Text>
+      </View>
+    )
+  }
 
-  // if (!itemStore.items.length) {
-  //   return (
-  //     <View>
-  //       <Text>No items</Text>
-  //     </View>
-  //   )
-  // }
+  let data = itemStore.items
+  if (listType == "active") {
+    data = data.filter((item) => ((item.device_id != "") && (item.slot > -1)))
+  } else if (listType == "inactive") {
+    data = data.filter((item) => !((item.device_id != "") && (item.slot > -1)))
+  } else if (listType == "all") {
+    // default, no filter
+  }
+
 
   return (
     <View style={styles.container}>
-      {/*<Text style={HIDDEN}>userStore.user.meter: {userStore.user.meter}</Text>*/}
-      <Meter />
-      <SwiperFlatList
-        //autoplay
-        autoplayDelay={2}
-        //autoplayLoop
-        //index={2}
-        showPagination
-        //style={{}}
-        data={itemStore.items}
-        renderItem={renderItem}
-        //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
-        //keyExtractor={(item: { key: any; }) => item.key}
-      />
+      { !data.length && (
+        <View style={MESSAGE}>
+          <Text>No items</Text>
+        </View>
+      )}
+      { (data.length > 0) && (
+        <SwiperFlatList
+          vertical={vertical}
+          showPagination
+          style={LIST_STYLE}
+          data={data}
+          renderItem={renderItem}
+          //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
+          //keyExtractor={(item: { key: any; }) => item.key}
+        />
+      )}
     </View>
   )
-
 }

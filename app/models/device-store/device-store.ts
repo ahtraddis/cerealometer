@@ -19,7 +19,7 @@ export const DeviceStoreModel = types
       //console.log("device-store: saveDevices(): deviceSnapshots:", JSON.stringify(deviceSnapshots, null, 2))
       // create model instances from the plain objects
       const deviceModels: Device[] = deviceSnapshots.map(c => DeviceModel.create(c))
-      self.devices.replace(deviceModels) // Replace the existing data with the new data
+      self.devices.replace(deviceModels)
       //console.log("device-store: saveDevices(): self.devices:", JSON.stringify(self.devices, null, 2))
     },
   }))
@@ -36,12 +36,13 @@ export const DeviceStoreModel = types
   }))
   .actions(self => ({
     updateDevice: flow(function*(in_device_id: string, snapshot: DeviceSnapshot) {
+      //console.log(`in_device_id: ${in_device_id}, snapshot:`, JSON.stringify(snapshot))
       const new_snapshot = update(snapshot, {$merge: {}});
-      new_snapshot['device_id'] = in_device_id
+      new_snapshot['id'] = in_device_id
       //console.log("device-store: updateDevices(): self.devices:", JSON.stringify(self.devices, null, 2))
       //console.log("device-store: updateDevices(): new device snapshot:", JSON.stringify(snapshot, null, 2))
-      const index = self.devices.findIndex(device => device.device_id == in_device_id)
-      console.log("new_snapshot: ", JSON.stringify(new_snapshot, null, 2))
+      const index = self.devices.findIndex(device => device.id == in_device_id)
+      //onsole.log("device-store: updateDevice(): new_snapshot:", JSON.stringify(new_snapshot, null, 2))
       self.devices[index] = new_snapshot
     }),
   }))

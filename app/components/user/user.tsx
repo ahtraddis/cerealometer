@@ -1,29 +1,19 @@
 import * as React from "react"
 import { useStores } from "../../models/root-store"
 import { observer } from "mobx-react-lite"
-import { View, ViewStyle } from "react-native"
+import { UserMetrics } from "../../models/user"
+import { View } from "react-native"
 import { Text } from "../"
 
+const TEXT: TextStyle = {
+  color: '#777',
+}
+
 export interface UserProps {
-  /**
-   * Text which is looked up via i18n.
-   */
-  tx?: string
-
-  /**
-   * The text to display if not using `tx` or nested components.
-   */
-  text?: string
-
-  /**
-   * An optional style override useful for padding & margin.
-   */
-  style?: ViewStyle
-
+  id: string
   name: string
   email: string
-  meter: number
-  user_id: string
+  metrics: UserMetrics
   // [eschwartz-TODO] Not sure how to handle device list
   //devices:
 }
@@ -33,10 +23,10 @@ const Info = observer(() => {
   let user = userStore.user
   return (
     <View>
-      <Text>name: {userStore.user.name}</Text>
-      <Text>email: {user.email}</Text>
-      <Text>meter: {user.meter}</Text>
-      <Text>user_id: {user.user_id}</Text>
+      <Text style={TEXT}>id: {user.id}</Text>
+      <Text style={TEXT}>name: {userStore.user.name}</Text>
+      <Text style={TEXT}>email: {user.email}</Text>
+      <Text style={TEXT}>metrics: {JSON.stringify(user.metrics, null, 2)}</Text>
     </View>
   )
 })
@@ -46,7 +36,7 @@ const Info = observer(() => {
  */
 export function User(props: UserProps) {
   // grab the props
-  const { tx, text, style, name, email, meter, user_id, ...rest } = props
+  //const { id, name, email, metrics, ...rest } = props
   //const textStyle = { }
 
   return (

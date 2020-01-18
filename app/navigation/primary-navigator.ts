@@ -13,7 +13,7 @@ export const PrimaryNavigator = createBottomTabNavigator(
     item: {
       screen: ItemScreen,
       navigationOptions: ( {navigation }) => ({
-        title: "Items",
+        title: "Shelf",
         headerTitleAlign: 'center',
       }),
     },
@@ -38,27 +38,27 @@ export const PrimaryNavigator = createBottomTabNavigator(
         headerTitleAlign: 'center',
       }),
     },
-    device: {
-      screen: DeviceScreen,
-      navigationOptions: ({ navigation }) => ({
-        title: "Devices",
-        headerTitleAlign: 'center', // nope
-        //headerBackTitle: 'backtitle', // nope
-        //headerBackTitleVisible: true, // nope?
-        headerStyle: {
-          //backgroundColor: '#ccc',
-        },
-        headerTitleStyle: {
-          //fontFamily:
-          //fontSize: 30,
-        },
-        headerBackTitleStyle: {
-          fontFamily: 'Arial',
-          fontSize: 5,
-        },
-        //headerTintColor: 'black', // this is just color (what's tint?)
-      }),
-    },
+    // device: {
+    //   screen: DeviceScreen,
+    //   navigationOptions: ({ navigation }) => ({
+    //     title: "Devices",
+    //     headerTitleAlign: 'center', // nope
+    //     //headerBackTitle: 'backtitle', // nope
+    //     //headerBackTitleVisible: true, // nope?
+    //     headerStyle: {
+    //       //backgroundColor: '#ccc',
+    //     },
+    //     headerTitleStyle: {
+    //       //fontFamily:
+    //       //fontSize: 30,
+    //     },
+    //     headerBackTitleStyle: {
+    //       fontFamily: 'Arial',
+    //       fontSize: 5,
+    //     },
+    //     //headerTintColor: 'black', // this is just color (what's tint?)
+    //   }),
+    // },
   },
   {
     headerMode: "screen",

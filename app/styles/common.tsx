@@ -12,19 +12,22 @@ export const HIDDEN: TextStyle = { display: 'none' }
 
 export const BUTTON: ViewStyle = {
   backgroundColor: "#5D2555",
-  padding: 15,
+  padding: 5,
+  marginTop: 10,
+  marginBottom: 10,
 }
 export const BUTTON_TEXT: TextStyle = {
   ...TEXT,
   ...BOLD,
-  fontSize: 13,
+  fontSize: 12,
   letterSpacing: 2,
 }
 export const ROOT: ViewStyle = {
   backgroundColor: color.palette.black,
 }
 export const FULL: ViewStyle = {
-  flex: 1
+  flex: 1,
+  backgroundColor: color.palette.darkPlum,
 }
 export const HEADER: TextStyle = {
   paddingTop: 20,
@@ -47,4 +50,8 @@ export const FOOTER: ViewStyle = {
 }
 export const FOOTER_CONTENT: ViewStyle = {
   padding: 10,
+}
+export const MESSAGE: ViewStyle = {
+  padding: 20,
+  backgroundColor: '#ccc',
 }

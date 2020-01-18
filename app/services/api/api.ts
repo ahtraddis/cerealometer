@@ -3,6 +3,7 @@ import { getGeneralApiProblem } from "./api-problem"
 import { ApiConfig, DEFAULT_API_CONFIG, HTTP_FUNCTION_BASEURL } from "./api-config"
 import * as Types from "./api.types"
 import { DeviceSnapshot } from "../../models/device"
+import { PortSnapshot } from "../../models/port"
 import { ItemSnapshot } from "../../models/item"
 import { ItemDefinitionSnapshot } from "../../models/item-definition"
 
@@ -67,11 +68,51 @@ export class Api {
       //console.log("API: getDevices(): rawDevices:", JSON.stringify(rawDevices, null, 2))
       const convertedDevices: DeviceSnapshot[] = Object.keys(rawDevices).map(s => {
         let result = rawDevices[s]
-        result.device_id = s // add key from parent
+        result.id = s // add key from parent
         return result
       })
       //console.log("API: getDevices(): convertedDevices:", JSON.stringify(convertedDevices))
       return { kind: "ok", devices: convertedDevices }
+    } catch (e) {
+      __DEV__ && console.tron.log(e.message)
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Gets a list of ports
+   */
+  async getPorts(): Promise<Types.GetPortsResult> {
+    //console.log(`API: getPorts(): fetching ALL ports (limit to user later)`)
+    // get /ports for device_id's associated with user
+    // [eschwartz-TODO] Getting all ports for now, regardless of associated user (will filter on front end)
+    const response: ApiResponse<any> = await this.apisauce.get(`/ports.json`)
+    // console.log("API: getPorts(): response:", JSON.stringify(response, null, 2));
+
+    // the typical ways to die when calling an api
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    // transform the data into the format we are expecting
+    try {
+      // const rawPorts = response.data
+      // // flatten into array
+      // let result = []
+      // Object.keys(rawPorts).map((device_id) => {
+      //   let deviceData = rawPorts[device_id]
+      //   Object.keys(deviceData).map((slot) => {
+      //     let portData = deviceData[slot]
+      //     portData.device_id = device_id
+      //     portData.slot = parseInt(slot)
+      //     result.push(portData)
+      //   })
+      // })
+      // const convertedPorts: PortSnapshot[] = result.map(p => {
+      //   return p
+      // })
+      //console.log("API: getPorts(): convertedPorts:", JSON.stringify(convertedPorts, null, 2))
+      return { kind: "ok", ports: response.data }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
       return { kind: "bad-data" }
@@ -98,7 +139,7 @@ export class Api {
       //console.log("API: getItemDefinitions(): rawItemDefinitions:", JSON.stringify(rawItemDefinitions, null, 2))
       const convertedItemDefinitions: ItemDefinitionSnapshot[] = Object.keys(rawItemDefinitions).map(s => {
         let result = rawItemDefinitions[s]
-        result.item_definition_id = s // add key from parent
+        result.id = s // add key from parent
         return result
       })
       //console.log("API: getItemDefinitions(): convertedItemDefinitions:", JSON.stringify(convertedItemDefinitions, null, 2))
@@ -129,7 +170,7 @@ export class Api {
       //console.log("API: getItems(): rawItems:", JSON.stringify(rawItems, null, 2))
       const convertedItems: ItemSnapshot[] = Object.keys(rawItems).map(s => {
         let result = rawItems[s]
-        result.item_id = s // add key from parent
+        result.id = s // add key from parent
         return result
       })
       //console.log("API: getItems(): convertedItems:", JSON.stringify(convertedItems, null, 2))
@@ -159,7 +200,7 @@ export class Api {
       const rawUser = response.data
       //console.log("API: getUser(): rawUser:", JSON.stringify(rawUser, null, 2))
       let convertedUser = rawUser
-      convertedUser.user_id = user_id
+      convertedUser.id = user_id
       //console.log("API: getUser():", JSON.stringify(convertedUser, null, 2))
       return { kind: "ok", user: convertedUser }
     } catch (e) {
@@ -202,8 +243,11 @@ export class Api {
    * Add (create) item for the current user
    */
   async addItem(user_id: string, item_definition_id: string): Promise<Types.AddItemResult> {
-    console.log(`API: addItem(): adding item for user_id '${user_id}'`)
-    // make the api call
+    //console.log(`API: addItem(): adding item with item_definition_id '${item_definition_id}' for user_id '${user_id}'`)
+    if (!item_definition_id) {
+      console.log('missing item_definition_id')
+      return
+    }
     let data = {
       item_definition_id: item_definition_id,
       device_id: "",
