@@ -4,8 +4,14 @@ import { Text } from "../"
 import { Button } from "../../components"
 import { ItemDefinition } from "../../models/item-definition"
 import { Port } from "../../models/port"
-import { BUTTON, BUTTON_TEXT, BOLD, HIDDEN, BLACK, WHITE, FULL, HEADER, HEADER_CONTENT, HEADER_TITLE, MESSAGE } from "../../styles/common"
+import { Device } from "../../models/device"
+import { BUTTON, BUTTON_TEXT } from "../../styles/common"
+var moment = require('moment');
+import { getBoundedPercentage } from "../../utils/math"
 
+const WRAPPER: ViewStyle = {
+  flex: 1,
+}
 const ITEM: ViewStyle = {
   flex: 1,
   flexDirection: 'row',
@@ -35,7 +41,7 @@ const ITEM_IMAGE: ImageStyle = {
   resizeMode: 'cover',
 }
 const ITEM_INFO: ViewStyle = {
-  padding: 10,
+  //padding: 10,
 }
 const ITEM_NAME: ViewStyle = {
   marginBottom: 10,
@@ -59,39 +65,42 @@ const SLOT_HEADER_TEXT: TextStyle = {
 
 export interface ItemProps {
   id: string
-  device_id: string
   item_definition_id: string
   last_known_weight_kg: number
   last_checkin: number
-  slot: number
   user_id: string
-  item_definition: ItemDefinition
+  itemDefinition: ItemDefinition
   showSlotHeader: boolean
   buttonCallback: (event) => void
   buttonLabel: string
+  buttonEnabled: boolean
   port: Port
+  device: Device
 }
 
 /**
  * Display a single user item
  */
 export function Item(props: ItemProps) {
-  const { id, device_id, item_definition_id, last_known_weight_kg, last_checkin, slot, user_id, item_definition, showSlotHeader, buttonCallback, buttonLabel, port, ...rest } = props
-  const itemdef = item_definition
+  const { id, item_definition_id, last_known_weight_kg, last_checkin, user_id, itemDefinition, showSlotHeader, buttonCallback, buttonLabel, buttonEnabled, port, device, ...rest } = props
+  const itemdef = itemDefinition
+  //console.log("itemdef: ", itemdef)
 
   return (
-    <View>
-      { showSlotHeader && (device_id != "") && (slot != -1) && (
+    <View style={WRAPPER}>
+      { showSlotHeader && port && device && (
         <View style={SLOT_HEADER}>
           <Text style={SLOT_HEADER_TEXT}>
-            Device &lt;{device_id}&gt; Slot &lt;{slot}&gt;
+            {device.name} &mdash; Slot {port.slot}
           </Text>
         </View>
       )}
       <View style={ITEM}>
-        <View style={ITEM_IMAGE_VIEW}>
-          <Image style={ITEM_IMAGE} source={{uri: itemdef.image_url}} />
-        </View>
+        { itemdef &&
+          <View style={ITEM_IMAGE_VIEW}>
+            <Image style={ITEM_IMAGE} source={{uri: itemdef.image_url}} />
+          </View>
+        }
         <View style={ITEM_INFO_VIEW}>
           <View style={ITEM_INFO}>
             { itemdef && (
@@ -103,53 +112,68 @@ export function Item(props: ItemProps) {
               )
             }
             <View>
+              { itemdef &&
+                <Text style={TEXT_LABEL}>
+                  net weight:
+                  &nbsp;<Text style={TEXT_VALUE}>
+                    {parseFloat(itemdef.net_weight_kg).toFixed(3)} kg
+                  </Text>
+                </Text>
+              }
+              { itemdef &&
+                <Text style={TEXT_LABEL}>
+                  tare weight:
+                  &nbsp;<Text style={TEXT_VALUE}>
+                    {parseFloat(itemdef.tare_weight_kg).toFixed(3)} kg
+                  </Text>
+                </Text>
+              }
               <Text style={TEXT_LABEL}>
-                id:  <Text style={TEXT_VALUE}>{id}</Text>
+                last checkin:
+                &nbsp;<Text style={TEXT_VALUE}>
+                  {last_checkin ? moment.unix(last_checkin).fromNow() : "never" }
+                </Text>
               </Text>
+              <Text style={TEXT_LABEL}>
+                last known weight:
+                &nbsp;<Text style={TEXT_VALUE}>
+                  {parseFloat(last_known_weight_kg).toFixed(3)} kg
+                </Text>
+              </Text>
+              { itemdef && (last_known_weight_kg > 0) && (
+                  <Text style={TEXT_LABEL}>
+                    remaining:
+                    &nbsp;<Text style={TEXT_VALUE}>
+                      {parseFloat(getBoundedPercentage(itemdef.tare_weight_kg ? (last_known_weight_kg - itemdef.tare_weight_kg) : last_known_weight_kg, itemdef.net_weight_kg)).toFixed(0)}%
+                    </Text>
+                  </Text>
+                )
+              }
               { port &&
                 <View>
                   <Text style={TEXT_LABEL}>
-                    status: <Text style={TEXT_VALUE}>{port.status}</Text>
+                    slot status: <Text style={TEXT_VALUE}>{port.status}</Text>
                   </Text>
                   <Text style={TEXT_LABEL}>
-                    weight_kg: <Text style={TEXT_VALUE}>{port.weight_kg}</Text>
+                    slot weight: <Text style={TEXT_VALUE}>{port.weight_kg} kg</Text>
                   </Text>
                   {/*<Text style={TEXT_LABEL}>
                     item_id: '<Text style={TEXT_VALUE}>{port.item_id}</Text>'
                   </Text>*/}
                 </View>
               }
-              <Text style={TEXT_LABEL}>
-                net weight:
-                &nbsp;<Text style={TEXT_VALUE}>
-                  {parseFloat(itemdef.weight_grams / 1000).toFixed(3)} kg
-                </Text>
-              </Text>
-              <Text style={TEXT_LABEL}>
-                last_checkin:
-                &nbsp;<Text style={TEXT_VALUE}>
-                  {last_checkin ? last_checkin : "never" }
-                </Text>
-              </Text>
-              <Text style={TEXT_LABEL}>
-                last_known_weight_kg:
-                &nbsp;<Text style={TEXT_VALUE}>
-                  {parseFloat(last_known_weight_kg).toFixed(3)} kg
-                </Text>
-              </Text>
-              <Text style={TEXT_LABEL}>
-                remaining:
-                &nbsp;<Text style={TEXT_VALUE}>
-                  {parseFloat(100000 * last_known_weight_kg / itemdef.weight_grams).toFixed(0)}%
-                </Text>
-              </Text>
               { buttonCallback && buttonLabel &&
-                <Button style={BUTTON} textStyle={BUTTON_TEXT} tx={buttonLabel} onPress={buttonCallback}/>
+                <Button disabled={!buttonEnabled} style={BUTTON} textStyle={BUTTON_TEXT} tx={buttonLabel}
+                  onPress={() => buttonCallback(id)}
+                />
               }
             </View>
           </View>
         </View>
+
+
       </View>
     </View>
   )
+
 }

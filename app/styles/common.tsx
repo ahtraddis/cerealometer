@@ -55,3 +55,6 @@ export const MESSAGE: ViewStyle = {
   padding: 20,
   backgroundColor: '#ccc',
 }
+export const MESSAGE_TEXT: TextStyle = {
+  color: '#fff'
+}

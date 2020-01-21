@@ -6,6 +6,7 @@ import { DeviceSnapshot } from "../../models/device"
 import { PortSnapshot } from "../../models/port"
 import { ItemSnapshot } from "../../models/item"
 import { ItemDefinitionSnapshot } from "../../models/item-definition"
+//import { utils } from "@react-native-firebase/app"
 
 /**
  * Manages all requests to the API.
@@ -250,8 +251,6 @@ export class Api {
     }
     let data = {
       item_definition_id: item_definition_id,
-      device_id: "",
-      slot: -1,
       last_known_weight_kg: 0,
       last_checkin: 0,
       user_id: user_id,
@@ -271,6 +270,55 @@ export class Api {
       let convertedItem = rawItem
       console.log("API: addItem(): convertedItem:", JSON.stringify(convertedItem))
       return { kind: "ok", item: convertedItem }
+    } catch (e) {
+      __DEV__ && console.tron.log(e.message)
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Set item_id on a port
+   */
+  async setPortItem(device_id: string, slot: number, item_id: string): Promise<Types.SetPortItemResult> {
+    let data = {
+      device_id: device_id,
+      slot: slot,
+      item_id: item_id,
+    }
+    const response: ApiResponse<any> = await this.apisauce.post(`${HTTP_FUNCTION_BASEURL}/setPortItem`, data)
+    console.log("API: setPortItem(): response: ", response)
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      const rawPort = response.data // expected: {"item_id": "<item_id>", "status": "<status>", "weight_kg": "<weight_kg>"}
+      console.log("API: setPortItem(): rawPort: ", rawPort)
+      return { kind: "ok", port: rawPort }
+    } catch (e) {
+      __DEV__ && console.tron.log(e.message)
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Clear item_id on a port
+   */
+  async clearPortItem(device_id: string, slot: number): Promise<Types.ClearPortItemResult> {
+    let data = {
+      device_id: device_id,
+      slot: slot,
+    }
+    // [eschwartz-TODO] Change method to DELETE
+    const response: ApiResponse<any> = await this.apisauce.post(`${HTTP_FUNCTION_BASEURL}/clearPortItem`, data)
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      const rawPort = response.data // expected: {"item_id": "", "status": "<status>", "weight_kg": "<weight_kg>"}
+      console.log("API: clearPortItem(): rawPort: ", rawPort)
+      return { kind: "ok", port: rawPort }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
       return { kind: "bad-data" }

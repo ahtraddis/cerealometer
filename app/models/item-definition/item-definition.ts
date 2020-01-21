@@ -13,7 +13,8 @@ export const ItemDefinitionModel = types
     image_url: types.string,
     name: types.string,
     upc: types.string,
-    weight_grams: types.integer,
+    net_weight_kg: types.number,
+    tare_weight_kg: types.maybe(types.number),
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

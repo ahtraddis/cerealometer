@@ -24,4 +24,4 @@ export const DEFAULT_API_CONFIG: ApiConfig = {
   timeout: 10000,
 }
 
-export const HTTP_FUNCTION_BASEURL: string = "https://us-central1-my-project-1518494092131.cloudfunctions.net/getUpcData";
+export const HTTP_FUNCTION_BASEURL: string = "https://us-central1-my-project-1518494092131.cloudfunctions.net";

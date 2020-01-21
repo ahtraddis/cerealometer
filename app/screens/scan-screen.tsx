@@ -4,14 +4,15 @@ import { useState, useEffect } from "react"
 import { useStores } from "../models/root-store"
 import { ItemDefinition } from "../models/item-definition"
 import { NavigationScreenProps } from "react-navigation"
-import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle } from "react-native"
+import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle, Vibration, StyleSheet } from "react-native"
 //import { TouchableOpacity } from "react-native"
 import { Screen, Text, Header, Wallpaper, Button } from "../components"
 import { spacing } from "../theme"
 
 import { BOLD, HIDDEN, BLACK, WHITE, FULL, HEADER, HEADER_CONTENT, HEADER_TITLE } from "../styles/common"
-
+const DURATION = 50;
 import { RNCamera } from 'react-native-camera';
+import Sound from 'react-native-sound'
 
 const CONTAINER: ViewStyle = {
   paddingHorizontal: spacing[4],
@@ -151,6 +152,15 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
     setCount(0);
   }, []);
 
+  const beep = new Sound('beep.mp3', Sound.MAIN_BUNDLE, (error) => {
+    if (error) {
+      console.log('failed to load the sound', error);
+      return;
+    }
+    // loaded successfully
+    //console.log('duration in seconds: ' + beep.getDuration() + 'number of channels: ' + beep.getNumberOfChannels());
+  });
+
   // const takePicture = async() => {
   //   if (this.camera) {
   //     const options = { quality: 0.5, base64: true };
@@ -171,6 +181,8 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
       let key = code.data
       if (!(key in lookupItems)) {
         console.log(`scan-screen: adding ${key} to lookupItems`)
+        Vibration.vibrate(DURATION)
+        beep.play()
         let newLookupItems = update(lookupItems, {$merge: {}});
         newLookupItems[key] = {
           data: code,

@@ -18,23 +18,24 @@ const USER: ViewStyle = {
 export interface ItemsWrapperProps {
   listType?: string
   showSlotHeader?: boolean
+  emptyMessage?: string
 }
 
 export const ItemsWrapper: React.FunctionComponent<ItemsWrapperProps> = observer((props) => {
   const { userStore, itemStore, portStore } = useStores()
   const [count, setCount] = useState(0);
-  const { listType, showSlotHeader } = props
+  const { listType, showSlotHeader, emptyMessage, ...rest } = props
   useEffect(() => {
     // [eschwartz-TODO] Hack to force rerender on Items. Not sure why this is working!
-    setCount(1)
+    //setCount(1)
   }, [])
   // This needs to visibly display something in userStore to make it render observable changes.
   return (
       <Items
         {...props}
-        dummyUserProp={userStore.user.meter}
-        dummyItemProp={(itemStore.items && itemStore.items.length) ? itemStore.items[0].item_id : ""}
-        dummyPortProp={(portStore.ports && portStore.ports.length) ? portStore.ports[0].port_id : ""}
+        dummyUserProp={(userStore.user && userStore.user.metrics) ? userStore.user.metrics.overallPercentage : 0}
+        dummyItemProp={(itemStore.items && itemStore.items.length) ? itemStore.items[0] : {}}
+        dummyPortProp={(portStore.ports && portStore.ports.length) ? portStore.ports[0] : {}}
       />
   )
 });
@@ -59,9 +60,9 @@ export const ItemScreen: React.FunctionComponent<ItemScreenProps> = observer((pr
     //console.log("item-screen: userStore.user:", JSON.stringify(userStore.user, null, 2))
     // [eschwartz-TODO] Hardcoded user ID
     portStore.getPorts(env.HARDCODED_TEST_USER_ID)
-    //console.log("item-screen: portStore.items:", JSON.stringify(portStore.ports, null, 2))
+    //console.log("item-screen: portStore.ports:", JSON.stringify(portStore.ports, null, 2))
     // console.log("item-screen: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
-    // console.log("item-screen: deviceStore.devices:", JSON.stringify(deviceStore.devices, null, 2))
+    //console.log("item-screen: deviceStore.devices:", JSON.stringify(deviceStore.devices, null, 2))
   }, [])
 
   return (
@@ -69,10 +70,14 @@ export const ItemScreen: React.FunctionComponent<ItemScreenProps> = observer((pr
       {/*<Wallpaper />*/}
       <Screen preset="scroll">
         <Meter />
-        <ItemsWrapper listType={"active"} showSlotHeader={true} />
-        <View style={USER}>
+        <ItemsWrapper
+          listType={"active"}
+          showSlotHeader={true}
+          emptyMessage={"No items yet. Go to Overstock to add!"}
+        />
+        {/*<View style={USER}>
           <User />
-        </View>
+        </View>*/}
       </Screen>
     </View>
   )

@@ -47,11 +47,11 @@ export function Port(props: PortProps) {
   const { slot, item_id, status, weight_kg, ...rest } = props
 
   let statusColor = "transparent";
-  if (props.status == "present") {
+  if (props.status == "LOADED") {
     statusColor = "green"
-  } else if (props.status == "absent") {
+  } else if (props.status == "UNLOADED") {
     statusColor = "red"
-  } else if (props.status == "vacant") {
+  } else if (props.status == "VACANT") {
     statusColor = "transparent"
   } else {
     statusColor = "transparent"

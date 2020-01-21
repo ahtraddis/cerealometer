@@ -1,6 +1,7 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { PortModel, PortSnapshot, Port } from "../port/port"
-import { GetPortsResult } from "../../services/api"
+import { GetPortsResult, SetPortItemResult, ClearPortItemResult } from "../../services/api"
+var _ = require('underscore');
 import { withEnvironment } from "../extensions"
 
 /**
@@ -16,38 +17,36 @@ export const PortStoreModel = types
   .actions(self => ({
     savePorts: (portSnapshots: PortSnapshot[]) => {
       //console.log("port-store: savePorts(): portSnapshots:", JSON.stringify(portSnapshots, null, 2))
-      // create model instances from the plain objects
 
       // Expected structure from API or from Realtime Database update:
       // "-LxNyE47HCaN9ojmR3D2": {
       //   "0": {
-      //     "status": "presentx",
+      //     "status": "VACANT",
       //     "weight_kg": 0.05069,
       //     "item_id": "-LymVh8HGJJ0RabGJ0Rj"
       //   }
       //   ...
 
-      // flatten into array
+      // flatten into array, adding device_id and slot keys
       let result = []
-      Object.keys(portSnapshots).map((device_id) => {
-        let deviceData = portSnapshots[device_id]
-        Object.keys(deviceData).map((slot) => {
-          let portData = deviceData[slot]
-          portData.device_id = device_id
-          portData.slot = parseInt(slot)
-          result.push(portData)
+      if (!_.isEmpty(portSnapshots)) {
+        Object.keys(portSnapshots).map((device_id) => {
+          let deviceData = portSnapshots[device_id]
+          Object.keys(deviceData).map((slot) => {
+            let portData = deviceData[slot]
+            portData.device_id = device_id
+            portData.slot = parseInt(slot)
+            // On init of a new device, 'status' and 'item_id' will be momentarily
+            // unpopulated before portCreated() cloud function runs. Fill them in
+            // here to ensure valid models.
+            if (!('status' in portData)) portData.status = 'UNKNOWN'
+            if (!('item_id' in portData)) portData.item_id = ''
+            result.push(portData)
+          })
         })
-      })
-      // const convertedPorts: PortSnapshot[] = result.map(p => {
-      //   return p
-      // })
-
-
-
+      }
       const portsModels: Port[] = result.map(c => PortModel.create(c))
-      console.log("portsModels: ", JSON.stringify(portsModels, null, 2))
       self.ports = portsModels
-      //self.ports.replace(portsModels)
     },
   }))
   .actions(self => ({
@@ -64,9 +63,21 @@ export const PortStoreModel = types
   }))
   .actions(self => ({
     updatePorts: flow(function*(snapshot) {
-      console.log("port-store: updatePorts(): snapshot.val(): ", JSON.stringify(snapshot.val(), null, 2))
-      console.log("port-store: updatePorts(): self.ports:", JSON.stringify(self.ports, null, 2))
+      //console.log("port-store: updatePorts(): snapshot.val(): ", JSON.stringify(snapshot.val(), null, 2))
+      //console.log("port-store: updatePorts(): self.ports:", JSON.stringify(self.ports, null, 2))
       self.savePorts(snapshot.val())
+    }),
+  }))
+  .actions(self => ({
+    setPortItem: flow(function*(device_id: string, slot: number, item_id: string) {
+      const result: SetPortItemResult = yield self.environment.api.setPortItem(device_id, slot, item_id)
+      console.log("setPortItem result: ", result)
+    }),
+  }))
+  .actions(self => ({
+    clearPortItem: flow(function*(device_id: string, slot: number) {
+      const result: ClearPortItemResult = yield self.environment.api.clearPortItem(device_id, slot)
+      console.log("clearPortItem result: ", result)
     }),
   }))
 

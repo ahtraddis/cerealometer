@@ -5,9 +5,9 @@ import { observer } from "mobx-react-lite"
 import * as env from "../environment-variables"
 import { NavigationScreenProps } from "react-navigation"
 import { View } from "react-native"
-import { Wallpaper, Items, Text } from "../components"
-import { FULL } from "../styles/common"
+import { Wallpaper } from "../components"
 import { ItemsWrapper } from "../screens/item-screen"
+import { FULL } from "../styles/common"
 
 export interface OverstockScreenProps extends NavigationScreenProps<{}> {}
 
@@ -32,7 +32,11 @@ export const OverstockScreen: React.FunctionComponent = observer((props) => {
   return (
     <View style={FULL}>
       {/*<Wallpaper />*/}
-      <ItemsWrapper vertical={true} listType={"inactive"} />
+      <ItemsWrapper
+        vertical={false}
+        listType={"inactive"}
+        emptyMessage={"Go to Scan to add more items!"}
+      />
     </View>
   )
 })

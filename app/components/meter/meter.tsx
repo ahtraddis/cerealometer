@@ -93,7 +93,7 @@ const Display = observer(() => {
         allowedDecimals={0}
         labels={labels}
         //value={5}
-        value={userStore.user.metrics.overallPercentage || 0}
+        value={(userStore && userStore.user && userStore.user.metrics) ? userStore.user.metrics.overallPercentage : 0 }
         size={width-70}
       />
     </SafeAreaView>

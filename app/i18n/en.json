@@ -27,7 +27,10 @@
   },
 
   "item": {
-    "moveToShelf": "Move to Shelf",
+    "addToShelf": "Add to Shelf",
+    "addToShelfEnabled": "Add to Shelf (enabled)",
+    "addToShelfDisabled": "Add to Shelf (disabled)",
+    "removeFromShelf": "Remove from Shelf",
   },
 
   "storybook": {

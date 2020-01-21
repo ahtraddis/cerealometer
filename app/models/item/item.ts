@@ -7,11 +7,9 @@ export const ItemModel = types
   .model("Item")
   .props({
     id: types.string,
-    device_id: types.string,
     item_definition_id: types.string,
     last_known_weight_kg: types.number,
     last_checkin: types.number,
-    slot: types.integer,
     user_id: types.string,
   })
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
