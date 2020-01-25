@@ -8,8 +8,8 @@ import { withEnvironment } from "../extensions"
 export const UserMetricsModel = types
   .model("UserMetrics")
   .props({
-      totalItemWeightKg: types.maybe(types.number),
-      totalGrams: types.maybe(types.number),
+      totalNetWeightKg: types.maybe(types.number),
+      totalKg: types.maybe(types.number),
       overallPercentage: types.maybe(types.number),
   })
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

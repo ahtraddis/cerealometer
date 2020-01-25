@@ -3,7 +3,7 @@
     "ok": "OK!",
     "cancel": "Cancel",
     "back": "Back",
-    "update": "Update",
+    "update": "Update"
   },
   "errors": {
     "invalidEmail": "Invalid email address."
@@ -11,26 +11,31 @@
   "deviceScreen": {
     "header": "Devices",
     "navigate": "Other screen",
-    "goToScanScreen": "Go to Scan Screen",
+    "goToScanScreen": "Go to Scan Screen"
   },
   "overstockScreen": {
-    "header": "Overstock",
+    "header": "Overstock"
   },
   "scanScreen": {
-    "header": "Scan your barcode",
+    "header": "Scan your barcodes",
     "goToDeviceScreen": "Go to Device Screen",
     "takePicture": "SNAP",
-    "addItemButton": "Add to inventory",
+    "addItemButton": "Add",
+    "noResults": "Scanned items will list here",
+    "incrementButtonLabel": "+",
+    "decrementButtonLabel": "-",
+    "addItemLabel": "Add",
+    "clearResultsLabel": "Clear results",
   },
   "alarmScreen": {
-    "header": "Alarms",
+    "header": "Alarms"
   },
-
   "item": {
-    "addToShelf": "Add to Shelf",
-    "addToShelfEnabled": "Add to Shelf (enabled)",
-    "addToShelfDisabled": "Add to Shelf (disabled)",
-    "removeFromShelf": "Remove from Shelf",
+    "addToShelf": "INSTALL",
+    "addToShelfEnabled": "INSTALL",
+    "addToShelfDisabled": "INSTALL",
+    "removeFromShelf": "UNINSTALL",
+    "deleteButtonLabel": "I ATE IT"
   },
 
   "storybook": {

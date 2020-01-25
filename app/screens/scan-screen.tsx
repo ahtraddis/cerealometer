@@ -2,139 +2,295 @@ import * as React from "react"
 import update from 'immutability-helper'
 import { useState, useEffect } from "react"
 import { useStores } from "../models/root-store"
-import { ItemDefinition } from "../models/item-definition"
 import { NavigationScreenProps } from "react-navigation"
-import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle, Vibration, StyleSheet } from "react-native"
-//import { TouchableOpacity } from "react-native"
+import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle, Vibration, ScrollView, Dimensions } from "react-native"
 import { Screen, Text, Header, Wallpaper, Button } from "../components"
-import { spacing } from "../theme"
-
-import { BOLD, HIDDEN, BLACK, WHITE, FULL, HEADER, HEADER_CONTENT, HEADER_TITLE } from "../styles/common"
-const DURATION = 50;
+import { color } from "../theme"
+import { BOLD, BLACK, WHITE, FULL, HEADER, HEADER_TITLE } from "../styles/common"
+import * as delay from "../utils/delay"
+var _ = require('underscore')
 import { RNCamera } from 'react-native-camera';
 import Sound from 'react-native-sound'
 
-const CONTAINER: ViewStyle = {
-  paddingHorizontal: spacing[4],
+const VIBRATE_DURATION = 50;
+const ITEM_HEIGHT = 60;
+
+const { width } = Dimensions.get("window");
+
+const SCREEN_CONTAINER: ViewStyle = {
+  flex: 1,
+}
+const MAIN_CONTAINER: ViewStyle = {
+  flex: 1,
+}
+const INSTRUCTION_CONTAINER: ViewStyle = {
+  flex: 1,
+  justifyContent: 'center',
 }
 const CAMERA_CONTAINER: ViewStyle = {
-  marginTop: 100,
-  flex: 1,
+  flex: 3,
+}
+const RESULTS_CONTAINER: ViewStyle = {
+  flex: 4,
   flexDirection: 'column',
 }
-const CAMERA_PREVIEW: ViewStyle = {
-  marginTop: 100,
-  flex: 1,
-  justifyContent: 'flex-end',
-  alignItems: 'center',
-  height: 50,
+const RESULTS_LIST: ViewStyle = {
+  flex: 5,
+  paddingTop: 20,
 }
-// for ItemLookupResult
-const ITEM_CONTAINER: ViewStyle = {
-  backgroundColor: '#fff',
-  height: 100,
-  padding: 10,
-  margin: 15,
+const NO_RESULTS_TEXT: TextStyle = {
+  textAlign: 'center',
+  opacity: .5,
+}
+const NO_RESULTS: ViewStyle = {
+  flex: 1,
+  paddingTop: 20,
+}
+const RESULTS_BUTTONS: ViewStyle = {
+  flex: 1,
   alignItems: 'center',
+}
+const BUTTONS: ViewStyle = {
+  flex: 1,
+  flexDirection: 'row',
+}
+const CAMERA_PREVIEW: ViewStyle = {
+  flex: 1,
+  width: width,
+  overflow: 'hidden', // cam view exceeds view height
+  justifyContent: 'space-around',
+  alignItems: 'center',
+}
+const ITEM_CONTAINER: ViewStyle = {
+  backgroundColor: color.palette.lightPlum,
+  height: ITEM_HEIGHT,
+  padding: 0,
+  marginBottom: 20,
+  marginLeft: 15,
+  marginRight: 15,
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 3,
+}
+const ITEM_FOUND_CONTAINER: ViewStyle = {
+  ...ITEM_CONTAINER,
+  backgroundColor: color.palette.white,
 }
 const OUTER: ViewStyle = {
   flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
   flexDirection: 'row',
 }
 const IMAGE_VIEW: ViewStyle = {
   flex: 1,
-  width: 50,
-  height: 50,
+  width: ITEM_HEIGHT,
+  height: ITEM_HEIGHT,
+  paddingLeft: 5,
 }
 const IMAGE: ImageStyle = {
-  height: 75,
+  height: ITEM_HEIGHT - 10,
+  resizeMode: 'contain',
+  backgroundColor: 'yellow',
+  marginTop: 5
 }
 const INFO_VIEW: ViewStyle = {
-  flex: 3,
+  flex: 4,
+  height: ITEM_HEIGHT,
+  paddingLeft: 10,
+  paddingRight: 0,
+}
+const INFO_CONTENT_VIEW: ViewStyle = {
+  flex: 1,
+  flexDirection: 'row',
+}
+const BUTTONS_VIEW: ViewStyle = {
+  flex: 1,
   height: 50,
-  paddingLeft: 15,
-  paddingRight: 15,
+  paddingLeft: 10,
 }
 const TITLE_VIEW: ViewStyle = {
-  marginBottom: 10,
+  marginBottom: 0,
+  flex: 8,
+  justifyContent: 'center',
+  alignItems: 'center',
+}
+const QUAN_VIEW: ViewStyle = {
+  flex: 2,
+  justifyContent: 'center',
+  alignContent: 'flex-start',
+}
+const QUAN_COLUMN: ViewStyle = {
+  flex: 1,
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+}
+const QUAN_BUTTON_VIEW: ViewStyle = {
+  flex: 1,
+  justifyContent: 'center',
+  padding: 5,
+}
+const QUAN_BUTTON: ViewStyle = {
+  backgroundColor: '#999',
+  width: 20,
+}
+const QUAN_BUTTON_TEXT: TextStyle = {
+  fontSize: 18,
+}
+const QUAN_TEXT: TextStyle = {
+  color: '#000',
+  fontWeight: 'normal',
+  fontSize: 14,
 }
 const TITLE_TEXT: TextStyle = {
   ...BOLD,
   ...BLACK,
+  fontSize: 14,
 }
-const ITEM_BUTTON_VIEW: ViewStyle = {}
+const ITEM_BUTTON_VIEW: ViewStyle = {
+  paddingRight: 5,
+  flex: 1,
+  flexDirection: 'column'
+}
 const ITEM_BUTTON: ViewStyle = {
-  padding: 5,
-  backgroundColor: 'purple',
+  marginTop: 5,
+  marginBottom: 5,
+  paddingTop: 10,
+  paddingBottom: 10,
+  backgroundColor: color.palette.darkPurple,
+}
+const ITEM_BUTTON_DISABLED: ViewStyle = {
+  ...ITEM_BUTTON,
+  backgroundColor: '#bbb'
 }
 const ITEM_BUTTON_TEXT: TextStyle = {
   ...WHITE,
-  fontSize: 12,
+  fontSize: 14,
 }
-// const CAMERA_CAPTURE: ViewStyle = {
-//   ...WHITE,
-//   flex: 0,
-//   borderRadius: 5,
-//   padding: 15,
-//   paddingHorizontal: 20,
-//   alignSelf: 'center',
-//   margin: 20,
-// }
-// const CAMERA_BUTTON: ViewStyle = {
-//   flex: 0,
-//   flexDirection: 'row',
-//   justifyContent: 'center',
-// }
-// const CAMERA_BUTTON_TEXT: ViewStyle = {
-//   ...BLACK,
-//   fontSize: 14,
-// }
-const FOUND: ViewStyle = {
-  height: 175,
+const ACTION_BUTTON: ViewStyle = {
+  padding: 10,
+  backgroundColor: color.palette.darkPurple,
+  width: 100,
+  marginLeft: 5,
+  marginRight: 5,
+  marginBottom: 10,
+}
+const ACTION_BUTTON_TEXT: TextStyle = {
+  fontSize: 14,
+}
+const FETCHING_TEXT: TextStyle = {
+  color: '#ccc',
 }
 
 export interface ItemLookupResultProps {
-  itemDefinition: ItemDefinition
+  upc: string
 }
 
 export function ItemLookupResult(props: ItemLookupResultProps) {
-  // grab the props
-  const { itemDefinition } = props
-  const { itemStore, userStore } = useStores()
-  let user = userStore.user
+  const { upc } = props
+  const { itemDefinitionStore, itemStore, userStore } = useStores()
+  const [fetching, setFetching] = useState(false);
+  const [itemDefinition, setItemDefinition] = useState(null)
+  const [quan, setQuan] = useState(1)
+  const [added, setAdded] = useState(false)
 
-  async function addItem(user_id: string, item_definition_id: string) {
-    console.log(`scan-screen: addItem(): adding item_definition_id ${item_definition_id}`)
-    const response = await itemStore.addItem(user_id, item_definition_id)
-    console.log("scan-screen: addItem(): response:", JSON.stringify(response, null, 2))
+  useEffect(() => {
+    // send async lookup request to cloud function
+    async function getData() {
+      await delay.delay(1000)
+      let result = await lookupUpc(upc)
+      setItemDefinition(result)
+      setFetching(false)
+    }
+    if (!itemDefinition) {
+      setFetching(true)
+      getData()
+    }
+  }, [upc]);
+
+  async function lookupUpc(upc) {
+    return await itemDefinitionStore.getUpcData(upc)
   }
 
+  const addItem = async(itemDefinition, quan) => {
+    await itemStore.addItem(userStore.user.id, itemDefinition.id, quan)
+    // [escshwartz-TODO] Handle failure case
+    setAdded(true)
+    setQuan(1)
+  }
+
+  const incrementQuan = () => setQuan(Math.min(3, quan + 1))
+  const decrementQuan = () => setQuan(Math.max(0, quan - 1))
+  
   return (
-    <View style={ITEM_CONTAINER}>
-      <View style={OUTER}>
-        <View style={IMAGE_VIEW}>
-          <Image style={IMAGE} source={{uri: itemDefinition.image_url}} />
-        </View>
-        <View style={INFO_VIEW}>
-          <View style={TITLE_VIEW}>
-            <Text style={TITLE_TEXT}>{itemDefinition.name}</Text>
-          </View>
-          <View style={ITEM_BUTTON_VIEW}>
-            <Button
-              style={ITEM_BUTTON}
-              textStyle={ITEM_BUTTON_TEXT}
-              tx="scanScreen.addItemButton"
-              onPress={
-                async() => {
-                  //console.log("itemDefinition: ", itemDefinition)
-                  const result = await addItem(user.id, itemDefinition.id)
-                  //console.log("scan-screen: addItem result:", JSON.stringify(result, null, 2))
-                }
-              }
-            />
+    <View style={itemDefinition ? ITEM_FOUND_CONTAINER : ITEM_CONTAINER}>
+      { !itemDefinition && (
+        <View style={OUTER}>
+          <View>
+            { fetching && (
+              <Text style={FETCHING_TEXT}>
+                Looking up {upc}...
+              </Text>
+            )}
+            { !fetching && (
+              <Text style={FETCHING_TEXT}>
+                Sorry, UPC {upc} not found.
+              </Text>
+            )}
           </View>
         </View>
-      </View>
+      )}
+      { itemDefinition && (
+        <View style={OUTER}>
+          <View style={IMAGE_VIEW}>
+            { itemDefinition.image_url &&
+              <Image style={IMAGE} source={{uri: itemDefinition.image_url}} />
+            }
+          </View>
+          <View style={INFO_VIEW}>
+            <View style={INFO_CONTENT_VIEW}>
+              <View style={TITLE_VIEW}>
+                <Text style={TITLE_TEXT}>{itemDefinition.name}</Text>
+              </View>
+              <View style={QUAN_VIEW}>
+                <View style={QUAN_COLUMN}>
+                  <View style={QUAN_BUTTON_VIEW}>
+                    <Button
+                      tx={"scanScreen.incrementButtonLabel"}
+                      style={QUAN_BUTTON}
+                      textStyle={QUAN_BUTTON_TEXT}
+                      onPress={incrementQuan}
+                    />
+                  </View>
+                  <View style={QUAN_BUTTON_VIEW}>
+                    <Text style={QUAN_TEXT}>{quan}</Text>
+                  </View>
+                  <View style={QUAN_BUTTON_VIEW}>
+                    <Button
+                      tx={"scanScreen.decrementButtonLabel"}
+                      style={QUAN_BUTTON}
+                      textStyle={QUAN_BUTTON_TEXT}
+                      onPress={decrementQuan}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View style={BUTTONS_VIEW}>
+            <View style={ITEM_BUTTON_VIEW}>
+              <Button
+                style={(quan > 0) ? ITEM_BUTTON : ITEM_BUTTON_DISABLED}
+                textStyle={ITEM_BUTTON_TEXT}
+                disabled={(quan > 0) ? false : true}
+                tx={"scanScreen.addItemLabel"}
+                onPress={() => addItem(itemDefinition, quan)}
+              />
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }
@@ -143,13 +299,13 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
 export interface ScanScreenProps extends NavigationScreenProps<{}> {}
 
 export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
-  const { itemDefinitionStore } = useStores()
+  //const { userStore } = useStores()
   const [lookupItems, setLookupItems] = useState({});
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    setLookupItems({});
-    setCount(0);
+    //setLookupItems({});
+    //setCount(0);
   }, []);
 
   const beep = new Sound('beep.mp3', Sound.MAIN_BUNDLE, (error) => {
@@ -157,128 +313,107 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
       console.log('failed to load the sound', error);
       return;
     }
-    // loaded successfully
-    //console.log('duration in seconds: ' + beep.getDuration() + 'number of channels: ' + beep.getNumberOfChannels());
-  });
+  })
 
-  // const takePicture = async() => {
-  //   if (this.camera) {
-  //     const options = { quality: 0.5, base64: true };
-  //     const data = await this.camera.takePictureAsync(options);
-  //   }
-  // }
-
-  async function lookupUpc(upc) {
-    //console.log(`scan-screen: lookupUpc(): looking up upc ${upc}`)
-    let response = await itemDefinitionStore.getUpcData(upc)
-    //console.log("scan-screen: lookupUpc(): response:", JSON.stringify(response, null, 2))
-    return response
+  const clearResults = () => {
+    setLookupItems({})
   }
+
+  // const updateState = () => {
+  //   setCount(count + 1)
+  // }
 
   const readCodes = (barcodes) => {
     // add lookup items to state for async processing
     barcodes.map((code: { data: any; }) => {
-      let key = code.data
-      if (!(key in lookupItems)) {
-        console.log(`scan-screen: adding ${key} to lookupItems`)
-        Vibration.vibrate(DURATION)
+      let upc = code.data
+      if (!(upc in lookupItems)) {
+        //console.log(`scan-screen: adding ${upc} to lookupItems`)
+        Vibration.vibrate(VIBRATE_DURATION)
         beep.play()
         let newLookupItems = update(lookupItems, {$merge: {}});
-        newLookupItems[key] = {
+        newLookupItems[upc] = {
           data: code,
-          processed: false,
-          processing: false,
-          result: {}
         }
+        setCount(count + 1)
         setLookupItems(newLookupItems)
       }
     })
-
-    if (Object.keys(lookupItems).length) {
-      Object.keys(lookupItems).map(key => {
-        let item = lookupItems[key]
-        if ((item.processed == false) && (item.processing == false)) {
-          console.log(`scan-screen: calling lookupUpc() for item ${item.data.data}`);
-          (async () => {
-            // set processing to true before sending async request
-            let newLookupItems = update(lookupItems, {$merge: {}});
-            newLookupItems[key].processing = true
-            setLookupItems(newLookupItems)
-            // send async lookup request to cloud function
-            let result = await lookupUpc(item.data.data);
-            console.log("scan-screen: got lookupUpc result:", JSON.stringify(result, null, 2))
-            // update result in state and set processed true
-            newLookupItems = update(lookupItems, {$merge: {}});
-            newLookupItems[key].processed = true
-            newLookupItems[key].processing = false
-            newLookupItems[key].result = result
-            setLookupItems(newLookupItems)
-            // [eschwartz-TODO] fix this hack to update state
-            setCount(count + 1)
-          })()
-        }
-      })
-    }
   }
 
   return (
     <View style={FULL}>
       <Wallpaper />
-      <Screen style={CONTAINER} preset="scroll">
-        <SafeAreaView style={HEADER}>
-          <View style={HEADER_CONTENT}>
-            <Header headerTx="scanScreen.header" style={HEADER} titleStyle={HEADER_TITLE} />
+      <Screen style={SCREEN_CONTAINER} preset="scroll">
+        <View style={MAIN_CONTAINER}>
+          <View style={INSTRUCTION_CONTAINER}>
+            <Header headerTx={"scanScreen.header"} style={HEADER} titleStyle={HEADER_TITLE} />
           </View>
-        </SafeAreaView>
-        <View style={CAMERA_CONTAINER}>
-          <RNCamera
-            /*ref={ref => {
-              this.camera = ref;
-            }}*/
-            style={CAMERA_PREVIEW}
-            type={RNCamera.Constants.Type.back}
-            flashMode={RNCamera.Constants.FlashMode.off}
-            captureAudio={false}
-            androidCameraPermissionOptions={{
-              title: 'Permission to use camera',
-              message: 'We need your permission to use your camera',
-              buttonPositive: 'Ok',
-              buttonNegative: 'Cancel',
-            }}
-            androidRecordAudioPermissionOptions={{
-              title: 'Permission to use audio recording',
-              message: 'We need your permission to use your audio',
-              buttonPositive: 'Ok',
-              buttonNegative: 'Cancel',
-            }}
-            onGoogleVisionBarcodesDetected={({ barcodes }) => {
-              readCodes(barcodes)
-            }}
-          />
-          {/*
-          <View style={CAMERA_BUTTON}>
-            <TouchableOpacity style={CAMERA_CAPTURE} onPress={takePicture}>
-            <Text style={CAMERA_BUTTON} tx="scanScreen.takePicture" />
-            </TouchableOpacity>
+          <View style={CAMERA_CONTAINER}>
+            <RNCamera
+              /*ref={ref => {
+                this.camera = ref;
+              }}*/
+              style={CAMERA_PREVIEW}
+              type={RNCamera.Constants.Type.back}
+              flashMode={RNCamera.Constants.FlashMode.off}
+              captureAudio={false}
+              androidCameraPermissionOptions={{
+                title: 'Permission to use camera',
+                message: 'We need your permission to use your camera',
+                buttonPositive: 'Ok',
+                buttonNegative: 'Cancel',
+              }}
+              androidRecordAudioPermissionOptions={{
+                title: 'Permission to use audio recording',
+                message: 'We need your permission to use your audio',
+                buttonPositive: 'Ok',
+                buttonNegative: 'Cancel',
+              }}
+              onGoogleVisionBarcodesDetected={({ barcodes }) => {
+                readCodes(barcodes)
+              }}
+            />
           </View>
-          */}
+          <View style={RESULTS_CONTAINER}>
+            <ScrollView>
+            <View style={RESULTS_LIST}>
+              { _.isEmpty(lookupItems) && (
+                <View style={NO_RESULTS}>
+                  <Text tx={"scanScreen.noResults"} style={NO_RESULTS_TEXT} />
+                </View>
+              )}
+              { Object.keys(lookupItems).map((upc, i) => {
+                  return (
+                    <ItemLookupResult
+                      key={i}
+                      upc={upc}
+                    />
+                  )
+                })
+              }
+            </View>
+            <View style={RESULTS_BUTTONS}>
+              <View style={BUTTONS}>
+                { !_.isEmpty(lookupItems) && (
+                  <View>
+                    <Button style={ACTION_BUTTON} textStyle={ACTION_BUTTON_TEXT}
+                      tx={"scanScreen.clearResultsLabel"}
+                      onPress={clearResults}
+                    />
+                  </View>
+                )}
+                {/*<View>
+                  <Button style={ACTION_BUTTON} textStyle={ACTION_BUTTON_TEXT}
+                    text={"Update state"}
+                    onPress={updateState} />
+                </View>*/}
+              </View>
+            </View>
+            </ScrollView>
+          </View>
         </View>
       </Screen>
-      <SafeAreaView>
-        <Text style={HIDDEN}>[HACK] count: {count}</Text>
-        <View style={FOUND}>
-          { Object.keys(lookupItems).map((key, i) => {
-              let result = lookupItems[key].result
-              return (
-                <ItemLookupResult
-                  key={i}
-                  itemDefinition={result}
-                />
-              )
-            })
-          }
-        </View>
-      </SafeAreaView>
     </View>
   )
 }

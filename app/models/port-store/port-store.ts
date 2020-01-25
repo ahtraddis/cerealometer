@@ -71,13 +71,26 @@ export const PortStoreModel = types
   .actions(self => ({
     setPortItem: flow(function*(device_id: string, slot: number, item_id: string) {
       const result: SetPortItemResult = yield self.environment.api.setPortItem(device_id, slot, item_id)
-      console.log("setPortItem result: ", result)
+      console.log("port-store: setPortItem(): result: ", JSON.stringify(result, null, 2))
+
+      if (result.kind === "ok") {
+        return result.port
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
+
+
     }),
   }))
   .actions(self => ({
     clearPortItem: flow(function*(device_id: string, slot: number) {
       const result: ClearPortItemResult = yield self.environment.api.clearPortItem(device_id, slot)
-      console.log("clearPortItem result: ", result)
+      console.log("port-store: clearPortItem(): result: ", result)
+      if (result.kind === "ok") {
+        return result.port
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
     }),
   }))
 

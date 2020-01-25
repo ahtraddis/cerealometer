@@ -4,21 +4,16 @@ import { useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import * as env from "../environment-variables"
 import { NavigationScreenProps } from "react-navigation"
-import { View, ViewStyle } from "react-native"
-import { Wallpaper, Items, Meter, User, Screen } from "../components"
-import { FULL } from "../styles/common"
+import { View, Text } from "react-native"
+import { Wallpaper, Items, Meter, Screen } from "../components"
+import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT } from "../styles/common"
 
-const USER: ViewStyle = {
-  marginTop: 50,
-  paddingTop: 10,
-  borderTopWidth: 1,
-  borderTopColor: '#333',
-}
 
 export interface ItemsWrapperProps {
   listType?: string
   showSlotHeader?: boolean
   emptyMessage?: string
+  vertical?: boolean
 }
 
 export const ItemsWrapper: React.FunctionComponent<ItemsWrapperProps> = observer((props) => {
@@ -57,27 +52,30 @@ export const ItemScreen: React.FunctionComponent<ItemScreenProps> = observer((pr
     //userStore.clearUser()
     userStore.getUser(env.HARDCODED_TEST_USER_ID);
     //console.log("item-screen: itemDefinitionStore.item_definitions:", JSON.stringify(itemDefinitionStore.itemDefinitions, null, 2))
-    //console.log("item-screen: userStore.user:", JSON.stringify(userStore.user, null, 2))
+    console.log("item-screen: userStore.user:", JSON.stringify(userStore.user, null, 2))
     // [eschwartz-TODO] Hardcoded user ID
     portStore.getPorts(env.HARDCODED_TEST_USER_ID)
-    //console.log("item-screen: portStore.ports:", JSON.stringify(portStore.ports, null, 2))
-    // console.log("item-screen: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
-    //console.log("item-screen: deviceStore.devices:", JSON.stringify(deviceStore.devices, null, 2))
+    console.log("item-screen: portStore.ports:", JSON.stringify(portStore.ports, null, 2))
+    console.log("item-screen: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
+    console.log("item-screen: deviceStore.devices:", JSON.stringify(deviceStore.devices, null, 2))
   }, [])
 
   return (
     <View style={FULL}>
-      {/*<Wallpaper />*/}
+      <Wallpaper />
       <Screen preset="scroll">
-        <Meter />
+        <View style={SCREEN_HEADER}>
+          <Text style={SCREEN_HEADER_TEXT}>Cerealometer</Text>
+        </View>
+        <Meter
+          //showStats={true}
+        />
         <ItemsWrapper
+          vertical={false}
           listType={"active"}
           showSlotHeader={true}
-          emptyMessage={"No items yet. Go to Overstock to add!"}
+          emptyMessage={"No items yet. Go to Overstock to install!"}
         />
-        {/*<View style={USER}>
-          <User />
-        </View>*/}
       </Screen>
     </View>
   )

@@ -14,3 +14,4 @@ export type GetItemDefinitionsResult = { kind: "ok"; item_definitions: ItemDefin
 export type GetUserResult = { kind: "ok"; user: UserSnapshot } | GeneralApiProblem
 export type GetUpcDataResult = { kind: "ok"; item_definition: ItemDefinitionSnapshot } | GeneralApiProblem
 export type AddItemResult = { kind: "ok"; item: ItemSnapshot } | GeneralApiProblem
+export type DeleteItemResult = { kind: "ok"; item: ItemSnapshot } | GeneralApiProblem

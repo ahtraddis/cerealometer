@@ -1,5 +1,6 @@
 import * as React from "react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { Observer } from 'mobx-react-lite'
 import { useStores } from "../../models/root-store"
 import * as env from "../../environment-variables"
 import { View, ViewStyle, StyleSheet, Dimensions, Text } from "react-native"
@@ -28,9 +29,20 @@ const styles = StyleSheet.create({
 const LIST_STYLE: ViewStyle = {
 
 }
+const PAGINATION_STYLE_ITEM = {
+  borderColor: '#B38530',
+  borderWidth: 6,
+  padding: 5,
+  //shadowColor: '#ff0000',
+  shadowRadius: 1,
+  marginBottom: 10
+}
 const MESSAGE: ViewStyle = {
   backgroundColor: color.palette.darkPurple,
-  padding: 20,
+  padding: 15,
+  marginLeft: 38,
+  marginRight: 38,
+  marginTop: 10
 }
 
 export interface ItemsProps {
@@ -55,6 +67,8 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   const { device_id, vertical, showSlotHeader, listType, emptyMessage, ...rest } = props
 
   const { userStore, itemStore, itemDefinitionStore, portStore, deviceStore } = useStores()
+  const [count, setCount] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
 
   function onUserChange(snapshot: UserSnapshot) {
     //console.log("items: onUserChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
@@ -62,7 +76,7 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   }
 
   function onItemsChange(snapshot: ItemSnapshot[]) {
-    //console.log("items: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    console.log("items: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
     itemStore.updateItems(snapshot)
     //console.log("items: onItemsChange(): itemStore.items: ", JSON.stringify(itemStore.items, null, 2))
   }
@@ -97,12 +111,12 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
     }
   }, []); // run once
 
-
   const clearPortItem = async(item_id) => {
     const port = portStore.ports.find((port) => (port.item_id == item_id))
-    console.log("clearPortItem: found port to clear: ", port)
+    console.log("clearPortItem(): found port to clear: ", port)
     let result = await portStore.clearPortItem(port.device_id, port.slot)
-    console.log("clearPortItem result: ", result)
+    console.log("clearPortItem(): result: ", result)
+    setCount(count + 1)
   }
 
   const setPortItem = async(item_id) => {
@@ -110,8 +124,15 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
     if (vacantPort) {
       console.log("setPortItem: found vacant port: ", vacantPort)
       let result = await portStore.setPortItem(vacantPort.device_id, vacantPort.slot, item_id)
-      console.log("setPortItem result: ", result)
+      console.log("setPortItem(): result: ", result)
+      setCount(count + 1)
     }
+  }
+
+  const deleteItem = async(item_id) => {
+    console.log("deleteItem: item_id = ", item_id)
+    let result = await itemStore.deleteItem(item_id)
+    console.log("deleteItem(): result: ", result)
   }
 
   const renderItem = ({ item }) => {
@@ -133,9 +154,20 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
           buttonEnabled={port || vacantPort}
           buttonCallback={port ? clearPortItem : setPortItem}
           buttonLabel={port ? "item.removeFromShelf" : "item.addToShelf" + ((port || vacantPort) ? '' : 'Disabled')}
+          deleteCallback={deleteItem}
+          deleteButtonLabel={"item.deleteButtonLabel"}
         />
       </View>
     )
+  }
+
+  const onRefresh = async() => {
+    console.log("items: onRefresh(), fetching item definitions")
+    setRefreshing(true)
+    let result = await itemDefinitionStore.getItemDefinitions()
+    console.log("items: itemDefinitionStore.itemDefinitions: ", JSON.stringify(itemDefinitionStore.itemDefinitions, null, 2))
+    setRefreshing(false)
+    //setCount(count + 1) // hack to update state
   }
 
   let data = itemStore.items
@@ -147,7 +179,6 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
     // default, no filter
   }
 
-
   return (
     <View style={styles.container}>
       { !data.length && (
@@ -155,17 +186,24 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
           <Text style={MESSAGE_TEXT}>{emptyMessage || "No items."}</Text>
         </View>
       )}
-      { (data.length > 0) && (
+      <Observer>{ () => 
         <SwiperFlatList
+          onRefresh={onRefresh}
+          refreshing={refreshing}
           vertical={vertical}
           showPagination
+          renderAll={true}
           style={LIST_STYLE}
+          paginationStyleItem={PAGINATION_STYLE_ITEM}
+          paginationDefaultColor={'transparent'}
+          paginationActiveColor={'#8f6a26'}
           data={data}
           renderItem={renderItem}
           //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
           //keyExtractor={(item: { key: any; }) => item.key}
         />
-      )}
+        }
+      </Observer>
     </View>
   )
 }

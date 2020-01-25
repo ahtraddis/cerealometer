@@ -8,10 +8,10 @@ export const ItemDefinitionModel = types
   .model("ItemDefinition")
   .props({
     id: types.string,
-    brand: types.string,
-    description: types.string,
-    image_url: types.string,
-    name: types.string,
+    brand: types.maybe(types.string),
+    description: types.maybe(types.string),
+    image_url: types.maybe(types.string),
+    name: types.maybe(types.string),
     upc: types.string,
     net_weight_kg: types.number,
     tare_weight_kg: types.maybe(types.number),

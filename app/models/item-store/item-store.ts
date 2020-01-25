@@ -1,7 +1,7 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemModel, ItemSnapshot, Item } from "../item/item"
 import { withEnvironment } from "../extensions"
-import { AddItemResult, GetItemsResult } from "../../services/api"
+import { AddItemResult, DeleteItemResult, GetItemsResult } from "../../services/api"
 //import update from 'immutability-helper'
 var _ = require('underscore');
 
@@ -39,24 +39,34 @@ export const ItemStoreModel = types
     updateItems: flow(function*(snapshot) {
       //console.log("item-store: updateItems(): snapshot.val(): ", JSON.stringify(snapshot.val(), null, 2))
       //console.log("item-store: updateItems(): self.items:", JSON.stringify(self.items, null, 2))
-      if (_.isEmpty(snapshot.val())) {
+      let data = snapshot.val()
+      if (_.isEmpty(data)) {
         self.items = []
       } else {
-        Object.keys(snapshot.val()).map((key) => {
-          //console.log(`looking for key '${key}' in self.items`)
-          var obj = snapshot.val()[key]
-          obj.id = key
+        let newItems = []
 
-          let index = self.items.findIndex(i => (i.id == key))
-          //let new_obj = update(self.items[index], {$merge: {}});
-          if (index != -1) {
-            //console.log("updating obj: ", obj)
-            self.items[index] = obj
-          } else {
-            //console.log("adding obj: ", obj)
-            self.items.push(obj)
-          }
+        Object.keys(data).map((key) => {
+          let obj = data[key]
+          obj.id = key
+          newItems.push(obj)
         })
+
+        self.items = newItems
+
+        // Object.keys(data).map((key) => {
+        //   //console.log(`looking for key '${key}' in self.items`)
+        //   var obj = data[key]
+        //   obj.id = key
+
+        //   let index = self.items.findIndex(i => (i.id == key))
+        //   if (index != -1) {
+        //     //console.log("updating obj: ", obj)
+        //     self.items[index] = obj
+        //   } else {
+        //     //console.log("adding obj: ", obj)
+        //     self.items.push(obj)
+        //   }
+        // })
       }
       //console.log("item-store: updateItems(): itemStore:", JSON.stringify(self.items, null, 2))
     }),
@@ -67,9 +77,20 @@ export const ItemStoreModel = types
     }),
   }))
   .actions(self => ({
-    addItem: flow(function*(user_id, item_definition_id) {
-      //console.log(`item-store: addItem(): user_id = '${user_id}', item_definition_id = '${item_definition_id}'`, item_definition_id)
-      const result: AddItemResult = yield self.environment.api.addItem(user_id, item_definition_id)
+    addItem: flow(function*(user_id, item_definition_id, quantity) {
+      //console.log(`item-store: addItem(): user_id = '${user_id}', item_definition_id = '${item_definition_id}', quantity = ${quantity}`)
+      const result: AddItemResult = yield self.environment.api.addItem(user_id, item_definition_id, quantity)
+      if (result.kind === "ok") {
+        return result.item
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
+    }),
+  }))
+  .actions(self => ({
+    deleteItem: flow(function*(item_id) {
+      //console.log(`item-store: deleteitem(): item_id = '${item_id}'`, item_id)
+      const result: DeleteItemResult = yield self.environment.api.deleteItem(item_id)
       if (result.kind === "ok") {
         return result.item
       } else {

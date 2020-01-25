@@ -9,7 +9,7 @@ export const ItemModel = types
     id: types.string,
     item_definition_id: types.string,
     last_known_weight_kg: types.number,
-    last_checkin: types.number,
+    last_update_time: types.number,
     user_id: types.string,
   })
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

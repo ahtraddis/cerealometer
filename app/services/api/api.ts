@@ -215,7 +215,7 @@ export class Api {
    * First does a PATCH to /upc/${upc} with submitted: true
    */
   async getUpcData(upc: string): Promise<Types.GetUpcDataResult> {
-    console.log(`API: getUpcData() called for upc '${upc}'`)
+    //console.log(`API: getUpcData() called for upc '${upc}'`)
     // make the api call
     const response: ApiResponse<any> = await this.apisauce.get(`${HTTP_FUNCTION_BASEURL}/getUpcData?upc=${upc}`)
     //console.log("API: getUpcData(): response from GET: ", JSON.stringify(response, null, 2))
@@ -226,7 +226,7 @@ export class Api {
     }
 
     const rawData = response.data
-    console.log("API: getUpcData(): rawData:", JSON.stringify(rawData, null, 2))
+    //console.log("API: getUpcData(): rawData:", JSON.stringify(rawData, null, 2))
     let itemDefinition: any = {}
     if (rawData.item_definition) {
       itemDefinition = rawData.item_definition
@@ -243,20 +243,51 @@ export class Api {
   /**
    * Add (create) item for the current user
    */
-  async addItem(user_id: string, item_definition_id: string): Promise<Types.AddItemResult> {
-    //console.log(`API: addItem(): adding item with item_definition_id '${item_definition_id}' for user_id '${user_id}'`)
+  async addItem(user_id: string, item_definition_id: string, quantity: number): Promise<Types.AddItemResult> {
+    //console.log(`API: addItem(): adding quan ${quantity} item with item_definition_id '${item_definition_id}' for user_id '${user_id}'`)
     if (!item_definition_id) {
       console.log('missing item_definition_id')
-      return
+      return null
     }
     let data = {
       item_definition_id: item_definition_id,
       last_known_weight_kg: 0,
-      last_checkin: 0,
+      last_update_time: 0,
       user_id: user_id,
     }
-    const response: ApiResponse<any> = await this.apisauce.post(`/items.json`, data)
-    console.log("API: addItem(): response:", JSON.stringify(response, null, 2))
+    let lastResponse;
+    for (let count = 0; count < quantity; count++) {
+      const response: ApiResponse<any> = await this.apisauce.post(`/items.json`, data)
+      //console.log("API: addItem(): response:", JSON.stringify(response, null, 2))
+      // the typical ways to die when calling an api
+      if (!response.ok) {
+        const problem = getGeneralApiProblem(response)
+        if (problem) return problem
+      }
+      lastResponse = response
+    }
+    // transform the data into the format we are expecting
+    try {
+      const rawItem = lastResponse.data
+      console.log(`API: addItem(): (added ${quantity}, result from last) rawItem: `, rawItem)
+      return { kind: "ok", item: rawItem }
+    } catch (e) {
+      __DEV__ && console.tron.log(e.message)
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Delete item for the current user
+   */
+  async deleteItem(item_id: string): Promise<Types.DeleteItemResult> {
+    //console.log(`API: deleteItem(): deleting item_id '${item_id}'`)
+    if (!item_id) {
+      console.log('missing item_id')
+      return null
+    }
+    const response: ApiResponse<any> = await this.apisauce.delete(`/items/${item_id}.json`)
+    //console.log("API: deleteItem(): response:", JSON.stringify(response, null, 2))
     // the typical ways to die when calling an api
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
@@ -265,11 +296,9 @@ export class Api {
 
     // transform the data into the format we are expecting
     try {
-      const rawItem = response.data
-      console.log("API: addItem(): rawItem: ", rawItem)
-      let convertedItem = rawItem
-      console.log("API: addItem(): convertedItem:", JSON.stringify(convertedItem))
-      return { kind: "ok", item: convertedItem }
+      const rawItem = response.data // expecting null
+      //console.log("API: deleteItem(): rawItem: ", rawItem)
+      return { kind: "ok", item: rawItem }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
       return { kind: "bad-data" }
@@ -293,6 +322,9 @@ export class Api {
     }
     try {
       const rawPort = response.data // expected: {"item_id": "<item_id>", "status": "<status>", "weight_kg": "<weight_kg>"}
+      const convertedPort = rawPort
+      convertedPort.device_id = device_id
+      convertedPort.slot = slot
       console.log("API: setPortItem(): rawPort: ", rawPort)
       return { kind: "ok", port: rawPort }
     } catch (e) {
@@ -317,8 +349,11 @@ export class Api {
     }
     try {
       const rawPort = response.data // expected: {"item_id": "", "status": "<status>", "weight_kg": "<weight_kg>"}
-      console.log("API: clearPortItem(): rawPort: ", rawPort)
-      return { kind: "ok", port: rawPort }
+      const convertedPort = rawPort
+      convertedPort.device_id = device_id
+      convertedPort.slot = slot
+      console.log("API: clearPortItem(): convertedPort: ", convertedPort)
+      return { kind: "ok", port: convertedPort }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
       return { kind: "bad-data" }

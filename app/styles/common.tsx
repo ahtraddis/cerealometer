@@ -58,3 +58,15 @@ export const MESSAGE: ViewStyle = {
 export const MESSAGE_TEXT: TextStyle = {
   color: '#fff'
 }
+export const SCREEN_HEADER: ViewStyle = {
+  backgroundColor: color.palette.darkPurple,
+  marginBottom: 15,
+}
+export const SCREEN_HEADER_TEXT: TextStyle = {
+  color: '#fff',
+  fontFamily: 'sans-serif-monospace',
+  fontSize: 16,
+  textAlign: 'center',
+  padding: 5,
+  letterSpacing: 1
+}

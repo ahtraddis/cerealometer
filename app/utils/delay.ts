@@ -4,3 +4,7 @@
  * @param ms The number of milliseconds to wait.
  */
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// function promiseDelay(ms) {
+//     return new Promise(resolve => setTimeout(() => resolve(), ms));
+// }

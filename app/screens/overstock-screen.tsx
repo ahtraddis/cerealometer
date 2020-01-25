@@ -4,10 +4,19 @@ import { useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import * as env from "../environment-variables"
 import { NavigationScreenProps } from "react-navigation"
-import { View } from "react-native"
+import { View, Text } from "react-native"
 import { Wallpaper } from "../components"
 import { ItemsWrapper } from "../screens/item-screen"
-import { FULL } from "../styles/common"
+import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT } from "../styles/common"
+
+export const ScreenHeader = (props) => {
+  const { text } = props
+  return (
+    <View style={SCREEN_HEADER}>
+      <Text style={SCREEN_HEADER_TEXT}>{text}</Text>
+    </View>
+  )
+}
 
 export interface OverstockScreenProps extends NavigationScreenProps<{}> {}
 
@@ -31,9 +40,10 @@ export const OverstockScreen: React.FunctionComponent = observer((props) => {
 
   return (
     <View style={FULL}>
-      {/*<Wallpaper />*/}
+      <Wallpaper />
+      <ScreenHeader text={"Overstock"} />
       <ItemsWrapper
-        vertical={false}
+        //vertical={true}
         listType={"inactive"}
         emptyMessage={"Go to Scan to add more items!"}
       />

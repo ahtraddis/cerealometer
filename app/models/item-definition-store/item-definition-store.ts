@@ -2,6 +2,9 @@ import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemDefinitionModel, ItemDefinitionSnapshot, ItemDefinition } from "../item-definition/item-definition"
 import { withEnvironment } from "../extensions"
 import { GetItemDefinitionsResult, GetUpcDataResult } from "../../services/api"
+
+const promiseTimeout = time => () => new Promise(resolve => setTimeout(resolve, time));
+
 /**
  * Model description here for TypeScript hints.
  */
@@ -32,6 +35,11 @@ export const ItemDefinitionStoreModel = types
   }))
   .actions(self => ({
     getUpcData: flow(function*(upc) {
+      // First check local store for cached item def, otherwise fetch it
+      const itemdef = self.itemDefinitions.find((itemdef) => (itemdef.upc == upc))
+      if (itemdef) {
+        return itemdef
+      }
       const result: GetUpcDataResult = yield self.environment.api.getUpcData(upc)
       if (result.kind === "ok") {
         return result.item_definition

@@ -8,22 +8,26 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
+var moment = require('moment');
 
-const PRESENCE_THRESHOLD_KG = 0.03
+const PRESENCE_THRESHOLD_KG = 0.001
+const BARCODE_API_KEY = 'j1r1wmbrrx75nqiyyy0eh54az8sezh'
 
-async function getItemDefinitionByUpc(upc) {
-  //console.log("getItemDefinitionByUpc(): upc: ", upc);
-  const snap = await admin.database().ref(`/item_definitions`).orderByChild('upc').equalTo(upc).once('value');
-  //console.log("getItemDefinitionByUpc(): snap: ", snap.val());
-  return snap.val()
-}
+/**
+ * Get current Unix epoch
+ */
+const getEpoch = () => Math.floor(new Date().getTime() / 1000)
 
 exports.setWeight = functions.https.onRequest(async (req, res) => {
-  if (req.method != "POST") return res.status(405).end()
+  if (req.method != "POST") {
+    return res.status(405).end()
+  }
   try {
     const { device_id, slot, weight_kg } = req.body
-    //console.log(`device_id: ${device_id}, slot=${slot}, weight_kg=${weight_kg}`)
-    const snap = await admin.database().ref(`/ports/${device_id}/${slot}/weight_kg`).set(weight_kg)
+    console.log(`device_id: '${device_id}', slot='${slot}', weight_kg=${weight_kg}`)
+    await admin.database().ref(`/ports/${device_id}/${slot}/weight_kg`).set(weight_kg)
+    await admin.database().ref(`/ports/${device_id}/${slot}/last_update_time`).set(getEpoch())
     res.status(200).send("OK")
   } catch(error) {
     console.log("error: ", error)
@@ -34,15 +38,56 @@ exports.setWeight = functions.https.onRequest(async (req, res) => {
 exports.getUpcData = functions.https.onRequest(async (req, res) => {
   const upc = req.query.upc;
   const snap = await admin.database().ref(`/item_definitions`).orderByChild('upc').equalTo(upc).once('value');
+  const data = snap.val()
+  console.log("getUpcData(): data: ", data)
   let response = {}
-  if (snap.val()) {
-    let data = snap.val()
-    let key = Object.keys(data)[0]
+  if (data) {
+    let key = Object.keys(data)[0] // in case of multiple
     console.log("item_definition: ", data[key])
     data[key].id = key
     response.item_definition = data[key]
+    res.status(200).send(response);
+  } else {
+    console.log(`getUpcData(): upc '${upc}' not found in item_definitions, querying barcodelookup.com`)
+    try {
+      const url = `https://api.barcodelookup.com/v2/products?barcode=${upc}&key=${BARCODE_API_KEY}`
+
+      fetch(url)
+        .then(res => res.json())
+        .then(json => {
+          console.log("json: ", json)
+          let product = json.products[0]
+          let brand = product.brand || null
+          let name = product.product_name || null
+          let description = product.description || null
+          let image_url = product.images[0] || null
+          let size = product.size // "17 oz"
+          
+          let result = {
+            brand: brand,
+            name: name,
+            description: description,
+            image_url: image_url,
+            upc: upc,
+            net_weight_kg: 0, // TODO: find me
+            tare_weight_kg: 0, // TODO: find me
+          }
+
+          // Create new item def if all essential fields are here
+          const createSnap = admin.database().ref(`/item_definitions`).push(result)
+          const key = createSnap.key
+          result.key = key // add newly created key
+          response.item_definition = result
+          res.status(200).send(response)
+        })
+
+
+    } catch(error) {
+      console.log("error: ", error)
+      res.status(400).send(error)
+    }
+    
   }
-  res.status(200).send(response);
 });
 
 exports.setPortItem = functions.https.onRequest(async (req, res) => {
@@ -58,10 +103,12 @@ exports.setPortItem = functions.https.onRequest(async (req, res) => {
     const itemSnap = await admin.database().ref(`/ports/${device_id}/${slot}/item_id`).set(item_id)
     // If something is already on scale, set status to CLEARING to disregard weight updates until scale is cleared, otherwise UNLOADED so next weight change updates the new item.
     const newStatus = (port.weight_kg >= PRESENCE_THRESHOLD_KG) ? "CLEARING" : "UNLOADED"
-    const statusSnap = await admin.database().ref(`/ports/${device_id}/${slot}/status`).set(newStatus)
+    await admin.database().ref(`/ports/${device_id}/${slot}/status`).set(newStatus)
+    await admin.database().ref(`/ports/${device_id}/${slot}/last_update_time`).set(getEpoch())
     const resultPortSnap = await admin.database().ref(`/ports/${device_id}/${slot}`).once('value')
     const resultPort = resultPortSnap.val()
     let response = resultPort
+
     res.status(200).send(response);
   }
 });
@@ -99,6 +146,44 @@ exports.portCreated = functions.database.ref('/ports/{device_id}/{slot_id}')
   }
 );
 
+async function updateMetricsForUserId(user_id) {
+  const itemsSnap = await admin.database().ref('/items').orderByChild('user_id').equalTo(user_id).once('value')
+  const items = itemsSnap.val()
+
+  // [eschwartz-TODO] Get only item_definitions relevant for this user (getting all for now)
+  const itemDefinitionSnap = await admin.database().ref('/item_definitions').once('value')
+  const itemDefinitions = itemDefinitionSnap.val()
+
+  let totalKg = 0
+  let totalNetWeightKg = 0
+
+  if (items) {
+    Object.keys(items).forEach(key => {
+      let item = items[key]
+      if (item.last_known_weight_kg > 0) {
+        totalNetWeightKg += item.last_known_weight_kg - (itemDefinitions[item.item_definition_id].tare_weight_kg ? itemDefinitions[item.item_definition_id].tare_weight_kg : 0)
+        totalKg += itemDefinitions[item.item_definition_id].net_weight_kg
+      }
+    })
+  }
+  let metrics = {
+    totalKg: totalKg,
+    totalNetWeightKg: totalNetWeightKg,
+    overallPercentage: totalKg ? (100 * totalNetWeightKg / totalKg) : 0,
+  }
+  await admin.database().ref(`/users/${user_id}/metrics`).set(metrics)
+  console.log(`updated metrics for user_id '${user_id}':`, JSON.stringify(metrics, null, 2))
+
+  // add message
+  let data = {
+    title: "Title",
+    message: moment().format('LLL')
+  }
+  const snap = admin.database().ref(`/messages/${user_id}`).push(data)
+  const messageKey = snap.key
+  console.log(`message key '${messageKey}' has been created:`, data)
+}
+
 // Log event when cereal scale status changes, e.g. box is removed or returned
 exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}/weight_kg')
   .onUpdate(async (change, context) => {
@@ -108,7 +193,6 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}
     // get all current values for the changed port
     const portSnap = await change.after.ref.parent.once('value')
     const port = portSnap.val()
-    console.log(`port data for device '${device_id}' slot '${slot_id}':`, JSON.stringify(port, null, 2))
 
     const item_id = port.item_id
     let item = {}
@@ -116,7 +200,6 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}
     let new_status = port.status // default no change
 
     const rootRef = change.before.ref.root
-    const epoch = Math.floor(new Date().getTime() / 1000)
 
     if (item_id) {
       const itemSnap = await rootRef.child(`/items/${item_id}`).once('value')
@@ -127,10 +210,6 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}
       }
       item_definition_id = item.item_definition_id
     }
-
-    // get all item_definitions since we need weight values to compute metrics
-    const itemDefinitionSnap = await rootRef.child('/item_definitions').once('value')
-    const itemDefinitions = itemDefinitionSnap.val()
 
     // Slot States:
     // VACANT = no assigned item, available for use
@@ -164,7 +243,7 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}
         && (new_status != "CLEARING")) {
       const newItem = item
       item.last_known_weight_kg = port.weight_kg
-      item.last_checkin = epoch
+      item.last_update_time = getEpoch()
       const updateItemSnap = await rootRef.child(`/items/${item_id}`).set(newItem)
       console.log('updated item:', JSON.stringify(newItem, null, 2))
     }
@@ -173,30 +252,42 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}
     const device = deviceSnap.val()
     const user_id = device.user_id
 
-    const itemsSnap = await rootRef.child('/items').orderByChild('user_id').equalTo(user_id).once('value')
-    const items = itemsSnap.val()
-
-    let totalGrams = 0
-    let totalItemWeightKg = 0
-    Object.keys(items).forEach(key => {
-      let item = items[key]
-      let name = itemDefinitions[item.item_definition_id].name
-      if (item.last_known_weight_kg > 0) {
-        totalItemWeightKg += item.last_known_weight_kg
-        totalGrams += itemDefinitions[item.item_definition_id].weight_grams
-      }
-    })
-    let pctRemaining = 100000 * totalItemWeightKg / totalGrams
-    let metrics = {
-      totalGrams: totalGrams,
-      totalItemWeightKg: totalItemWeightKg,
-      overallPercentage: pctRemaining,
-    }
-    //const updateMeterSnap = await rootRef.child(`/users/${user_id}/meter`).set(pctRemaining)
-    const updateMetricsSnap = await rootRef.child(`/users/${user_id}/metrics`).set(metrics)
-    console.log('updated metrics:', JSON.stringify(metrics, null, 2))
+    await updateMetricsForUserId(user_id)
+    console.log("done updating metrics")
   }
 );
+
+exports.resetPort = functions.database.ref('/items/{item_id}').onDelete(async (snap, context) => {
+  const deletedItem = snap.val()
+  const user_id = deletedItem.user_id
+
+  const { item_id } = context.params
+  console.log(`item '${item_id}' has been deleted`)
+  // Unset any item_id references in /ports
+  // [eschwartz-TODO] orderByChild doesn't seem to work here to query item_id in /ports, perhaps due to the <slot> param one level up?
+  // Querying all ports for now.
+  //const snap = await admin.database().ref(`/ports`).orderByChild('item_id').equalTo(item_id).once('value')
+  const portsSnap = await admin.database().ref('/ports').once('value')
+  const ports = portsSnap.val()
+
+  if (ports) {
+    Object.keys(ports).map(async device_id => {
+      let deviceData = ports[device_id]
+      Object.keys(deviceData).map(async slot => {
+        let slotData = deviceData[slot]
+        if (slotData.item_id == item_id) {
+          await admin.database().ref(`/ports/${device_id}/${slot}/item_id`).set("")
+          await admin.database().ref(`/ports/${device_id}/${slot}/status`).set("VACANT")
+          await admin.database().ref(`/ports/${device_id}/${slot}/last_update_time`).set(getEpoch())
+        }
+      })
+    })
+  }
+
+  await updateMetricsForUserId(user_id)
+
+  return null // [eschwartz-TODO] Is this valid to return?
+});
 
 // Configure the email transport using the default SMTP transport and a GMail account.
 // For Gmail, enable these:
