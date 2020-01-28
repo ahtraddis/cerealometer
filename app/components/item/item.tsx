@@ -1,85 +1,62 @@
 import * as React from "react"
-import { View, ViewStyle, ImageStyle, TextStyle, Image } from "react-native"
+import { useStores } from "../../models/root-store"
+import { useState, useEffect } from "react"
+import { View, ViewStyle, ImageStyle, TextStyle, Image, ScrollView } from "react-native"
 import { Text } from "../"
-import { Button } from "../../components"
+import { Button, LoadingButton } from "../../components"
 import { ItemDefinition } from "../../models/item-definition"
 import { Port } from "../../models/port"
 import { Device } from "../../models/device"
 import { BOLD } from "../../styles/common"
-var moment = require('moment');
 import { getBoundedPercentage } from "../../utils/math"
-import { color } from "../../theme"
+var moment = require('moment');
 
 const NUTRITION_TEXT: TextStyle = {
   fontFamily: 'sans-serif-condensed',
 }
 const WRAPPER: ViewStyle = {
   flex: 1,
-  padding: 0,
 }
-const ITEM: ViewStyle = {
+export const ITEM_COMMON: ViewStyle = {
   flex: 1,
   flexDirection: 'row',
-  backgroundColor: '#fff',
-  paddingTop: 10,
-  //paddingBottom: 35,
-  paddingLeft: 10,
-  paddingRight: 10,
+  padding: 10,
   borderRadius: 3,
   margin: 10,
 }
-const ITEM_IMAGE_VIEW: ViewStyle = {
-  flex: 4,
-  justifyContent: 'flex-start',
-  height: 200,
-  borderTopWidth: 5,
-  borderBottomWidth: 5,
-  borderColor: 'transparent',
-  //backgroundColor: 'yellow',
-  paddingRight: 10
+const ITEM: ViewStyle = {
+  ...ITEM_COMMON,
+  backgroundColor: '#fff',
+}
+const IMAGE_BUTTONS_VIEW: ViewStyle = {
+  flex: 1,
+}
+const IMAGE_VIEW: ViewStyle = {
+  flex: 1,
+}
+const BUTTON_VIEW: ViewStyle = {
+  flex: 2,
 }
 const ITEM_INFO_VIEW: ViewStyle = {
-  flex: 8,
-  //height: 200,
-  //backgroundColor: 'red',
+  flex: 2,
+  overflow: 'hidden',
   borderWidth: 1,
-  borderTopColor: '#000',
-  borderBottomColor: '#000',
-  borderBottomWidth: 0,
   paddingLeft: 5,
   paddingRight: 5,
-  marginBottom: 35
 }
-const ITEM_IMAGE: ImageStyle = {
+const IMAGE: ImageStyle = {
   flex: 1,
   resizeMode: 'contain',
-  marginBottom: 5
 }
-const ITEM_INFO: ViewStyle = {
-  //padding: 10,
-}
+const ITEM_INFO: ViewStyle = {}
 const ITEM_NAME: ViewStyle = {
   marginBottom: 5,
-  borderBottomWidth: 1,
   borderBottomColor: '#000',
 }
 const ITEM_NAME_TEXT: TextStyle = {
   ...NUTRITION_TEXT,
   ...BOLD,
-  fontSize: 20,
-  color: '#000',
-
-}
-const PORT_INFO_LABEL: TextStyle = {
-  ...NUTRITION_TEXT,
-  ...BOLD,
-  color: '#000',
-  borderBottomWidth: 1,
-  borderBottomColor: '#000',
-  marginRight: 15
-}
-const PORT_INFO_VALUE: TextStyle = {
-  ...NUTRITION_TEXT,
+  fontSize: 22,
   color: '#000',
 }
 const TEXT_LABEL: TextStyle = {
@@ -100,17 +77,23 @@ const DIVIDER: ViewStyle = {
   borderBottomWidth: 10,
   borderBottomColor: '#000,'
 }
-const ACTION_BUTTON: ViewStyle = {
+const BUTTONS: ViewStyle = {
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingTop: 10,
+}
+const BUTTON: ViewStyle = {
   padding: 3,
   marginTop: 10,
-  marginBottom: 10,
+  marginBottom: 5,
   backgroundColor: '#72551e',
+  width: 75,
 }
-const ACTION_BUTTON_DISABLED: ViewStyle = {
-  ...ACTION_BUTTON,
+const BUTTON_DISABLED: ViewStyle = {
+  ...BUTTON,
   backgroundColor: '#ddcbb3',
 }
-const ACTION_BUTTON_TEXT: TextStyle = {
+const BUTTON_TEXT: TextStyle = {
   fontSize: 12,
 }
 
@@ -121,133 +104,196 @@ export interface ItemProps {
   last_update_time: number
   user_id: string
   itemDefinition: ItemDefinition
-  showSlotHeader: boolean
-  buttonCallback: (event) => void
-  deleteCallback: (event) => void
-  buttonLabel: string
-  buttonEnabled: boolean
-  deleteButtonLabel: string
   port: Port
   device: Device
+  isPortView: boolean
 }
 
 /**
  * Display a single user item
  */
 export function Item(props: ItemProps) {
-  const { id, item_definition_id, last_known_weight_kg, last_update_time, user_id, itemDefinition, showSlotHeader, buttonCallback, buttonLabel, buttonEnabled, deleteCallback, deleteButtonLabel, port, device, ...rest } = props
-  const itemdef = itemDefinition
-  //console.log("itemdef: ", itemdef)
+  const {
+      id,
+      item_definition_id,
+      last_known_weight_kg,
+      last_update_time,
+      user_id,
+      itemDefinition,
+      port,
+      device,
+      isPortView,
+      ...rest
+  } = props
+  
+  useEffect(() => {
+    //console.log("item: props: ", props)
+    setCount(count + 1)
+  }, []);
+
+  const { itemStore, itemDefinitionStore, portStore } = useStores()
+  const [taring, setTaring] = useState(false)
+  const [count, setCount] = useState(0)
+  const [moving, setMoving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
+
+  const itemDef = itemDefinition
+
+  const tareEnabled = itemDef && port && (port.status == 'LOADED') && (itemDef.net_weight_kg > 0) && (!itemDef.tare_weight_kg || (last_known_weight_kg > itemDef.net_weight_kg))
+  const buttonEnabled = port || vacantPort
+  
+  const clearPortItem = async() => {
+    const port = portStore.ports.find((port) => (port.item_id == id))
+    setMoving(true)
+    await portStore.clearPortItem(port.device_id, port.slot)
+    setMoving(false)
+    setCount(count + 1)
+  }
+
+  const setPortItem = async() => {
+    if (vacantPort) {
+      setMoving(true)
+      await portStore.setPortItem(vacantPort.device_id, vacantPort.slot, id)
+      setMoving(false)
+      setCount(count + 1)
+    }
+  }
+
+  const deleteItem = async() => {
+    setDeleting(true)
+    await itemStore.deleteItem(id)
+    setDeleting(false)
+  }
+
+  /**
+   * Update item def tare weight by measuring gross weight
+   */
+  const updateTareWeight = async() => {
+    // Only update if item is on the scale and weight exceeds the known net weight
+    if (port && (port.status == 'LOADED') && (last_known_weight_kg > itemDef.net_weight_kg)) {
+      const tareWeightKg = last_known_weight_kg - itemDef.net_weight_kg
+      setTaring(true)
+      await itemDefinitionStore.updateTareWeight(item_definition_id, tareWeightKg)
+      setTaring(false)
+    }
+  }
 
   return (
     <View style={WRAPPER}>
-      { showSlotHeader && port && device && (
-        <View style={{flex: 0, padding: 0, flexDirection: 'row'}}>
-          <View style={{flex: 1, height: 18}}>
-            <Text style={{fontWeight: 'normal', fontSize: 16, textAlign: 'center'}}>
-              SLOT {port.slot + 1}
-            </Text>
-          </View>
-        </View>
-      )}
       <View style={ITEM}>
-        { itemdef &&
-          <View style={ITEM_IMAGE_VIEW}>
-            <View style={{flex: 2}}>
-              <Image style={ITEM_IMAGE} source={{uri: itemdef.image_url}} />
-              { false && port && (
-                <View>
-                  <Text style={PORT_INFO_LABEL}>Slot Status</Text>
-                  <Text style={PORT_INFO_VALUE}>{port.status}</Text>
-                </View>
-              )}
+        { itemDef &&
+          <View style={IMAGE_BUTTONS_VIEW}>
+            <View style={IMAGE_VIEW}>
+              <Image style={IMAGE} source={{uri: itemDef.image_url}} />
             </View>
-            <View style={{flex: 1}}>
-              <View style={{}}>
-                { false && port && (
-                  <View>
-                    <Text style={PORT_INFO_LABEL}>Slot Weight</Text>
-                    <Text style={PORT_INFO_VALUE}>{port.weight_kg.toFixed(4)} kg</Text>
-                  </View>
+            <View style={BUTTON_VIEW}>
+              <View style={BUTTONS}>
+                { (port && !isPortView) && (
+                  <Button
+                    disabled={true}
+                    style={BUTTON_DISABLED}
+                    textStyle={BUTTON_TEXT}
+                    tx={"item.installed"}
+                    //onPress={() => void}
+                  />
                 )}
-                { buttonCallback && buttonLabel &&
-                  <Button disabled={!buttonEnabled} style={buttonEnabled ? ACTION_BUTTON : ACTION_BUTTON_DISABLED} textStyle={ACTION_BUTTON_TEXT} tx={buttonLabel}
-                    onPress={() => buttonCallback(id)}
+                { ((port && isPortView) || (!port && !isPortView)) && (
+                  <LoadingButton
+                    isLoading={moving}
+                    disabled={!buttonEnabled}
+                    style={buttonEnabled ? BUTTON : BUTTON_DISABLED}
+                    textStyle={BUTTON_TEXT}
+                    tx={port ? "item.removeFromShelf" : "item.addToShelf"}
+                    onPress={port ? clearPortItem : setPortItem}
                   />
-                }
-                { deleteCallback && deleteButtonLabel &&
-                  <Button style={ACTION_BUTTON} textStyle={ACTION_BUTTON_TEXT} tx={deleteButtonLabel}
-                    onPress={() => deleteCallback(id)}
+                )}
+                <LoadingButton
+                  isLoading={deleting}
+                  style={BUTTON}
+                  textStyle={BUTTON_TEXT}
+                  tx={"item.deleteButtonLabel"}
+                  onPress={deleteItem}
+                />                
+                { port && isPortView && (
+                  <LoadingButton
+                    isLoading={taring}
+                    disabled={!tareEnabled}
+                    style={tareEnabled ? BUTTON : BUTTON_DISABLED}
+                    textStyle={BUTTON_TEXT}
+                    tx={"item.updateTareWeightButtonLabel"}
+                    onPress={updateTareWeight}
                   />
-                }
+                )}
               </View>
             </View>
-
-
           </View>
         }
         <View style={ITEM_INFO_VIEW}>
           <View style={ITEM_INFO}>
-            { itemdef && (
-                <View style={ITEM_NAME}>
-                  <Text style={ITEM_NAME_TEXT}>
-                    {itemdef.name}
-                  </Text>
-                </View>
-              )
-            }
-            <View style={{}}>
-              
-              
+            { false && !last_update_time && (
+              <View style={{backgroundColor: 'red', padding: 10, marginTop: 5}}>
+                <Text style={{color: '#fff'}}>Not weighed yet!</Text>
+              </View>
+            )}
+            { itemDef && (
+              <View style={ITEM_NAME}>
+                <Text style={ITEM_NAME_TEXT}>
+                  {itemDef.name}
+                </Text>
+              </View>
+            )}
+            <View style={DIVIDER} />
+            <Text style={TEXT_LABEL}>
+              Last Seen
+              &nbsp;<Text style={TEXT_VALUE}>
+                {last_update_time ? moment.unix(last_update_time).fromNow() : "Never" }
+              </Text>
+            </Text>
+            <Text style={TEXT_LABEL}>
+              Last Weight
+              &nbsp;<Text style={TEXT_VALUE}>
+                {parseFloat(last_known_weight_kg).toFixed(4)} kg
+              </Text>
+            </Text>
+            { itemDef && (itemDef.net_weight_kg > 0) && (last_known_weight_kg > 0) && (
               <Text style={TEXT_LABEL}>
-                Last Seen
+                Amount Remaining
                 &nbsp;<Text style={TEXT_VALUE}>
-                  {last_update_time ? moment.unix(last_update_time).fromNow() : "never" }
+                  {parseFloat(getBoundedPercentage(itemDef.tare_weight_kg ? (last_known_weight_kg - itemDef.tare_weight_kg) : last_known_weight_kg, itemDef.net_weight_kg)).toFixed(0)}%
                 </Text>
               </Text>
+            )}
+            <View style={DIVIDER} />
+            { itemDef && (
               <Text style={TEXT_LABEL}>
-                Last Weight
+                Net Weight
                 &nbsp;<Text style={TEXT_VALUE}>
-                  {parseFloat(last_known_weight_kg).toFixed(4)} kg
+                  {parseFloat(itemDef.net_weight_kg).toFixed(3)} kg
                 </Text>
               </Text>
-              { itemdef && (last_known_weight_kg > 0) && (
-                  <Text style={TEXT_LABEL}>
-                    Amount Remaining
-                    &nbsp;<Text style={TEXT_VALUE}>
-                      {parseFloat(getBoundedPercentage(itemdef.tare_weight_kg ? (last_known_weight_kg - itemdef.tare_weight_kg) : last_known_weight_kg, itemdef.net_weight_kg)).toFixed(0)}%
-                    </Text>
-                  </Text>
-                )
-              }
-              <View style={DIVIDER} />
-              { itemdef &&
-                  <Text style={TEXT_LABEL}>
-                    Net Weight
-                    &nbsp;<Text style={TEXT_VALUE}>
-                      {parseFloat(itemdef.net_weight_kg).toFixed(3)} kg
-                    </Text>
-                  </Text>
-              }
-              
-              { itemdef &&
-                <Text style={TEXT_LABEL}>
-                  Tare Weight
-                  &nbsp;<Text style={TEXT_VALUE}>
-                    {parseFloat(itemdef.tare_weight_kg).toFixed(3)} kg
-                  </Text>
+            )}
+            { itemDef && (
+              <Text style={TEXT_LABEL}>
+                Tare Weight
+                &nbsp;<Text style={TEXT_VALUE}>
+                  {itemDef.tare_weight_kg ? parseFloat(itemDef.tare_weight_kg).toFixed(3) + " kg" : "Unknown"}
                 </Text>
-              }
-              <View style={DIVIDER} />
-              
-              
-            </View>
+              </Text>
+            )}
+            { itemDef && (
+              <Text style={TEXT_LABEL}>
+                UPC
+                &nbsp;<Text style={TEXT_VALUE}>
+                  {itemDef.upc}
+                </Text>
+              </Text>
+            )}
+            <View style={DIVIDER} />
           </View>
         </View>
-
-
       </View>
     </View>
   )
-
 }

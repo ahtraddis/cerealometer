@@ -6,6 +6,11 @@ import { color } from "../../theme"
 
 import RNSpeedometer from 'react-native-speedometer'
 
+const CONTAINER: ViewStyle = {
+  flex: 0,
+  flexDirection: 'row',
+  marginBottom: 10,
+}
 const METER: ViewStyle = {
   flex: 10,
   backgroundColor: '#fff',
@@ -20,10 +25,9 @@ const LABEL = {
   position: 'relative',
   top: -5,
   textAlign: 'center',
-  //fontSize: 16,
 }
 const LABEL_NOTE = {
-  fontSize: 16,
+  fontSize: 15,
   fontFamily: 'sans-serif-monospace',
   fontWeight: 'normal',
   position: 'relative',
@@ -32,32 +36,14 @@ const LABEL_NOTE = {
   textAlign: 'center',
 }
 
-export interface MeterProps {
-  /**
-   * Text which is looked up via i18n.
-   */
-  tx?: string
-
-  /**
-   * The text to display if not using `tx` or nested components.
-   */
-  text?: string
-
-  /**
-   * An optional style override useful for padding & margin.
-   */
-  style?: ViewStyle
-  showStats?: boolean
-}
-
 const labels = [
   {
-    name: "TOAST.😢",
+    name: "YOU'RE HAVING TOAST 😢",
     labelColor: '#444', //'#ff2900',
     activeBarColor: '#ff2900',
   },
   {
-    name: 'OH MY GOD.😳',
+    name: 'OH MY GOD 😳',
     labelColor: '#444', //'#ff5400',
     activeBarColor: '#ff5400',
   },
@@ -105,13 +91,10 @@ const METER_SIDEBAR_RIGHT: ViewStyle = {
 const Display = observer((props) => {
   const { userStore } = useStores()
   const { width } = Dimensions.get("window");
-  const { showStats } = props
-  let overallPercentage = (userStore && userStore.user && userStore.user.metrics) ? userStore.user.metrics.overallPercentage.toFixed(0) : 0;
-  let totalKg = (userStore && userStore.user && userStore.user.metrics) ? userStore.user.metrics.totalKg : 0;
-  let totalNetWeightKg = (userStore && userStore.user && userStore.user.metrics) ? userStore.user.metrics.totalNetWeightKg : 0;
+
   return (
     <SafeAreaView>
-      <View style={{flex: 1, flexDirection: 'row', marginBottom: 10}}>
+      <View style={CONTAINER}>
         <View style={METER_SIDEBAR_LEFT} />
         <View style={METER}>
           <RNSpeedometer
@@ -124,7 +107,7 @@ const Display = observer((props) => {
             allowedDecimals={0}
             labels={labels}
             value={(userStore && userStore.user && userStore.user.metrics) ? userStore.user.metrics.overallPercentage : 0 }
-            size={width-120}
+            size={width-140}
           />
         </View>
         <View style={METER_SIDEBAR_RIGHT} />
@@ -134,12 +117,28 @@ const Display = observer((props) => {
   )
 })
 
+export interface MeterProps {
+  /**
+   * Text which is looked up via i18n.
+   */
+  tx?: string
+
+  /**
+   * The text to display if not using `tx` or nested components.
+   */
+  text?: string
+
+  /**
+   * An optional style override useful for padding & margin.
+   */
+  style?: ViewStyle
+}
+
 /**
  * Display the cereal safety meter using the cloud-computed metrics in userStore
  */
 export function Meter(props: MeterProps) {
-  // grab the props
-  const { tx, text, style, showStats, ...rest } = props
+  const { tx, text, style, ...rest } = props
 
   return <Display {...props} />
 }

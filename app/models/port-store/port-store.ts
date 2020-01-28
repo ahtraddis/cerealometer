@@ -93,7 +93,11 @@ export const PortStoreModel = types
       }
     }),
   }))
-
+  .actions(self => ({
+    clearPorts: () => {
+      self.ports = []
+    }
+  }))
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).
   * Useful for sensitive data like passwords, or transitive state like whether a modal is open.

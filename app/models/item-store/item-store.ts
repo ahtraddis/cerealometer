@@ -89,7 +89,7 @@ export const ItemStoreModel = types
   }))
   .actions(self => ({
     deleteItem: flow(function*(item_id) {
-      //console.log(`item-store: deleteitem(): item_id = '${item_id}'`, item_id)
+      console.log(`item-store: deleteitem(): item_id = '${item_id}'`)
       const result: DeleteItemResult = yield self.environment.api.deleteItem(item_id)
       if (result.kind === "ok") {
         return result.item
@@ -98,6 +98,7 @@ export const ItemStoreModel = types
       }
     }),
   }))
+  
 
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).

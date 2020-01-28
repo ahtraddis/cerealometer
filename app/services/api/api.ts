@@ -143,7 +143,7 @@ export class Api {
         result.id = s // add key from parent
         return result
       })
-      //console.log("API: getItemDefinitions(): convertedItemDefinitions:", JSON.stringify(convertedItemDefinitions, null, 2))
+      console.log("API: getItemDefinitions(): convertedItemDefinitions:", JSON.stringify(convertedItemDefinitions, null, 2))
       return { kind: "ok", item_definitions: convertedItemDefinitions }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
@@ -215,7 +215,7 @@ export class Api {
    * First does a PATCH to /upc/${upc} with submitted: true
    */
   async getUpcData(upc: string): Promise<Types.GetUpcDataResult> {
-    //console.log(`API: getUpcData() called for upc '${upc}'`)
+    console.log(`API: getUpcData() called for upc '${upc}'`)
     // make the api call
     const response: ApiResponse<any> = await this.apisauce.get(`${HTTP_FUNCTION_BASEURL}/getUpcData?upc=${upc}`)
     //console.log("API: getUpcData(): response from GET: ", JSON.stringify(response, null, 2))
@@ -281,13 +281,13 @@ export class Api {
    * Delete item for the current user
    */
   async deleteItem(item_id: string): Promise<Types.DeleteItemResult> {
-    //console.log(`API: deleteItem(): deleting item_id '${item_id}'`)
+    console.log(`API: deleteItem(): deleting item_id '${item_id}'`)
     if (!item_id) {
       console.log('missing item_id')
       return null
     }
     const response: ApiResponse<any> = await this.apisauce.delete(`/items/${item_id}.json`)
-    //console.log("API: deleteItem(): response:", JSON.stringify(response, null, 2))
+    console.log("API: deleteItem(): response:", JSON.stringify(response, null, 2))
     // the typical ways to die when calling an api
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
@@ -297,7 +297,7 @@ export class Api {
     // transform the data into the format we are expecting
     try {
       const rawItem = response.data // expecting null
-      //console.log("API: deleteItem(): rawItem: ", rawItem)
+      console.log("API: deleteItem(): rawItem: ", rawItem)
       return { kind: "ok", item: rawItem }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
@@ -315,7 +315,7 @@ export class Api {
       item_id: item_id,
     }
     const response: ApiResponse<any> = await this.apisauce.post(`${HTTP_FUNCTION_BASEURL}/setPortItem`, data)
-    console.log("API: setPortItem(): response: ", response)
+    //console.log("API: setPortItem(): response: ", response)
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
@@ -354,6 +354,30 @@ export class Api {
       convertedPort.slot = slot
       console.log("API: clearPortItem(): convertedPort: ", convertedPort)
       return { kind: "ok", port: convertedPort }
+    } catch (e) {
+      __DEV__ && console.tron.log(e.message)
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Update tare weight on an ItemDefinition
+   */
+  async updateTareWeight(item_definition_id: string, tare_weight_kg: number): Promise<Types.UpdateItemDefinitionResult> {
+    let data = {
+      item_definition_id: item_definition_id,
+      tare_weight_kg: tare_weight_kg,
+    }
+    const response: ApiResponse<any> = await this.apisauce.put(`${HTTP_FUNCTION_BASEURL}/setItemDefinitionTareWeight`, data)
+    //console.log("API: updateTareWeight(): response: ", response)
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      const rawItemDefinition = response.data
+      //console.log("API: updateTareWeight(): rawItemDefinition:", JSON.stringify(rawItemDefinition, null, 2))
+      return { kind: "ok", item_definition: rawItemDefinition }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)
       return { kind: "bad-data" }

@@ -11,6 +11,7 @@ export type GetPortsResult = { kind: "ok"; ports: PortSnapshot[] } | GeneralApiP
 export type SetPortItemResult = { kind: "ok"; port: PortSnapshot } | GeneralApiProblem
 export type ClearPortItemResult = { kind: "ok"; port: PortSnapshot } | GeneralApiProblem
 export type GetItemDefinitionsResult = { kind: "ok"; item_definitions: ItemDefinitionSnapshot[] } | GeneralApiProblem
+export type UpdateItemDefinitionResult = { kind: "ok"; item_definition: ItemDefinitionSnapshot } | GeneralApiProblem
 export type GetUserResult = { kind: "ok"; user: UserSnapshot } | GeneralApiProblem
 export type GetUpcDataResult = { kind: "ok"; item_definition: ItemDefinitionSnapshot } | GeneralApiProblem
 export type AddItemResult = { kind: "ok"; item: ItemSnapshot } | GeneralApiProblem

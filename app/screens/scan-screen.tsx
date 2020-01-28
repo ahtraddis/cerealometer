@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useStores } from "../models/root-store"
 import { NavigationScreenProps } from "react-navigation"
 import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle, Vibration, ScrollView, Dimensions } from "react-native"
-import { Screen, Text, Header, Wallpaper, Button } from "../components"
+import { Screen, Text, Header, Wallpaper, Button, LoadingButton } from "../components"
+//import LoadingButton from "../components/loading-button/loading-button"
 import { color } from "../theme"
 import { BOLD, BLACK, WHITE, FULL, HEADER, HEADER_TITLE } from "../styles/common"
 import * as delay from "../utils/delay"
@@ -91,7 +92,6 @@ const IMAGE_VIEW: ViewStyle = {
 const IMAGE: ImageStyle = {
   height: ITEM_HEIGHT - 10,
   resizeMode: 'contain',
-  backgroundColor: 'yellow',
   marginTop: 5
 }
 const INFO_VIEW: ViewStyle = {
@@ -106,17 +106,20 @@ const INFO_CONTENT_VIEW: ViewStyle = {
 }
 const BUTTONS_VIEW: ViewStyle = {
   flex: 1,
-  height: 50,
+  //height: 50,
   paddingLeft: 10,
 }
 const TITLE_VIEW: ViewStyle = {
-  marginBottom: 0,
+  marginBottom: 5,
   flex: 8,
-  justifyContent: 'center',
+  overflow: 'hidden',
+  marginTop: 5,
+  //justifyContent: 'center',
   alignItems: 'center',
 }
 const QUAN_VIEW: ViewStyle = {
-  flex: 2,
+  flex: 0,
+  display: 'none', // [eschwartz-TODO] Hidden until needed
   justifyContent: 'center',
   alignContent: 'flex-start',
 }
@@ -132,26 +135,26 @@ const QUAN_BUTTON_VIEW: ViewStyle = {
   padding: 5,
 }
 const QUAN_BUTTON: ViewStyle = {
-  backgroundColor: '#999',
+  backgroundColor: '#aaa',
   width: 20,
 }
 const QUAN_BUTTON_TEXT: TextStyle = {
-  fontSize: 18,
+  fontSize: 20,
 }
 const QUAN_TEXT: TextStyle = {
   color: '#000',
-  fontWeight: 'normal',
-  fontSize: 14,
+  fontSize: 15,
 }
 const TITLE_TEXT: TextStyle = {
-  ...BOLD,
+  //...BOLD,
   ...BLACK,
-  fontSize: 14,
+  fontSize: 13,
 }
 const ITEM_BUTTON_VIEW: ViewStyle = {
   paddingRight: 5,
-  flex: 1,
-  flexDirection: 'column'
+  flex: 0,
+  flexDirection: 'column',
+  //backgroundColor: 'red'
 }
 const ITEM_BUTTON: ViewStyle = {
   marginTop: 5,
@@ -166,7 +169,7 @@ const ITEM_BUTTON_DISABLED: ViewStyle = {
 }
 const ITEM_BUTTON_TEXT: TextStyle = {
   ...WHITE,
-  fontSize: 14,
+  fontSize: 12,
 }
 const ACTION_BUTTON: ViewStyle = {
   padding: 10,
@@ -194,11 +197,12 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
   const [itemDefinition, setItemDefinition] = useState(null)
   const [quan, setQuan] = useState(1)
   const [added, setAdded] = useState(false)
+  const [adding, setAdding] = useState(false)
 
   useEffect(() => {
     // send async lookup request to cloud function
     async function getData() {
-      await delay.delay(1000)
+      await delay.delay(500)
       let result = await lookupUpc(upc)
       setItemDefinition(result)
       setFetching(false)
@@ -214,10 +218,14 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
   }
 
   const addItem = async(itemDefinition, quan) => {
+    console.log(`scan-screen: addItem(): quan=${quan}, itemDefinition:`, JSON.stringify(itemDefinition, null, 2))
+    setAdding(true)
+    await delay.delay(500)
     await itemStore.addItem(userStore.user.id, itemDefinition.id, quan)
     // [escshwartz-TODO] Handle failure case
     setAdded(true)
-    setQuan(1)
+    setAdding(false)
+    //setQuan(0)
   }
 
   const incrementQuan = () => setQuan(Math.min(3, quan + 1))
@@ -280,10 +288,11 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
           </View>
           <View style={BUTTONS_VIEW}>
             <View style={ITEM_BUTTON_VIEW}>
-              <Button
+              <LoadingButton
+                isLoading={adding}
                 style={(quan > 0) ? ITEM_BUTTON : ITEM_BUTTON_DISABLED}
                 textStyle={ITEM_BUTTON_TEXT}
-                disabled={(quan > 0) ? false : true}
+                //disabled={(quan > 0) ? false : true}
                 tx={"scanScreen.addItemLabel"}
                 onPress={() => addItem(itemDefinition, quan)}
               />
@@ -324,6 +333,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
   // }
 
   const readCodes = (barcodes) => {
+    //console.log("barcodes: ", JSON.stringify(barcodes, null, 2))
     // add lookup items to state for async processing
     barcodes.map((code: { data: any; }) => {
       let upc = code.data
@@ -344,6 +354,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
   return (
     <View style={FULL}>
       <Wallpaper />
+      
       <Screen style={SCREEN_CONTAINER} preset="scroll">
         <View style={MAIN_CONTAINER}>
           <View style={INSTRUCTION_CONTAINER}>
@@ -383,7 +394,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
                   <Text tx={"scanScreen.noResults"} style={NO_RESULTS_TEXT} />
                 </View>
               )}
-              { Object.keys(lookupItems).map((upc, i) => {
+              { !_.isEmpty(lookupItems) && Object.keys(lookupItems).map((upc, i) => {
                   return (
                     <ItemLookupResult
                       key={i}
@@ -400,7 +411,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
                     <Button style={ACTION_BUTTON} textStyle={ACTION_BUTTON_TEXT}
                       tx={"scanScreen.clearResultsLabel"}
                       onPress={clearResults}
-                    />
+                />
                   </View>
                 )}
                 {/*<View>

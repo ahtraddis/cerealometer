@@ -13,7 +13,7 @@ import { MESSAGE_TEXT } from "../../styles/common"
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import database from '@react-native-firebase/database'
 
-export const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -33,15 +33,14 @@ const PAGINATION_STYLE_ITEM = {
   borderColor: '#B38530',
   borderWidth: 6,
   padding: 5,
-  //shadowColor: '#ff0000',
   shadowRadius: 1,
   marginBottom: 10
 }
 const MESSAGE: ViewStyle = {
   backgroundColor: color.palette.darkPurple,
   padding: 15,
-  marginLeft: 38,
-  marginRight: 38,
+  marginLeft: 15,
+  marginRight: 15,
   marginTop: 10
 }
 
@@ -56,7 +55,6 @@ export interface ItemsProps {
   dummyPortProp?: any
   listType?: string
   vertical?: boolean
-  showSlotHeader?: boolean
   emptyMessage?: string
 }
 
@@ -64,11 +62,11 @@ export interface ItemsProps {
  * Display list of user's items
  */
 export const Items: React.FunctionComponent<ItemsProps> = (props) => {
-  const { device_id, vertical, showSlotHeader, listType, emptyMessage, ...rest } = props
+  const { device_id, vertical, listType, emptyMessage, ...rest } = props
 
   const { userStore, itemStore, itemDefinitionStore, portStore, deviceStore } = useStores()
-  const [count, setCount] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
+  const [count, setCount] = useState(0)
 
   function onUserChange(snapshot: UserSnapshot) {
     //console.log("items: onUserChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
@@ -76,13 +74,13 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   }
 
   function onItemsChange(snapshot: ItemSnapshot[]) {
-    console.log("items: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    //console.log("items: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
     itemStore.updateItems(snapshot)
-    //console.log("items: onItemsChange(): itemStore.items: ", JSON.stringify(itemStore.items, null, 2))
+    setCount(count + 1) // hack to force rerender
   }
 
   function onPortsChange(snapshot: PortSnapshot[]) {
-    //console.log("items: onPortsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    console.log("items: onPortsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
     portStore.updatePorts(snapshot)
   }
 
@@ -91,7 +89,6 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
     //console.log("items: itemDefinitionStore.item_definitions:", JSON.stringify(itemDefinitionStore.item_definitions, null, 2))
     // [eschwartz-TODO] Hardcoded user id
     portStore.getPorts(env.HARDCODED_TEST_USER_ID)
-    //console.log("items: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
 
     // [eschwartz-TODO] hardcoded user id
     const itemsRef = database().ref('/items').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
@@ -111,37 +108,13 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
     }
   }, []); // run once
 
-  const clearPortItem = async(item_id) => {
-    const port = portStore.ports.find((port) => (port.item_id == item_id))
-    console.log("clearPortItem(): found port to clear: ", port)
-    let result = await portStore.clearPortItem(port.device_id, port.slot)
-    console.log("clearPortItem(): result: ", result)
-    setCount(count + 1)
-  }
-
-  const setPortItem = async(item_id) => {
-    const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
-    if (vacantPort) {
-      console.log("setPortItem: found vacant port: ", vacantPort)
-      let result = await portStore.setPortItem(vacantPort.device_id, vacantPort.slot, item_id)
-      console.log("setPortItem(): result: ", result)
-      setCount(count + 1)
-    }
-  }
-
-  const deleteItem = async(item_id) => {
-    console.log("deleteItem: item_id = ", item_id)
-    let result = await itemStore.deleteItem(item_id)
-    console.log("deleteItem(): result: ", result)
-  }
+  
 
   const renderItem = ({ item }) => {
-    //console.log("items: renderItem(): item: ", item)
+    //console.log("item: item: ", item)
     let itemDefinition = itemDefinitionStore.itemDefinitions.find(itemdef => (itemdef.id == item.item_definition_id))
     let port = portStore.ports.find((port) => (port.item_id == item.id))
     let device = port ? deviceStore.devices.find((device) => (device.id == port.device_id)) : null
-
-    const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
 
     return (
       <View style={styles.child}>
@@ -150,34 +123,27 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
           itemDefinition={itemDefinition}
           port={port}
           device={device}
-          showSlotHeader={showSlotHeader}
-          buttonEnabled={port || vacantPort}
-          buttonCallback={port ? clearPortItem : setPortItem}
-          buttonLabel={port ? "item.removeFromShelf" : "item.addToShelf" + ((port || vacantPort) ? '' : 'Disabled')}
-          deleteCallback={deleteItem}
-          deleteButtonLabel={"item.deleteButtonLabel"}
         />
       </View>
     )
   }
 
   const onRefresh = async() => {
-    console.log("items: onRefresh(), fetching item definitions")
+    //console.log("items: onRefresh(), fetching item definitions")
     setRefreshing(true)
     let result = await itemDefinitionStore.getItemDefinitions()
-    console.log("items: itemDefinitionStore.itemDefinitions: ", JSON.stringify(itemDefinitionStore.itemDefinitions, null, 2))
+    //console.log("items: itemDefinitionStore.itemDefinitions: ", JSON.stringify(itemDefinitionStore.itemDefinitions, null, 2))
     setRefreshing(false)
-    //setCount(count + 1) // hack to update state
   }
 
   let data = itemStore.items
-  if (listType == "active") {
-    data = data.filter((item) => portStore.ports.find((port) => (port.item_id == item.id)))
-  } else if (listType == "inactive") {
-    data = data.filter((item) => !portStore.ports.find((port) => (port.item_id == item.id)))
-  } else if (listType == "all") {
-    // default, no filter
-  }
+  // if (listType == "active") {
+  //   data = data.filter((item) => portStore.ports.find((port) => (port.item_id == item.id)))
+  // } else if (listType == "inactive") {
+  //   data = data.filter((item) => !portStore.ports.find((port) => (port.item_id == item.id)))
+  // } else if (listType == "all") {
+  //   // default, no filter
+  // }
 
   return (
     <View style={styles.container}>
@@ -192,7 +158,7 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
           refreshing={refreshing}
           vertical={vertical}
           showPagination
-          renderAll={true}
+          //renderAll={true}
           style={LIST_STYLE}
           paginationStyleItem={PAGINATION_STYLE_ITEM}
           paginationDefaultColor={'transparent'}

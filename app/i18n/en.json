@@ -25,17 +25,20 @@
     "incrementButtonLabel": "+",
     "decrementButtonLabel": "-",
     "addItemLabel": "Add",
-    "clearResultsLabel": "Clear results",
+    "clearResultsLabel": "Clear results"
   },
   "alarmScreen": {
     "header": "Alarms"
   },
   "item": {
     "addToShelf": "INSTALL",
-    "addToShelfEnabled": "INSTALL",
-    "addToShelfDisabled": "INSTALL",
     "removeFromShelf": "UNINSTALL",
-    "deleteButtonLabel": "I ATE IT"
+    "installed": "INSTALLED",
+    "deleteButtonLabel": "ATE IT",
+    "updateTareWeightButtonLabel": "SET TARE"
+  },
+  "port": {
+    "vacantSlotLabel": "Available slot"
   },
 
   "storybook": {

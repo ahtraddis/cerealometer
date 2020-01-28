@@ -39,54 +39,100 @@ exports.getUpcData = functions.https.onRequest(async (req, res) => {
   const upc = req.query.upc;
   const snap = await admin.database().ref(`/item_definitions`).orderByChild('upc').equalTo(upc).once('value');
   const data = snap.val()
-  console.log("getUpcData(): data: ", data)
+  //console.log("getUpcData(): data: ", data)
   let response = {}
   if (data) {
     let key = Object.keys(data)[0] // in case of multiple
-    console.log("item_definition: ", data[key])
+    console.log("getUpcData(): found existing entry in item_definitions: ", data[key])
     data[key].id = key
     response.item_definition = data[key]
     res.status(200).send(response);
   } else {
-    console.log(`getUpcData(): upc '${upc}' not found in item_definitions, querying barcodelookup.com`)
-    try {
-      const url = `https://api.barcodelookup.com/v2/products?barcode=${upc}&key=${BARCODE_API_KEY}`
+    //console.log(`getUpcData(): UPC '${upc}' not found in item_definitions, querying barcodelookup.com`)
+    console.log(`getUpcData(): UPC '${upc}' not found in item_definitions, querying upcitemdb.com`)
+    //const url = `https://api.barcodelookup.com/v2/products?barcode=${upc}&key=${BARCODE_API_KEY}`
+    const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`
 
-      fetch(url)
-        .then(res => res.json())
-        .then(json => {
-          console.log("json: ", json)
-          let product = json.products[0]
-          let brand = product.brand || null
-          let name = product.product_name || null
-          let description = product.description || null
-          let image_url = product.images[0] || null
-          let size = product.size // "17 oz"
+    fetch(url)
+      .then(res => {
+        //console.log("res: ", JSON.stringify(res), null, 2)
+        console.log("res.headers:", res.headers)
+        const headers = res.headers
+         
+        const xRateLimitLimit = headers.get('x-ratelimit-limit')
+        const xRateLimitRemaining = headers.get('x-ratelimit-remaining')
+        const xRateLimitReset = headers.get('x-ratelimit-reset')
+        const fromNow = moment.unix(xRateLimitReset).fromNow()
+        console.log(`xRateLimitLimit: ${xRateLimitLimit}, xRateLimitRemaining: ${xRateLimitRemaining}, xRateLimitReset: ${xRateLimitReset} (${fromNow})`)
+        return res.json()
+      })
+      .then(json => {
+        console.log("json: ", JSON.stringify(json, null, 2))
+        // Parsing for barcodelookup.com:
+        // let product = json.products[0]
+        // let brand = product.brand || null
+        // let name = product.product_name || null
+        // let description = product.description || null
+        // let image_url = product.images[0] || null
+        // let size = product.size // "17 oz"
+        
+        // Parsing for upcitemdb.com:
+        if (json.code != "OK") {
+          res.status(400).send(json)
+        } else {
+          let items = json.items
+          let item = items[0]
+          let ean = item.ean || null
+          let title = item.title || null
+          let description = item.description || null
+          let upc = item.upc || null
+          let brand = item.brand || null
+          let model = item.model || null
+          let color = item.color || null
+          let size = item.size || null
+          let dimension = item.dimension || null
+          let weight = item.weight || null
+          let currency = item.currency || null
+          let lowest_recorded_price = item.lowest_recorded_price || null
+          let highest_recorded_price = item.highest_recorded_price || null
+          let image_url = item.images[0] || null
+          // skipping offers [Array]
           
           let result = {
+            _source: 'upcitemdb',
+            // main fields to get from any db
+            upc: upc,
             brand: brand,
-            name: name,
+            name: title,
             description: description,
             image_url: image_url,
-            upc: upc,
+            // computed fields
             net_weight_kg: 0, // TODO: find me
             tare_weight_kg: 0, // TODO: find me
+            // extra non-essential fields
+            ean: ean,
+            title: title,
+            model: model,
+            //color: color,
+            size: size,
+            dimension: dimension,
+            weight: weight,
+            //currency: currency,
+            //lowest_recorded_price: lowest_recorded_price,
+            //highest_recorded_price: highest_recorded_price,
           }
 
           // Create new item def if all essential fields are here
           const createSnap = admin.database().ref(`/item_definitions`).push(result)
           const key = createSnap.key
-          result.key = key // add newly created key
+          result.id = key // add newly created key
           response.item_definition = result
           res.status(200).send(response)
-        })
-
-
-    } catch(error) {
-      console.log("error: ", error)
-      res.status(400).send(error)
-    }
-    
+        }
+      }).catch(error => {
+        console.log("error: ", error)
+        res.status(400).send(error)
+      });
   }
 });
 
@@ -95,8 +141,8 @@ exports.setPortItem = functions.https.onRequest(async (req, res) => {
   const { device_id, slot, item_id } = req.body
   const portSnap = await admin.database().ref(`/ports/${device_id}/${slot}`).once('value')
   const port = portSnap.val()
-  if (port.item_id) {
-    console.log(`item_id is already set to '${item_id}'`)
+  if (port.item_id == item_id) {
+    console.log(`item_id is already set (to '${item_id}')`)
     let response = { error: "item_id is already set" }
     res.status(400).send(response)
   } else {
@@ -183,6 +229,26 @@ async function updateMetricsForUserId(user_id) {
   const messageKey = snap.key
   console.log(`message key '${messageKey}' has been created:`, data)
 }
+
+exports.itemDefinitionChanged = functions.database.ref('/item_definitions/{item_definition_id}')
+  .onUpdate(async (change, context) => {
+    const { item_definition_id } = context.params
+    const itemDefBefore = change.before.val()
+    const itemDefAfter = change.after.val()
+
+    // Update metrics for affected users if net weight or tare weight has changed
+    if ((itemDefAfter.net_weight_kg != itemDefBefore.net_weight_kg) ||
+        (itemDefAfter.tare_weight_kg != itemDefBefore.tare_weight_kg)) {
+      const itemsAffectedSnap = await admin.database().ref(`/items`).orderByChild('item_definition_id').equalTo(item_definition_id).once('value');
+      const itemsAffected = itemsAffectedSnap.val()
+      if (itemsAffected) {
+        const uniqueUserIds = Array.from(new Set(Object.keys(itemsAffected).map(i => itemsAffected[i].user_id)))
+        uniqueUserIds.forEach(user_id => updateMetricsForUserId(user_id))
+      }
+    }
+    return null
+  }
+);
 
 // Log event when cereal scale status changes, e.g. box is removed or returned
 exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}/weight_kg')
@@ -287,6 +353,30 @@ exports.resetPort = functions.database.ref('/items/{item_id}').onDelete(async (s
   await updateMetricsForUserId(user_id)
 
   return null // [eschwartz-TODO] Is this valid to return?
+});
+
+
+exports.setItemDefinitionTareWeight = functions.https.onRequest(async (req, res) => {
+  if (req.method != "PUT") return res.status(405).end()
+  const { item_definition_id, tare_weight_kg } = req.body
+  const itemDefSnap = await admin.database().ref(`/item_definitions/${item_definition_id}`).once('value')
+  const itemDef = itemDefSnap.val()
+  console.log("itemDef:", JSON.stringify(itemDef, null, 2))
+
+  // update tare weight as long as reported value seems reasonable
+  if ((tare_weight_kg > PRESENCE_THRESHOLD_KG) && (tare_weight_kg < itemDef.net_weight_kg)) {
+    await admin.database().ref(`/item_definitions/${item_definition_id}/tare_weight_kg`).set(tare_weight_kg)
+    const finalSnap = await admin.database().ref(`/item_definitions/${item_definition_id}`).once('value')
+    const response = finalSnap.val()
+    res.status(200).send(response)
+  } else {
+    const errorMsg = `error: reported tare_weight_kg ${tare_weight_kg} was not accepted`
+    console.error(errorMsg)
+    const response = {
+      error: errorMsg
+    }
+    res.status(400).send(response)
+  }
 });
 
 // Configure the email transport using the default SMTP transport and a GMail account.

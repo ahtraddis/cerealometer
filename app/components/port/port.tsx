@@ -1,94 +1,139 @@
 import * as React from "react"
-import { View, ViewStyle, Image, ImageStyle, StyleSheet } from "react-native"
+import { useStores } from "../../models/root-store"
+import { View, ViewStyle, TextStyle } from "react-native"
+import { Item as ItemType } from "../../models/item"
+import { Port as PortType } from "../../models/port"
+import { ItemDefinition } from "../../models/item-definition"
+import { Device } from "../../models/device"
+import { Item } from "../../components"
 import { Text } from "../"
-
+import { ITEM_COMMON } from "../../components/item/item"
+import { color } from "../../theme/color"
+import { BOLD } from "../../styles/common"
 import * as conversion from "../../utils/conversion"
+
 
 const PORT: ViewStyle = {
   flex: 1,
-  flexDirection: 'row',
-  backgroundColor: "#333",
-  marginTop: 10
-}
-const PORT_IMAGE_VIEW: ViewStyle = {
-  flex: 1,
-  height: 200,
-  borderTopWidth: 5,
-  borderBottomWidth: 5,
-  borderColor: 'transparent'
-}
-const PORT_IMAGE: ImageStyle = {
-  flex: 1,
-  resizeMode: 'contain',
 }
 const PORT_INFO_VIEW: ViewStyle = {
+  flexDirection: 'row'
+}
+const SLOT_LABEL_VIEW: ViewStyle = {
   flex: 1,
-  height: 200,
-  justifyContent: "center",
+  height: 18,
+  justifyContent: 'center',
 }
-const PORT_INFO: ViewStyle = {
-  padding: 10
+const SLOT_LABEL_TEXT: TextStyle = {
+  fontSize: 16,
+  textAlign: 'center',
 }
-const PORT_ITEM: ViewStyle = {}
-const PORT_SLOT: ViewStyle = {}
-const PORT_WEIGHT: ViewStyle = {}
-const PORT_STATUS: ViewStyle = {}
+const VACANT_SLOT: ViewStyle = {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+}
+const VACANT_MESSAGE: ViewStyle = {
+  flex: 3,
+  justifyContent: 'center',
+  alignItems: 'center',
+}
+const VACANT_MESSAGE_TITLE: TextStyle = {
+  fontSize: 30,
+  color: '#777',
+  marginBottom: 10
+}
+const VACANT_MESSAGE_TEXT: TextStyle = {
+  fontSize: 20,
+  color: '#777',
+}
+const VACANT_DEBUG: ViewStyle = {
+  flex: 0,
+}
+const VACANT_SLOT_DEBUG_TEXT: TextStyle = {
+  fontSize: 14,
+  color: '#777',
+}
+const ITEM: ViewStyle = {
+  ...ITEM_COMMON,
+  backgroundColor: color.palette.darkerPurple,
+}
 
 export interface PortProps {
-  slot: number
-  item_id: string
-  status: string
-  weight_kg: number
+  port: PortType
+  item: ItemType
+  itemDefinition: ItemDefinition
+  device: Device
 }
 
+/**
+ * Wrapper component for Item, adding port info for Shelf screen
+ * 
+ * @param props 
+ */
 export function Port(props: PortProps) {
+  const {
+    port,
+    item,
+    itemDefinition,
+    device,
+    ...rest
+  } = props
 
-  // grab the props
-  const { slot, item_id, status, weight_kg, ...rest } = props
+  const { itemStore } = useStores()
 
-  let statusColor = "transparent";
-  if (props.status == "LOADED") {
-    statusColor = "green"
-  } else if (props.status == "UNLOADED") {
-    statusColor = "red"
-  } else if (props.status == "VACANT") {
-    statusColor = "transparent"
+  let statusTitle, statusMsg
+  if (port.status == 'CLEARING') {
+    statusTitle = 'CLEAR!'
+    statusMsg = 'Remove item to reset scale.'
   } else {
-    statusColor = "transparent"
+    if (itemStore.items.length) {
+      statusTitle = 'Available slot'
+      statusMsg = 'To select items, tap Overstock.'
+    } else {
+      statusTitle = 'No cereal detected'
+      statusMsg = 'To get started, tap Scan.'
+    }
   }
 
   return (
     <View style={PORT}>
-      <View style={[PORT_IMAGE_VIEW, {borderBottomColor: statusColor}]}>
-        <Image style={PORT_IMAGE} source={{uri: props.image_url}} />
-      </View>
       <View style={PORT_INFO_VIEW}>
-        <View style={PORT_INFO}>
-          <View style={PORT_SLOT}>
-            <Text>
-              slot: {props.slot}
-            </Text>
-          </View>
-          { props.item.name && (
-              <View style={PORT_ITEM}>
-                <Text>
-                  item.name: {props.item.name},
-                </Text>
-              </View>
-            )
-          }
-          <View style={PORT_WEIGHT}>
-            <Text>
-              weight_kg: {conversion.kilogramsToOunces(props.weight_kg).toFixed(1)} oz
-            </Text>
-          </View>
-          <View style={PORT_STATUS}>
-            <Text>
-              status: {props.status}
-            </Text>
-          </View>
+        <View style={SLOT_LABEL_VIEW}>
+          <Text style={SLOT_LABEL_TEXT}>
+            SLOT {port.slot + 1}
+          </Text>
         </View>
       </View>
+      { !item && (
+        <View style={ITEM}>
+          <View style={VACANT_SLOT}>
+            <View style={VACANT_MESSAGE}>
+              <Text style={VACANT_MESSAGE_TITLE} text={statusTitle} />
+              <Text style={VACANT_MESSAGE_TEXT} text={statusMsg} />
+            </View>
+            <View style={VACANT_DEBUG}>
+              <Text style={VACANT_SLOT_DEBUG_TEXT}>
+                status: {port.status},
+                weight_kg: {port.weight_kg},
+                item_id: "{port.item_id}",
+                last_update_time: {port.last_update_time}
+                {"\n"}{"\n"}
+              </Text>
+            </View>
+            
+          </View>
+        </View>
+      )}
+      { item && (
+        <Item
+          {...item}
+          port={port}
+          itemDefinition={itemDefinition}
+          device={device}
+          isPortView={true}
+        />
+      )}
     </View>
   )
 }

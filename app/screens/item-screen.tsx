@@ -5,28 +5,26 @@ import { observer } from "mobx-react-lite"
 import * as env from "../environment-variables"
 import { NavigationScreenProps } from "react-navigation"
 import { View, Text } from "react-native"
-import { Wallpaper, Items, Meter, Screen } from "../components"
+import { Wallpaper, Items, Meter, Screen, Ports } from "../components"
 import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT } from "../styles/common"
 
 
 export interface ItemsWrapperProps {
   listType?: string
-  showSlotHeader?: boolean
   emptyMessage?: string
   vertical?: boolean
 }
 
-export const ItemsWrapper: React.FunctionComponent<ItemsWrapperProps> = observer((props) => {
+const ItemsWrapper: React.FunctionComponent<ItemsWrapperProps> = observer((props) => {
   const { userStore, itemStore, portStore } = useStores()
-  const [count, setCount] = useState(0);
-  const { listType, showSlotHeader, emptyMessage, ...rest } = props
+  //const [count, setCount] = useState(0);
+  const { listType, emptyMessage, ...rest } = props
   useEffect(() => {
-    // [eschwartz-TODO] Hack to force rerender on Items. Not sure why this is working!
-    //setCount(1)
+
   }, [])
-  // This needs to visibly display something in userStore to make it render observable changes.
+  // [eschwartz-TODO] Hacks to force rerender. This needs to visibly display something in userStore to make it render observable changes.
   return (
-      <Items
+      <Ports
         {...props}
         dummyUserProp={(userStore.user && userStore.user.metrics) ? userStore.user.metrics.overallPercentage : 0}
         dummyItemProp={(itemStore.items && itemStore.items.length) ? itemStore.items[0] : {}}
@@ -43,13 +41,11 @@ export const ItemScreen: React.FunctionComponent<ItemScreenProps> = observer((pr
   useEffect(() => {
     // [eschwartz-TODO] Hardcoded user ID
     deviceStore.getDevices(env.HARDCODED_TEST_USER_ID);
-
     // [eschwartz-TODO] Hardcoded user ID
     itemStore.getItems(env.HARDCODED_TEST_USER_ID);
     // [eschwartz-TODO] Get only item defs for user
     itemDefinitionStore.getItemDefinitions();
     // [eschwartz-TODO] Hardcoded user ID
-    //userStore.clearUser()
     userStore.getUser(env.HARDCODED_TEST_USER_ID);
     //console.log("item-screen: itemDefinitionStore.item_definitions:", JSON.stringify(itemDefinitionStore.itemDefinitions, null, 2))
     console.log("item-screen: userStore.user:", JSON.stringify(userStore.user, null, 2))
@@ -63,20 +59,15 @@ export const ItemScreen: React.FunctionComponent<ItemScreenProps> = observer((pr
   return (
     <View style={FULL}>
       <Wallpaper />
-      <Screen preset="scroll">
-        <View style={SCREEN_HEADER}>
-          <Text style={SCREEN_HEADER_TEXT}>Cerealometer</Text>
-        </View>
-        <Meter
-          //showStats={true}
-        />
-        <ItemsWrapper
-          vertical={false}
-          listType={"active"}
-          showSlotHeader={true}
-          emptyMessage={"No items yet. Go to Overstock to install!"}
-        />
-      </Screen>
+      <View style={SCREEN_HEADER}>
+        <Text style={SCREEN_HEADER_TEXT}>Cerealometer</Text>
+      </View>
+      <Meter />
+      <ItemsWrapper
+        vertical={false}
+        listType={"active"}
+        emptyMessage={"YourShelf has not connected yet. Check back soon!"}
+      />
     </View>
   )
 })

@@ -1,9 +1,7 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemDefinitionModel, ItemDefinitionSnapshot, ItemDefinition } from "../item-definition/item-definition"
 import { withEnvironment } from "../extensions"
-import { GetItemDefinitionsResult, GetUpcDataResult } from "../../services/api"
-
-const promiseTimeout = time => () => new Promise(resolve => setTimeout(resolve, time));
+import { GetItemDefinitionsResult, UpdateItemDefinitionResult, GetUpcDataResult } from "../../services/api"
 
 /**
  * Model description here for TypeScript hints.
@@ -34,13 +32,30 @@ export const ItemDefinitionStoreModel = types
     }),
   }))
   .actions(self => ({
+    clearItemDefinitions: flow(function*() {
+      self.itemDefinitions = []
+    }),
+  }))
+  .actions(self => ({
     getUpcData: flow(function*(upc) {
       // First check local store for cached item def, otherwise fetch it
       const itemdef = self.itemDefinitions.find((itemdef) => (itemdef.upc == upc))
       if (itemdef) {
+        console.log("item-definition-store: getUpcData(): returning cached result:", JSON.stringify(itemdef, null, 2))
         return itemdef
       }
       const result: GetUpcDataResult = yield self.environment.api.getUpcData(upc)
+      console.log("item-definition-store: getUpcData(): result:", JSON.stringify(result, null, 2))
+      if (result.kind === "ok") {
+        return result.item_definition
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
+    }),
+  }))
+  .actions(self => ({
+    updateTareWeight: flow(function*(itemDefinitionId, tareWeightKg) {
+      const result: UpdateItemDefinitionResult = yield self.environment.api.updateTareWeight(itemDefinitionId, tareWeightKg)
       if (result.kind === "ok") {
         return result.item_definition
       } else {

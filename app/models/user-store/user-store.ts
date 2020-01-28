@@ -48,7 +48,7 @@ export const UserStoreModel = types
     }),
   }))
   .actions(self => ({
-    clearUser: flow(function*(user) {
+    clearUser: flow(function*() {
       self.user = {}
     })
   }))
