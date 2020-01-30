@@ -4,7 +4,6 @@ import { ApiConfig, DEFAULT_API_CONFIG, HTTP_FUNCTION_BASEURL } from "./api-conf
 import * as Types from "./api.types"
 import { DeviceSnapshot } from "../../models/device"
 import { ItemSnapshot } from "../../models/item"
-import { PortSnapshot } from "../../models/port"
 import { ItemDefinitionSnapshot } from "../../models/item-definition"
 
 /**
