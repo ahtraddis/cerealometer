@@ -1,20 +1,21 @@
 import * as React from "react"
 import { useEffect, useState } from "react"
-import { Observer } from 'mobx-react-lite'
-import { observer } from "mobx-react-lite"
+import { Observer, observer } from 'mobx-react-lite'
 import { useStores } from "../../models/root-store"
 import * as env from "../../environment-variables"
-import { View, ViewStyle, StyleSheet, Dimensions, Text } from "react-native"
+import { View, StyleSheet, Dimensions, Text } from "react-native"
 import { Port } from "../port/port"
 import { color } from "../../theme/color"
+import { EMPTY_MESSAGE, EMPTY_LOADER_VIEW, EMPTY_MESSAGE_TEXT } from "../../styles/common"
 import { UserSnapshot } from "../../models/user"
 import { ItemSnapshot } from "../../models/item"
 import { PortSnapshot } from "../../models/port"
-import { MESSAGE_TEXT } from "../../styles/common"
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import database from '@react-native-firebase/database'
+import * as Progress from 'react-native-progress'
 
 export const { width, height } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -27,21 +28,15 @@ const styles = StyleSheet.create({
     fontSize: width * 0.5
   }
 });
-const LIST_STYLE: ViewStyle = {}
 const PAGINATION_STYLE_ITEM = {
-  borderColor: '#B38530',
+  borderColor: color.palette.cheerio,
   borderWidth: 6,
   padding: 5,
   shadowRadius: 1,
   marginBottom: 10
 }
-const MESSAGE: ViewStyle = {
-  backgroundColor: color.palette.darkPurple,
-  padding: 15,
-  marginLeft: 15,
-  marginRight: 15,
-  marginTop: 10
-}
+
+
 
 export interface PortsProps {
   /**
@@ -69,28 +64,25 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
 
   const { userStore, itemStore, itemDefinitionStore, portStore, deviceStore } = useStores()
   const [refreshing, setRefreshing] = useState(false)
-  const [count, setCount] = useState(0)
 
   function onUserChange(snapshot: UserSnapshot) {
-    //console.log("ports: onUserChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    __DEV__ && console.tron.log("ports: onUserChange()")
     userStore.setUser(snapshot.val())
   }
 
   function onItemsChange(snapshot: ItemSnapshot[]) {
-    //console.log("ports: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    __DEV__ && console.tron.log("ports: onItemsChange()")
     itemStore.updateItems(snapshot)
   }
 
   function onPortsChange(snapshot: PortSnapshot[]) {
-    console.log("ports: onPortsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    __DEV__ && console.tron.log("ports: onPortsChange()")
     portStore.updatePorts(snapshot)
   }
 
   useEffect(() => {
-    itemDefinitionStore.getItemDefinitions()
-    //console.log("ports: itemDefinitionStore.item_definitions:", JSON.stringify(itemDefinitionStore.item_definitions, null, 2))
-
     // [eschwartz-TODO] Hardcoded user id
+    //itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID)
     //portStore.getPorts(env.HARDCODED_TEST_USER_ID)
 
     // [eschwartz-TODO] hardcoded user id
@@ -100,7 +92,7 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
     const userRef = database().ref(`/users/${env.HARDCODED_TEST_USER_ID}`)
     userRef.on('value', onUserChange);
 
-    const portsRef = database().ref('/ports')
+    const portsRef = database().ref('/ports').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
     portsRef.on('value', onPortsChange);
 
     // Unsubscribe from changes on unmount
@@ -130,43 +122,47 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
   }
 
   const onRefresh = async() => {
-    // refresh both ports and item defs
-    console.log("ports: onRefresh(): fetching ports and itemDefinitions")
+    __DEV__ && console.tron.log("onRefresh()")
+    // refresh ports, item defs, and items
     setRefreshing(true)
     // [eschwartz-TODO] Hardcoded user id
+    await itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID) // get first to avoid flash of "Unknown Item" on first load
     await portStore.getPorts(env.HARDCODED_TEST_USER_ID)
-    await itemDefinitionStore.getItemDefinitions()
+    await itemStore.getItems(env.HARDCODED_TEST_USER_ID)
+    
     setRefreshing(false)
   }
 
-  const EmptyMessage: React.FunctionComponent = observer((props) => {
+  const EmptyMessage = () => {
     return (
       <View>
-        { !portStore.ports.length && (
-          <View style={MESSAGE}>
-            <Text style={MESSAGE_TEXT}>{emptyMessage || "No ports."}</Text>
+        <View style={EMPTY_MESSAGE}>
+          <View style={EMPTY_LOADER_VIEW}>
+            <Progress.Circle color={'#fff'} size={14} indeterminate={true} />
           </View>
-        )}
+          <View>
+            <Text style={EMPTY_MESSAGE_TEXT}>{emptyMessage || "No ports."}</Text>
+          </View>
+        </View>
       </View>
     )
-  })
+  }
 
   let data = portStore.ports
   return (
     <View style={styles.container}>
-      <EmptyMessage />
+      
       <Observer>{ () => 
         <SwiperFlatList
           onRefresh={onRefresh}
           refreshing={refreshing}
           vertical={vertical}
           showPagination
-          //renderAll={true}
-          style={LIST_STYLE}
           paginationStyleItem={PAGINATION_STYLE_ITEM}
           paginationDefaultColor={'transparent'}
-          paginationActiveColor={'#8f6a26'}
+          paginationActiveColor={color.palette.cheerioCenter}
           data={data}
+          ListEmptyComponent={EmptyMessage}
           renderItem={renderPort}
           //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
           //keyExtractor={(item: { key: any; }) => item.key}

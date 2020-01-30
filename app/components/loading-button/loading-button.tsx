@@ -8,16 +8,10 @@ import { mergeAll, flatten } from "ramda"
 import { useSpring, animated } from "react-spring";
 import * as Progress from 'react-native-progress'
 
-import Loader from "./loader";
-//import "./styles.css"
-
 /**
- * For your text displaying needs.
- *
  * This component is a HOC over the built-in React Native one.
  */
 export function LoadingButton(props: LoadingButtonProps) {
-  // grab the props
   const {
     preset = "primary",
     tx,
@@ -25,9 +19,7 @@ export function LoadingButton(props: LoadingButtonProps) {
     style: styleOverride,
     textStyle: textStyleOverride,
     children,
-
     isLoading,
-
     ...rest
   } = props
 
@@ -47,7 +39,7 @@ export function LoadingButton(props: LoadingButtonProps) {
       setShowLoader(true);
     }
 
-    // Show loader a bits longer to avoid loading flash
+    // Show loader for a minimum time to avoid loading flash
     if (!isLoading && showLoader) {
       const timeout = setTimeout(() => {
         setShowLoader(false);
@@ -59,9 +51,7 @@ export function LoadingButton(props: LoadingButtonProps) {
     }
   }, [isLoading, showLoader]);
 
-  /* Capture the dimensions of the button before the loading happens
-  so it doesn’t change size.
-  These hooks can be put in a seprate file. */
+  // Capture the dimensions of the button before the loading happens so it doesn't change size.
   const [width, setWidth] = React.useState(0);
   const [height, setHeight] = React.useState(0);
   const ref = React.useRef(null);
@@ -69,11 +59,8 @@ export function LoadingButton(props: LoadingButtonProps) {
   React.useEffect(() => {
     if (ref.current && ref.current.measure) {
       ref.current.measure((ox, oy, width, height, px, py) => {
-        //console.log(`width: ${width}, height: ${height}`)
-        //console.log("viewStyle: ", viewStyle)
         setWidth(width)
         setHeight(height)
-        //viewStyle.width = width
       })
     }
     // if (ref.current && ref.current.getBoundingClientRect().width) {
@@ -94,34 +81,15 @@ export function LoadingButton(props: LoadingButtonProps) {
       ref={ref}
       style={viewStyle}
     >
-      {showLoader ? (<AnimatedView style={fadeOutProps}><Progress.Circle color={'#fff'} size={15} indeterminate={true} /></AnimatedView>) : (
-        <AnimatedView style={fadeInProps}>{content}</AnimatedView>
-      )}
-    </TouchableOpacity>
-  );
-
-  return (
-    <TouchableOpacity
-      {...rest}
-      ref={ref}
-      style={
-
-        showLoader
-          ? {
-              width: `${width}`,
-              height: `${height}`
-            }
-          : {}
-      }
-    >
       {showLoader ? (
-        <animated.div style={fadeOutProps}>
-          <Loader />
-        </animated.div>
+        <AnimatedView style={fadeOutProps}>
+          <Progress.Circle color={'#fff'} size={15} indeterminate={true} />
+        </AnimatedView>
       ) : (
-        <animated.div style={fadeInProps}>{content}</animated.div>
+        <AnimatedView style={fadeInProps}>
+          {content}
+        </AnimatedView>
       )}
     </TouchableOpacity>
   );
-
 }

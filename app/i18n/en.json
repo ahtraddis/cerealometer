@@ -8,6 +8,9 @@
   "errors": {
     "invalidEmail": "Invalid email address."
   },
+  "itemScreen": {
+    "header": "Cerealometer",
+  },
   "deviceScreen": {
     "header": "Devices",
     "navigate": "Other screen",
@@ -17,11 +20,11 @@
     "header": "Overstock"
   },
   "scanScreen": {
-    "header": "Scan your barcodes",
+    "header": "Scan your cereal",
     "goToDeviceScreen": "Go to Device Screen",
     "takePicture": "SNAP",
     "addItemButton": "Add",
-    "noResults": "Scanned items will list here",
+    "noResults": "Scanned items will appear here",
     "incrementButtonLabel": "+",
     "decrementButtonLabel": "-",
     "addItemLabel": "Add",
@@ -35,7 +38,7 @@
     "removeFromShelf": "UNINSTALL",
     "installed": "INSTALLED",
     "deleteButtonLabel": "ATE IT",
-    "updateTareWeightButtonLabel": "SET TARE"
+    "updateTareWeightButtonLabel": "SET TARE",
   },
   "port": {
     "vacantSlotLabel": "Available slot"

@@ -2,7 +2,7 @@ import * as React from "react"
 import { useStores } from "../../models/root-store"
 import { observer } from "mobx-react-lite"
 import { UserMetrics } from "../../models/user"
-import { View } from "react-native"
+import { View, TextStyle } from "react-native"
 import { Text } from "../"
 
 const TEXT: TextStyle = {
@@ -14,8 +14,6 @@ export interface UserProps {
   name: string
   email: string
   metrics: UserMetrics
-  // [eschwartz-TODO] Not sure how to handle device list
-  //devices:
 }
 
 const Info = observer(() => {
@@ -35,9 +33,7 @@ const Info = observer(() => {
  * Display some user info for debugging
  */
 export function User(props: UserProps) {
-  // grab the props
-  //const { id, name, email, metrics, ...rest } = props
-  //const textStyle = { }
+  const { id, name, email, metrics, ...rest } = props
 
   return (
     <Info />

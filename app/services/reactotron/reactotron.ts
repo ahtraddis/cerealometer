@@ -159,6 +159,56 @@ export class Reactotron {
         },
       })
 
+      Tron.onCustomCommand({
+        title: "Reset Item Store",
+        description: "Resets the item store",
+        command: "resetItemStore",
+        handler: () => {
+          console.tron.log("resetting item store")
+          this.rootStore.itemStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Item Definition Store",
+        description: "Resets the item definition store",
+        command: "resetItemDefinitionStore",
+        handler: () => {
+          console.tron.log("resetting the item definition store")
+          this.rootStore.itemDefinitionStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Port Store",
+        description: "Resets the port store",
+        command: "resetPortStore",
+        handler: () => {
+          console.tron.log("resetting the port store")
+          this.rootStore.portStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset User Store",
+        description: "Resets the user store",
+        command: "resetUserStore",
+        handler: () => {
+          console.tron.log("resetting the user store")
+          this.rootStore.userStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Device Store",
+        description: "Resets the device store",
+        command: "resetDeviceStore",
+        handler: () => {
+          console.tron.log("resetting the device store")
+          this.rootStore.deviceStore.reset()
+        },
+      })
+
       // clear if we should
       if (this.config.clearOnLoad) {
         Tron.clear()

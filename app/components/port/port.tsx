@@ -9,9 +9,7 @@ import { Item } from "../../components"
 import { Text } from "../"
 import { ITEM_COMMON } from "../../components/item/item"
 import { color } from "../../theme/color"
-import { BOLD } from "../../styles/common"
-import * as conversion from "../../utils/conversion"
-
+import * as Progress from 'react-native-progress'
 
 const PORT: ViewStyle = {
   flex: 1,
@@ -23,6 +21,7 @@ const SLOT_LABEL_VIEW: ViewStyle = {
   flex: 1,
   height: 18,
   justifyContent: 'center',
+  marginBottom: 10,
 }
 const SLOT_LABEL_TEXT: TextStyle = {
   fontSize: 16,
@@ -47,8 +46,21 @@ const VACANT_MESSAGE_TEXT: TextStyle = {
   fontSize: 20,
   color: '#777',
 }
+const VACANT_MESSAGE_MESSAGE: TextStyle = {
+  flexDirection: 'row',
+  justifyContent: 'center',
+}
+const VACANT_MESSAGE_ICON: TextStyle = {
+  justifyContent: 'center',
+  paddingRight: 5,
+}
+const VACANT_MESSAGE_TEXT_CONTAINER: TextStyle = {
+  justifyContent: 'center',
+}
+
 const VACANT_DEBUG: ViewStyle = {
   flex: 0,
+  //display: 'none',
 }
 const VACANT_SLOT_DEBUG_TEXT: TextStyle = {
   fontSize: 14,
@@ -84,14 +96,14 @@ export function Port(props: PortProps) {
 
   let statusTitle, statusMsg
   if (port.status == 'CLEARING') {
-    statusTitle = 'CLEAR!'
-    statusMsg = 'Remove item to reset scale.'
+    statusTitle = 'Please remove item'
+    statusMsg = 'Waiting for scale to clear...'
   } else {
     if (itemStore.items.length) {
-      statusTitle = 'Available slot'
-      statusMsg = 'To select items, tap Overstock.'
+      statusTitle = 'Slot available'
+      statusMsg = 'To select item, tap Overstock.'
     } else {
-      statusTitle = 'No cereal detected'
+      statusTitle = 'No cereal yet'
       statusMsg = 'To get started, tap Scan.'
     }
   }
@@ -110,22 +122,34 @@ export function Port(props: PortProps) {
           <View style={VACANT_SLOT}>
             <View style={VACANT_MESSAGE}>
               <Text style={VACANT_MESSAGE_TITLE} text={statusTitle} />
-              <Text style={VACANT_MESSAGE_TEXT} text={statusMsg} />
+              <View style={VACANT_MESSAGE_MESSAGE}>
+                { (port.status == 'CLEARING') && (
+                  <View style={VACANT_MESSAGE_ICON}>
+                    <Progress.Circle
+                      color={'#777'}
+                      size={14}
+                      indeterminate={true}
+                    />
+                  </View>
+                )}
+                <View style={VACANT_MESSAGE_TEXT_CONTAINER}>
+                  <Text style={VACANT_MESSAGE_TEXT} text={statusMsg} />
+                </View>
+              </View>
             </View>
             <View style={VACANT_DEBUG}>
               <Text style={VACANT_SLOT_DEBUG_TEXT}>
+                device_id: {port.device_id},
                 status: {port.status},
                 weight_kg: {port.weight_kg},
                 item_id: "{port.item_id}",
                 last_update_time: {port.last_update_time}
-                {"\n"}{"\n"}
               </Text>
             </View>
-            
           </View>
         </View>
       )}
-      { item && (
+      { item && itemDefinition && (
         <Item
           {...item}
           port={port}

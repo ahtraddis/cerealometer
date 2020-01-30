@@ -21,24 +21,28 @@ export const ITEM_COMMON: ViewStyle = {
   flex: 1,
   flexDirection: 'row',
   padding: 10,
+  paddingLeft: 0,
   borderRadius: 3,
   margin: 10,
+  marginTop: 0,
 }
 const ITEM: ViewStyle = {
   ...ITEM_COMMON,
   backgroundColor: '#fff',
 }
 const IMAGE_BUTTONS_VIEW: ViewStyle = {
-  flex: 1,
+  flex: 3,
 }
 const IMAGE_VIEW: ViewStyle = {
   flex: 1,
+  paddingRight: 5,
+  paddingLeft: 5,
 }
 const BUTTON_VIEW: ViewStyle = {
   flex: 2,
 }
 const ITEM_INFO_VIEW: ViewStyle = {
-  flex: 2,
+  flex: 7,
   overflow: 'hidden',
   borderWidth: 1,
   paddingLeft: 5,
@@ -127,8 +131,8 @@ export function Item(props: ItemProps) {
   } = props
   
   useEffect(() => {
-    //console.log("item: props: ", props)
-    setCount(count + 1)
+    // [eschwartz-TODO] Hack to force render
+    //setCount(count + 1)
   }, []);
 
   const { itemStore, itemDefinitionStore, portStore } = useStores()
@@ -149,6 +153,7 @@ export function Item(props: ItemProps) {
     setMoving(true)
     await portStore.clearPortItem(port.device_id, port.slot)
     setMoving(false)
+    // [eschwartz-TODO] Hack to force render
     setCount(count + 1)
   }
 
@@ -157,6 +162,7 @@ export function Item(props: ItemProps) {
       setMoving(true)
       await portStore.setPortItem(vacantPort.device_id, vacantPort.slot, id)
       setMoving(false)
+      // [eschwartz-TODO] Hack to force render
       setCount(count + 1)
     }
   }
@@ -180,13 +186,17 @@ export function Item(props: ItemProps) {
     }
   }
 
+  const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/150/000000/FFFFFF?text=%3F'
+
   return (
     <View style={WRAPPER}>
       <View style={ITEM}>
-        { itemDef &&
+        { true &&
           <View style={IMAGE_BUTTONS_VIEW}>
             <View style={IMAGE_VIEW}>
-              <Image style={IMAGE} source={{uri: itemDef.image_url}} />
+              { true && (
+                <Image style={IMAGE} source={{uri: itemDef ? itemDef.image_url : PLACEHOLDER_IMAGE }} />
+              )}
             </View>
             <View style={BUTTON_VIEW}>
               <View style={BUTTONS}>
@@ -196,7 +206,6 @@ export function Item(props: ItemProps) {
                     style={BUTTON_DISABLED}
                     textStyle={BUTTON_TEXT}
                     tx={"item.installed"}
-                    //onPress={() => void}
                   />
                 )}
                 { ((port && isPortView) || (!port && !isPortView)) && (
@@ -232,15 +241,10 @@ export function Item(props: ItemProps) {
         }
         <View style={ITEM_INFO_VIEW}>
           <View style={ITEM_INFO}>
-            { false && !last_update_time && (
-              <View style={{backgroundColor: 'red', padding: 10, marginTop: 5}}>
-                <Text style={{color: '#fff'}}>Not weighed yet!</Text>
-              </View>
-            )}
-            { itemDef && (
+            { true && (
               <View style={ITEM_NAME}>
                 <Text style={ITEM_NAME_TEXT}>
-                  {itemDef.name}
+                  {itemDef ? itemDef.name : "Unknown Item"}
                 </Text>
               </View>
             )}
@@ -261,7 +265,7 @@ export function Item(props: ItemProps) {
               <Text style={TEXT_LABEL}>
                 Amount Remaining
                 &nbsp;<Text style={TEXT_VALUE}>
-                  {parseFloat(getBoundedPercentage(itemDef.tare_weight_kg ? (last_known_weight_kg - itemDef.tare_weight_kg) : last_known_weight_kg, itemDef.net_weight_kg)).toFixed(0)}%
+                  { parseFloat(getBoundedPercentage(itemDef.tare_weight_kg ? (last_known_weight_kg - itemDef.tare_weight_kg) : last_known_weight_kg, itemDef.net_weight_kg)).toFixed(0) }%
                 </Text>
               </Text>
             )}
@@ -270,7 +274,7 @@ export function Item(props: ItemProps) {
               <Text style={TEXT_LABEL}>
                 Net Weight
                 &nbsp;<Text style={TEXT_VALUE}>
-                  {parseFloat(itemDef.net_weight_kg).toFixed(3)} kg
+                  { parseFloat(itemDef.net_weight_kg).toFixed(3) } kg
                 </Text>
               </Text>
             )}

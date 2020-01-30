@@ -1,4 +1,5 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
+import { DeviceModel } from "../device/device"
 import { withEnvironment } from "../extensions"
 
 /**
@@ -24,8 +25,6 @@ export const UserModel = types
     name: types.maybe(types.string),
     email: types.maybe(types.string),
     metrics: types.maybe(UserMetricsModel),
-    // [eschwartz-TODO] not sure how to do this for devices yet!
-    //devices: types.optional(types.map(<map of key-value pairs>) {}),
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

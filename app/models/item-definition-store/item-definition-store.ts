@@ -15,15 +15,40 @@ export const ItemDefinitionStoreModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     saveItemDefinitions: (itemDefinitionSnapshots: ItemDefinitionSnapshot[]) => {
-      //console.log("item-definition-store: saveItemDefinitions(): itemDefinitionSnapshots: ", JSON.stringify(itemDefinitionSnapshots, null, 2))
       // create model instances from the plain objects
-      const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c))
-      self.itemDefinitions.replace(itemDefinitionModels)
+      // const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c))
+      // self.itemDefinitions.replace(itemDefinitionModels)
+
+      // Replace or append item defs without overwriting any previously retrieved ones
+      itemDefinitionSnapshots.map(itemDefSnap => {
+        const itemDefinitionModel = ItemDefinitionModel.create(itemDefSnap)
+        const index = self.itemDefinitions.findIndex((itemdef) => (itemdef.id == itemDefinitionModel.id))
+        if (index != -1) {
+          //__DEV__ && console.tron.log("found itemDefinitionModel at index ", index)
+          self.itemDefinitions[index] = itemDefinitionModel
+        } else {
+          //__DEV__ && console.tron.log("adding itemDefinitionModel")
+          self.itemDefinitions.push(itemDefinitionModel)
+        }
+      })
     },
   }))
   .actions(self => ({
-    getItemDefinitions: flow(function*() {
-      const result: GetItemDefinitionsResult = yield self.environment.api.getItemDefinitions()
+    saveItemDefinition: (itemDefinitionSnapshot: ItemDefinitionSnapshot) => {
+      const itemDefinitionModel: ItemDefinition = ItemDefinitionModel.create(itemDefinitionSnapshot)
+      const index = self.itemDefinitions.findIndex((itemdef) => (itemdef.id == itemDefinitionModel.id))
+      if (index != -1) {
+        //__DEV__ && console.tron.log("found itemDefinitionModel at index ", index)
+        self.itemDefinitions[index] = itemDefinitionModel
+      } else {
+        //__DEV__ && console.tron.log("adding itemDefinitionModel")
+        self.itemDefinitions.push(itemDefinitionModel)
+      }
+    },
+  }))
+  .actions(self => ({
+    getItemDefinitions: flow(function*(user_id: string) {
+      const result: GetItemDefinitionsResult = yield self.environment.api.getItemDefinitions(user_id)
       if (result.kind === "ok") {
         self.saveItemDefinitions(result.item_definitions)
       } else {
@@ -32,21 +57,20 @@ export const ItemDefinitionStoreModel = types
     }),
   }))
   .actions(self => ({
-    clearItemDefinitions: flow(function*() {
+    reset: flow(function*() {
       self.itemDefinitions = []
     }),
   }))
   .actions(self => ({
     getUpcData: flow(function*(upc) {
-      // First check local store for cached item def, otherwise fetch it
-      const itemdef = self.itemDefinitions.find((itemdef) => (itemdef.upc == upc))
-      if (itemdef) {
-        console.log("item-definition-store: getUpcData(): returning cached result:", JSON.stringify(itemdef, null, 2))
-        return itemdef
-      }
+      // First check local store for cached item def, otherwise fetch it.
+      // If not found, cloud function will query UPC database and create a new item def.
+      const storedItemDef = self.itemDefinitions.find((itemdef) => (itemdef.upc == upc))
+      if (storedItemDef) return storedItemDef
+
       const result: GetUpcDataResult = yield self.environment.api.getUpcData(upc)
-      console.log("item-definition-store: getUpcData(): result:", JSON.stringify(result, null, 2))
       if (result.kind === "ok") {
+        self.saveItemDefinition(result.item_definition)
         return result.item_definition
       } else {
         __DEV__ && console.tron.log(result.kind)

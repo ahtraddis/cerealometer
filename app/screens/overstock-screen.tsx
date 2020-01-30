@@ -17,14 +17,18 @@ export const ScreenHeader = (props) => {
   )
 }
 
+export interface ItemsWrapperProps {
+  listType?: string
+  emptyMessage?: string
+  vertical?: boolean
+}
+
 const ItemsWrapper: React.FunctionComponent<ItemsWrapperProps> = observer((props) => {
   const { userStore, itemStore, portStore } = useStores()
   //const [count, setCount] = useState(0);
-  const { listType, emptyMessage, ...rest } = props
-  useEffect(() => {
-
-  }, [])
-  // [eschwartz-TODO] Hacks to force rerender. This needs to visibly display something in userStore to make it render observable changes.
+  const { listType, emptyMessage, vertical, ...rest } = props
+  useEffect(() => {}, [])
+  // [eschwartz-TODO] Hacks to force render. This needs to visibly display something in userStore to make it render observable changes.
   return (
       <Items
         {...props}
@@ -41,18 +45,12 @@ export const OverstockScreen: React.FunctionComponent = observer((props) => {
   const { deviceStore, itemDefinitionStore, itemStore, userStore } = useStores()
 
   useEffect(() => {
-    // [eschwartz-TODO] Hardcoded user ID
-    deviceStore.getDevices(env.HARDCODED_TEST_USER_ID);
-    // [eschwartz-TODO] Hardcoded user ID
-    itemStore.getItems(env.HARDCODED_TEST_USER_ID);
+    // [eschwartz-TODO] Hardcoded user id
+    //deviceStore.getDevices(env.HARDCODED_TEST_USER_ID);
+    //itemStore.getItems(env.HARDCODED_TEST_USER_ID);
     // [eschwartz-TODO] Get only item defs for user
-    itemDefinitionStore.getItemDefinitions();
-    // [eschwartz-TODO] Hardcoded user ID
-    userStore.getUser(env.HARDCODED_TEST_USER_ID);
-    //console.log("overstock-screen: itemDefinitionStore.item_definitions:", JSON.stringify(itemDefinitionStore.itemDefinitions, null, 2))
-    // console.log("overstock-screen: userStore.user:", JSON.stringify(userStore.user, null, 2))
-    // console.log("overstock-screen: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
-    // console.log("overstock-screen: deviceStore.devices:", JSON.stringify(deviceStore.devices, null, 2))
+    //itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID);
+    //userStore.getUser(env.HARDCODED_TEST_USER_ID);
   })
 
   return (
@@ -61,7 +59,7 @@ export const OverstockScreen: React.FunctionComponent = observer((props) => {
       <ScreenHeader text={"Overstock"} />
       <ItemsWrapper
         //vertical={true}
-        listType={"inactive"} // defaults to all
+        listType={"inactive"}
         emptyMessage={"Go to Scan to add more items!"}
       />
     </View>

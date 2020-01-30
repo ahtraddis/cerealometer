@@ -5,7 +5,6 @@
 //   })
 //   .then(response => response.json())
 //   .then(json => {
-//     //console.log("json: " + JSON.stringify(json));
 //     setState({
 //       ...state,
 //       ledState: json.led_state,

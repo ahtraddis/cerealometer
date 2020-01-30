@@ -70,3 +70,20 @@ export const SCREEN_HEADER_TEXT: TextStyle = {
   padding: 5,
   letterSpacing: 1
 }
+export const EMPTY_MESSAGE: ViewStyle = {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  backgroundColor: color.palette.darkPurple,
+  padding: 25,
+  marginLeft: 15,
+  marginRight: 15,
+  marginTop: 10
+}
+export const EMPTY_LOADER_VIEW: ViewStyle = {
+  justifyContent: 'center',
+  paddingRight: 10,
+}
+export const EMPTY_MESSAGE_TEXT: TextStyle = {
+  color: '#fff',
+  fontSize: 16,
+}

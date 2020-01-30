@@ -3,11 +3,10 @@ import update from 'immutability-helper'
 import { useState, useEffect } from "react"
 import { useStores } from "../models/root-store"
 import { NavigationScreenProps } from "react-navigation"
-import { ViewStyle, ImageStyle, View, SafeAreaView, Image, TextStyle, Vibration, ScrollView, Dimensions } from "react-native"
+import { ViewStyle, ImageStyle, View, Image, TextStyle, Vibration, ScrollView, Dimensions } from "react-native"
 import { Screen, Text, Header, Wallpaper, Button, LoadingButton } from "../components"
-//import LoadingButton from "../components/loading-button/loading-button"
 import { color } from "../theme"
-import { BOLD, BLACK, WHITE, FULL, HEADER, HEADER_TITLE } from "../styles/common"
+import { BLACK, WHITE, FULL, HEADER, HEADER_TITLE } from "../styles/common"
 import * as delay from "../utils/delay"
 var _ = require('underscore')
 import { RNCamera } from 'react-native-camera';
@@ -26,6 +25,7 @@ const MAIN_CONTAINER: ViewStyle = {
 }
 const INSTRUCTION_CONTAINER: ViewStyle = {
   flex: 1,
+  padding: 10,
   justifyContent: 'center',
 }
 const CAMERA_CONTAINER: ViewStyle = {
@@ -41,6 +41,7 @@ const RESULTS_LIST: ViewStyle = {
 }
 const NO_RESULTS_TEXT: TextStyle = {
   textAlign: 'center',
+  fontSize: 20,
   opacity: .5,
 }
 const NO_RESULTS: ViewStyle = {
@@ -106,7 +107,6 @@ const INFO_CONTENT_VIEW: ViewStyle = {
 }
 const BUTTONS_VIEW: ViewStyle = {
   flex: 1,
-  //height: 50,
   paddingLeft: 10,
 }
 const TITLE_VIEW: ViewStyle = {
@@ -114,12 +114,12 @@ const TITLE_VIEW: ViewStyle = {
   flex: 8,
   overflow: 'hidden',
   marginTop: 5,
-  //justifyContent: 'center',
   alignItems: 'center',
+  justifyContent: 'center',
 }
 const QUAN_VIEW: ViewStyle = {
   flex: 0,
-  display: 'none', // [eschwartz-TODO] Hidden until needed
+  display: 'none', // [eschwartz-TODO] Hiding quan +/- for now
   justifyContent: 'center',
   alignContent: 'flex-start',
 }
@@ -146,15 +146,13 @@ const QUAN_TEXT: TextStyle = {
   fontSize: 15,
 }
 const TITLE_TEXT: TextStyle = {
-  //...BOLD,
   ...BLACK,
-  fontSize: 13,
+  fontSize: 14,
 }
 const ITEM_BUTTON_VIEW: ViewStyle = {
   paddingRight: 5,
   flex: 0,
   flexDirection: 'column',
-  //backgroundColor: 'red'
 }
 const ITEM_BUTTON: ViewStyle = {
   marginTop: 5,
@@ -218,17 +216,19 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
   }
 
   const addItem = async(itemDefinition, quan) => {
-    console.log(`scan-screen: addItem(): quan=${quan}, itemDefinition:`, JSON.stringify(itemDefinition, null, 2))
+    if (!userStore.user.id) {
+      __DEV__ && console.tron.log("missing user id")
+      return
+    }
     setAdding(true)
     await delay.delay(500)
     await itemStore.addItem(userStore.user.id, itemDefinition.id, quan)
     // [escshwartz-TODO] Handle failure case
     setAdded(true)
     setAdding(false)
-    //setQuan(0)
   }
 
-  const incrementQuan = () => setQuan(Math.min(3, quan + 1))
+  const incrementQuan = () => setQuan(Math.min(5, quan + 1))
   const decrementQuan = () => setQuan(Math.max(0, quan - 1))
   
   return (
@@ -238,7 +238,7 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
           <View>
             { fetching && (
               <Text style={FETCHING_TEXT}>
-                Looking up {upc}...
+                Looking up UPC {upc}...
               </Text>
             )}
             { !fetching && (
@@ -259,7 +259,7 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
           <View style={INFO_VIEW}>
             <View style={INFO_CONTENT_VIEW}>
               <View style={TITLE_VIEW}>
-                <Text style={TITLE_TEXT}>{itemDefinition.name}</Text>
+                <Text style={TITLE_TEXT} text={itemDefinition.name} />
               </View>
               <View style={QUAN_VIEW}>
                 <View style={QUAN_COLUMN}>
@@ -292,7 +292,6 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
                 isLoading={adding}
                 style={(quan > 0) ? ITEM_BUTTON : ITEM_BUTTON_DISABLED}
                 textStyle={ITEM_BUTTON_TEXT}
-                //disabled={(quan > 0) ? false : true}
                 tx={"scanScreen.addItemLabel"}
                 onPress={() => addItem(itemDefinition, quan)}
               />
@@ -308,18 +307,14 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
 export interface ScanScreenProps extends NavigationScreenProps<{}> {}
 
 export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
-  //const { userStore } = useStores()
   const [lookupItems, setLookupItems] = useState({});
   const [count, setCount] = useState(0);
 
-  useEffect(() => {
-    //setLookupItems({});
-    //setCount(0);
-  }, []);
+  useEffect(() => {}, []);
 
   const beep = new Sound('beep.mp3', Sound.MAIN_BUNDLE, (error) => {
     if (error) {
-      console.log('failed to load the sound', error);
+      __DEV__ && console.tron.log('failed to load the sound', error);
       return;
     }
   })
@@ -328,17 +323,13 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
     setLookupItems({})
   }
 
-  // const updateState = () => {
-  //   setCount(count + 1)
-  // }
-
   const readCodes = (barcodes) => {
-    //console.log("barcodes: ", JSON.stringify(barcodes, null, 2))
+    //__DEV__ && console.tron.log("readCodes()", barcodes)
     // add lookup items to state for async processing
     barcodes.map((code: { data: any; }) => {
       let upc = code.data
       if (!(upc in lookupItems)) {
-        //console.log(`scan-screen: adding ${upc} to lookupItems`)
+        __DEV__ && console.tron.log(`adding ${upc} to lookupItems`)
         Vibration.vibrate(VIBRATE_DURATION)
         beep.play()
         let newLookupItems = update(lookupItems, {$merge: {}});
@@ -354,11 +345,13 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
   return (
     <View style={FULL}>
       <Wallpaper />
-      
       <Screen style={SCREEN_CONTAINER} preset="scroll">
         <View style={MAIN_CONTAINER}>
           <View style={INSTRUCTION_CONTAINER}>
-            <Header headerTx={"scanScreen.header"} style={HEADER} titleStyle={HEADER_TITLE} />
+            <Header
+              headerTx={"scanScreen.header"}
+              style={HEADER}
+              titleStyle={HEADER_TITLE} />
           </View>
           <View style={CAMERA_CONTAINER}>
             <RNCamera
@@ -388,39 +381,34 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
           </View>
           <View style={RESULTS_CONTAINER}>
             <ScrollView>
-            <View style={RESULTS_LIST}>
-              { _.isEmpty(lookupItems) && (
-                <View style={NO_RESULTS}>
-                  <Text tx={"scanScreen.noResults"} style={NO_RESULTS_TEXT} />
-                </View>
-              )}
-              { !_.isEmpty(lookupItems) && Object.keys(lookupItems).map((upc, i) => {
+              <View style={RESULTS_LIST}>
+                { _.isEmpty(lookupItems) && (
+                  <View style={NO_RESULTS}>
+                    <Text tx={"scanScreen.noResults"} style={NO_RESULTS_TEXT} />
+                  </View>
+                )}
+                { !_.isEmpty(lookupItems) && Object.keys(lookupItems).map((upc, i) => {
                   return (
                     <ItemLookupResult
                       key={i}
                       upc={upc}
                     />
                   )
-                })
-              }
-            </View>
-            <View style={RESULTS_BUTTONS}>
-              <View style={BUTTONS}>
-                { !_.isEmpty(lookupItems) && (
-                  <View>
-                    <Button style={ACTION_BUTTON} textStyle={ACTION_BUTTON_TEXT}
-                      tx={"scanScreen.clearResultsLabel"}
-                      onPress={clearResults}
-                />
-                  </View>
-                )}
-                {/*<View>
-                  <Button style={ACTION_BUTTON} textStyle={ACTION_BUTTON_TEXT}
-                    text={"Update state"}
-                    onPress={updateState} />
-                </View>*/}
+                })}
               </View>
-            </View>
+              <View style={RESULTS_BUTTONS}>
+                <View style={BUTTONS}>
+                  { !_.isEmpty(lookupItems) && (
+                    <View>
+                      <Button style={ACTION_BUTTON}
+                        textStyle={ACTION_BUTTON_TEXT}
+                        tx={"scanScreen.clearResultsLabel"}
+                        onPress={clearResults}
+                      />
+                    </View>
+                  )}
+                </View>
+              </View>
             </ScrollView>
           </View>
         </View>

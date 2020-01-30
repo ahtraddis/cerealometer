@@ -25,9 +25,9 @@ exports.setWeight = functions.https.onRequest(async (req, res) => {
   }
   try {
     const { device_id, slot, weight_kg } = req.body
-    console.log(`device_id: '${device_id}', slot='${slot}', weight_kg=${weight_kg}`)
-    await admin.database().ref(`/ports/${device_id}/${slot}/weight_kg`).set(weight_kg)
-    await admin.database().ref(`/ports/${device_id}/${slot}/last_update_time`).set(getEpoch())
+    //console.log(`device_id: '${device_id}', slot='${slot}', weight_kg=${weight_kg}`)
+    await admin.database().ref(`/ports/${device_id}/data/${slot}/weight_kg`).set(weight_kg)
+    await admin.database().ref(`/ports/${device_id}/data/${slot}/last_update_time`).set(getEpoch())
     res.status(200).send("OK")
   } catch(error) {
     console.log("error: ", error)
@@ -35,9 +35,69 @@ exports.setWeight = functions.https.onRequest(async (req, res) => {
   }
 });
 
+
+
+exports.getPorts = functions.https.onRequest(async (req, res) => {
+  const user_id = req.query.user_id
+  // get user's device id's
+  const deviceSnap = await admin.database().ref('/devices').orderByChild('user_id').equalTo(user_id).once('value')
+  const devices = deviceSnap.val()
+
+  // get all port data associated with devices
+  const promises = Object.keys(devices).map(async (deviceId) => {
+    const portsSnap = await admin.database().ref(`/ports/${deviceId}`).once('value')
+    let obj = {}
+    obj[deviceId] = portsSnap.val()
+    return obj
+  })
+  const result = await Promise.all(promises)
+
+  const arrayToObject = (array) => array.reduce((obj, item) => {
+    let key = Object.keys(item)[0]
+    obj[key] = item[key]
+    return obj
+  }, {})
+
+  const response = arrayToObject(result)
+  res.status(200).send(response)
+});
+
+exports.getItemDefinitions = functions.https.onRequest(async (req, res) => {
+  // [eschwartz-TODO] assume user_id present for now, return all items if absent
+  const user_id = req.query.user_id 
+  // get user's items
+  const itemsSnap = await admin.database().ref('/items').orderByChild('user_id').equalTo(user_id).once('value')
+  const items = itemsSnap.val()
+  console.log("items: ", items)
+
+  const arrayToObject = (array) => array.reduce((obj, item) => {
+    let key = Object.keys(item)[0]
+    obj[key] = item[key]
+    return obj
+  }, {})
+
+  let result = []
+
+  // get item defs for these items
+  if (items) {
+    const promises = Object.keys(items).map(async (itemId) => {
+      const item = items[itemId]
+      const itemDefinitionId = item.item_definition_id
+      const itemDefSnap = await admin.database().ref(`/item_definitions/${itemDefinitionId}`).once('value')
+      let obj = {}
+      obj[itemDefinitionId] = itemDefSnap.val()
+      return obj
+    })
+    result = await Promise.all(promises)
+  }
+  const response = arrayToObject(result)
+  console.log("response: ", response)
+  res.status(200).send(response)
+});
+
 exports.getUpcData = functions.https.onRequest(async (req, res) => {
   const upc = req.query.upc;
-  const snap = await admin.database().ref(`/item_definitions`).orderByChild('upc').equalTo(upc).once('value');
+  const snap = await admin.database().ref('/item_definitions').orderByChild('upc').equalTo(upc).once('value');
   const data = snap.val()
   //console.log("getUpcData(): data: ", data)
   let response = {}
@@ -139,19 +199,19 @@ exports.getUpcData = functions.https.onRequest(async (req, res) => {
 exports.setPortItem = functions.https.onRequest(async (req, res) => {
   if (req.method != "POST") return res.status(405).end()
   const { device_id, slot, item_id } = req.body
-  const portSnap = await admin.database().ref(`/ports/${device_id}/${slot}`).once('value')
+  const portSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}`).once('value')
   const port = portSnap.val()
   if (port.item_id == item_id) {
     console.log(`item_id is already set (to '${item_id}')`)
     let response = { error: "item_id is already set" }
     res.status(400).send(response)
   } else {
-    const itemSnap = await admin.database().ref(`/ports/${device_id}/${slot}/item_id`).set(item_id)
+    const itemSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}/item_id`).set(item_id)
     // If something is already on scale, set status to CLEARING to disregard weight updates until scale is cleared, otherwise UNLOADED so next weight change updates the new item.
     const newStatus = (port.weight_kg >= PRESENCE_THRESHOLD_KG) ? "CLEARING" : "UNLOADED"
-    await admin.database().ref(`/ports/${device_id}/${slot}/status`).set(newStatus)
-    await admin.database().ref(`/ports/${device_id}/${slot}/last_update_time`).set(getEpoch())
-    const resultPortSnap = await admin.database().ref(`/ports/${device_id}/${slot}`).once('value')
+    await admin.database().ref(`/ports/${device_id}/data/${slot}/status`).set(newStatus)
+    await admin.database().ref(`/ports/${device_id}/data/${slot}/last_update_time`).set(getEpoch())
+    const resultPortSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}`).once('value')
     const resultPort = resultPortSnap.val()
     let response = resultPort
 
@@ -165,30 +225,45 @@ exports.clearPortItem = functions.https.onRequest(async (req, res) => {
   const { device_id, slot } = req.body
   console.log(`method: ${req.method}, device_id: ${device_id}, slot=${slot}`)
 
-  const portSnap = await admin.database().ref(`/ports/${device_id}/${slot}`).once('value')
+  const portSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}`).once('value')
   const port = portSnap.val()
 
-  const itemSnap = await admin.database().ref(`/ports/${device_id}/${slot}/item_id`).set('')
+  const itemSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}/item_id`).set('')
 
   // Set status to CLEARING if something is on the scale, otherwise VACANT
   const newStatus = (port.weight_kg >= PRESENCE_THRESHOLD_KG) ? "CLEARING" : "VACANT"
-  const statusSnap = await admin.database().ref(`/ports/${device_id}/${slot}/status`).set(newStatus)
+  const statusSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}/status`).set(newStatus)
 
-  const resultPortSnap = await admin.database().ref(`/ports/${device_id}/${slot}`).once('value')
+  const resultPortSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}`).once('value')
   const resultPort = resultPortSnap.val()
   let response = resultPort
   res.status(200).send(response);
 });
 
-exports.portCreated = functions.database.ref('/ports/{device_id}/{slot_id}')
+// When device first writes port data, set status on item_id initial values and add user_id to sibling node.
+// This allows us to watch all ports associated with the user_id rather than doing so clumsily with ref.on() callbacks for each device.
+exports.portCreated = functions.database.ref('/ports/{device_id}/data/{slot_id}')
   .onCreate(async (snap, context) => {
     const { device_id, slot_id } = context.params
     const rootRef = snap.ref.root
 
-    await rootRef.child(`/ports/${device_id}/${slot_id}/status`).set('VACANT')
-    await rootRef.child(`/ports/${device_id}/${slot_id}/item_id`).set('')
-    const portSnap = await rootRef.child(`/ports/${device_id}/${slot_id}`).once('value')
+    await rootRef.child(`/ports/${device_id}/data/${slot_id}/status`).set('VACANT')
+    await rootRef.child(`/ports/${device_id}/data/${slot_id}/item_id`).set('')
+    const portSnap = await rootRef.child(`/ports/data/${device_id}/${slot_id}`).once('value')
     const port = portSnap.val()
+  }
+);
+
+// Add user_id back to /ports/<device_id> if ports are deleted and recreated for testing
+exports.portsDeviceCreated = functions.database.ref('/ports/{device_id}')
+  .onCreate(async (snap, context) => {
+    const { device_id, slot_id } = context.params
+    const rootRef = snap.ref.root
+    // find user_id for this device and add it to root node
+    const deviceSnap = await rootRef.child(`/devices/${device_id}`).once('value')
+    const device = deviceSnap.val()
+    if (device.user_id) await rootRef.child(`/ports/${device_id}/user_id`).set(device.user_id)
+    return null
   }
 );
 
@@ -218,16 +293,16 @@ async function updateMetricsForUserId(user_id) {
     overallPercentage: totalKg ? (100 * totalNetWeightKg / totalKg) : 0,
   }
   await admin.database().ref(`/users/${user_id}/metrics`).set(metrics)
-  console.log(`updated metrics for user_id '${user_id}':`, JSON.stringify(metrics, null, 2))
+  //console.log(`updated metrics for user_id '${user_id}':`, JSON.stringify(metrics, null, 2))
 
   // add message
-  let data = {
-    title: "Title",
-    message: moment().format('LLL')
-  }
-  const snap = admin.database().ref(`/messages/${user_id}`).push(data)
-  const messageKey = snap.key
-  console.log(`message key '${messageKey}' has been created:`, data)
+  // let data = {
+  //   title: "Title",
+  //   message: moment().format('LLL')
+  // }
+  // const snap = admin.database().ref(`/messages/${user_id}`).push(data)
+  // const messageKey = snap.key
+  // console.log(`message key '${messageKey}' has been created:`, data)
 }
 
 exports.itemDefinitionChanged = functions.database.ref('/item_definitions/{item_definition_id}')
@@ -251,7 +326,7 @@ exports.itemDefinitionChanged = functions.database.ref('/item_definitions/{item_
 );
 
 // Log event when cereal scale status changes, e.g. box is removed or returned
-exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}/weight_kg')
+exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/data/{slot_id}/weight_kg')
   .onUpdate(async (change, context) => {
     const { device_id, slot_id } = context.params
 
@@ -299,7 +374,7 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}
     }
 
     if (new_status != port.status) {
-      const updateStatusSnap = await rootRef.child(`/ports/${device_id}/${slot_id}/status`).set(new_status)
+      const updateStatusSnap = await rootRef.child(`/ports/${device_id}/data/${slot_id}/status`).set(new_status)
       console.log(`updated status from prev_status '${port.status}' to new_status '${new_status}'`);
     }
 
@@ -319,7 +394,6 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/{slot_id}
     const user_id = device.user_id
 
     await updateMetricsForUserId(user_id)
-    console.log("done updating metrics")
   }
 );
 
@@ -342,9 +416,9 @@ exports.resetPort = functions.database.ref('/items/{item_id}').onDelete(async (s
       Object.keys(deviceData).map(async slot => {
         let slotData = deviceData[slot]
         if (slotData.item_id == item_id) {
-          await admin.database().ref(`/ports/${device_id}/${slot}/item_id`).set("")
-          await admin.database().ref(`/ports/${device_id}/${slot}/status`).set("VACANT")
-          await admin.database().ref(`/ports/${device_id}/${slot}/last_update_time`).set(getEpoch())
+          await admin.database().ref(`/ports/${device_id}/data/${slot}/item_id`).set("")
+          await admin.database().ref(`/ports/${device_id}/data/${slot}/status`).set("VACANT")
+          await admin.database().ref(`/ports/${device_id}/data/${slot}/last_update_time`).set(getEpoch())
         }
       })
     })

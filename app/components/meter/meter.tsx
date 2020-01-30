@@ -1,11 +1,13 @@
 import * as React from "react"
 import { observer } from "mobx-react-lite"
 import { useStores } from "../../models/root-store"
-import { ViewStyle, SafeAreaView, Dimensions, Text, View } from "react-native"
+const {get} = require('underscore.get')
+import { ViewStyle, SafeAreaView, Dimensions, View } from "react-native"
 import { color } from "../../theme"
 
 import RNSpeedometer from 'react-native-speedometer'
 
+const LABEL_COLOR = '#444'
 const CONTAINER: ViewStyle = {
   flex: 0,
   flexDirection: 'row',
@@ -39,33 +41,33 @@ const LABEL_NOTE = {
 const labels = [
   {
     name: "YOU'RE HAVING TOAST 😢",
-    labelColor: '#444', //'#ff2900',
-    activeBarColor: '#ff2900',
+    labelColor: LABEL_COLOR,
+    activeBarColor: color.palette.meterRed,
   },
   {
     name: 'OH MY GOD 😳',
-    labelColor: '#444', //'#ff5400',
-    activeBarColor: '#ff5400',
+    labelColor: LABEL_COLOR,
+    activeBarColor: color.palette.meterDarkOrange,
   },
   {
     name: 'GETTING DESPERATE 😟',
-    labelColor: '#444', //'#f4ab44',
-    activeBarColor: '#f4ab44',
+    labelColor: LABEL_COLOR,
+    activeBarColor: color.palette.meterOrange,
   },
   {
     name: 'FAIR 🙂',
-    labelColor: '#444', //'#f2cf1f',
-    activeBarColor: '#f2cf1f',
+    labelColor: LABEL_COLOR,
+    activeBarColor: color.palette.meterGold,
   },
   {
     name: 'STRONG 😋',
-    labelColor: '#444', //'#14eb6e',
-    activeBarColor: '#14eb6e',
+    labelColor: LABEL_COLOR,
+    activeBarColor: color.palette.meterGreen,
   },
   {
     name: 'UNBELIEVABLY STRONG 🙂',
-    labelColor: '#444', //'#00ff6b',
-    activeBarColor: '#00ff6b',
+    labelColor: LABEL_COLOR,
+    activeBarColor: color.palette.meterLightGreen,
   },
 ]
 const LABEL_WRAPPER: ViewStyle = {
@@ -73,7 +75,8 @@ const LABEL_WRAPPER: ViewStyle = {
 }
 const METER_SIDEBAR: ViewStyle = {
   marginTop: 10,
-  flex: 1, backgroundColor: '#312244',
+  flex: 1,
+  backgroundColor: color.palette.darkerPurple,
   opacity: .5
 }
 const METER_SIDEBAR_LEFT: ViewStyle = {
@@ -87,7 +90,6 @@ const METER_SIDEBAR_RIGHT: ViewStyle = {
   borderBottomLeftRadius: 3
 }
 
-// [eschwartz-TODO] Rewrite with observer wrapper on Meter (syntax?)
 const Display = observer((props) => {
   const { userStore } = useStores()
   const { width } = Dimensions.get("window");
@@ -106,13 +108,12 @@ const Display = observer((props) => {
             labelNoteStyle={LABEL_NOTE}
             allowedDecimals={0}
             labels={labels}
-            value={(userStore && userStore.user && userStore.user.metrics) ? userStore.user.metrics.overallPercentage : 0 }
+            value={get(userStore, 'user.metrics.overallPercentage', 0)}
             size={width-140}
           />
         </View>
         <View style={METER_SIDEBAR_RIGHT} />
       </View>
-      
     </SafeAreaView>
   )
 })

@@ -24,21 +24,14 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
   const { deviceStore, itemDefinitionStore, itemStore, userStore } = useStores()
 
   useEffect(() => {
-    //deviceStore.clearDevices()
-    deviceStore.getDevices(env.HARDCODED_TEST_USER_ID);
-    // [eschwartz-TODO] Hardcoded user ID
-    itemStore.getItems(env.HARDCODED_TEST_USER_ID);
-    itemDefinitionStore.getItemDefinitions();
-    // [eschwartz-TODO] Hardcoded user ID
-    userStore.getUser(env.HARDCODED_TEST_USER_ID);
-    //console.log("device-screen: deviceStore.devices: ", JSON.stringify(deviceStore.devices, null, 2));
-    //console.log("device-screen: itemDefinitionStore: ", JSON.stringify(itemDefinitionStore, null, 2));
-    //console.log("device-screen: userStore: ", JSON.stringify(userStore, null, 2));
-    //console.log("device-screen: itemStore: ", JSON.stringify(itemStore, null, 2));
+    // [eschwartz-TODO] Hardcoded user id
+    //deviceStore.getDevices(env.HARDCODED_TEST_USER_ID);
+    //itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID);
+    //itemStore.getItems(env.HARDCODED_TEST_USER_ID);
+    //userStore.getUser(env.HARDCODED_TEST_USER_ID);
   }, [])
 
   const renderDevice = ({ device }) => {
-    //console.log("device-screen: renderDevice(): device: ", device)
     return (
       <Device {...device} />
     )

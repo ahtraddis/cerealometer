@@ -5,7 +5,7 @@ import { GetUserResult } from "../../services/api"
 import * as env from "../../environment-variables"
 
 /**
- * Model description here for TypeScript hints.
+ * UserStoreModel description
  */
 export const UserStoreModel = types
   .model("UserStore")
@@ -16,16 +16,14 @@ export const UserStoreModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     saveUser: (userSnapshot: UserSnapshot) => {
-      //console.log("user-store: saveUser(): userSnapshot:", JSON.stringify(userSnapshot, null, 2))
-      // create model instances from the plain objects
       const userModel: User = UserModel.create(userSnapshot)
       self.user = userModel
+      //__DEV__ && console.tron.log(userModel)
     },
   }))
   .actions(self => ({
     getUser: flow(function*(user_id) {
       const result: GetUserResult = yield self.environment.api.getUser(user_id)
-      //console.log(`user-store: getUser(): result for user_id '${user_id}': `, JSON.stringify(result, null, 2))
       if (result.kind === "ok") {
         self.saveUser(result.user)
       } else {
@@ -35,11 +33,9 @@ export const UserStoreModel = types
   }))
   .actions(self => ({
     setUser: flow(function*(user) {
-      //console.log("user: setUser(): self: ", JSON.stringify(self, null, 2))
-      //console.log("user: setUser(): new user: ", JSON.stringify(user, null, 2))
-      // [eschwartz-TODO] Use merge? from React immutability helper?
+      //__DEV__ && console.tron.log(user)
       self.user = UserModel.create({
-        // [eschwartz-TODO] Hardcoded email id
+        // [eschwartz-TODO] Hardcoded user id
         id: env.HARDCODED_TEST_USER_ID,
         name: user.name,
         metrics: UserMetricsModel.create(user.metrics),
@@ -48,7 +44,7 @@ export const UserStoreModel = types
     }),
   }))
   .actions(self => ({
-    clearUser: flow(function*() {
+    reset: flow(function*() {
       self.user = {}
     })
   }))
