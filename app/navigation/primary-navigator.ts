@@ -1,11 +1,9 @@
-import createNativeStackNavigator from "react-native-screens/createNativeStackNavigator"
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import {
-  DeviceScreen,
-  ScanScreen,
-  OverstockScreen,
-  AlarmScreen,
   ItemScreen,
+  OverstockScreen,
+  ScanScreen,
+  AlarmScreen,
 } from "../screens"
 
 export const PrimaryNavigator = createBottomTabNavigator(
@@ -13,6 +11,7 @@ export const PrimaryNavigator = createBottomTabNavigator(
     item: {
       screen: ItemScreen,
       navigationOptions: ( {navigation }) => ({
+        headerTitle: "Shelf",
         title: "Shelf",
         headerTitleAlign: 'center',
       }),
@@ -20,7 +19,7 @@ export const PrimaryNavigator = createBottomTabNavigator(
     overstock: {
       screen: OverstockScreen,
       navigationOptions: ( {navigation }) => ({
-        title: "Overstock",
+        title: "Backstock",
         headerTitleAlign: 'center',
       }),
     },
@@ -38,31 +37,9 @@ export const PrimaryNavigator = createBottomTabNavigator(
         headerTitleAlign: 'center',
       }),
     },
-    // device: {
-    //   screen: DeviceScreen,
-    //   navigationOptions: ({ navigation }) => ({
-    //     title: "Devices",
-    //     headerTitleAlign: 'center', // nope
-    //     //headerBackTitle: 'backtitle', // nope
-    //     //headerBackTitleVisible: true, // nope?
-    //     headerStyle: {
-    //       //backgroundColor: '#ccc',
-    //     },
-    //     headerTitleStyle: {
-    //       //fontFamily:
-    //       //fontSize: 30,
-    //     },
-    //     headerBackTitleStyle: {
-    //       fontFamily: 'Arial',
-    //       fontSize: 5,
-    //     },
-    //     //headerTintColor: 'black', // this is just color (what's tint?)
-    //   }),
-    // },
   },
   {
-    headerMode: "screen",
-    //initialRouteName: "devices",
+    initialRouteName: "item",
     tabBarOptions: {
       style: {
         height: 36,
@@ -71,7 +48,6 @@ export const PrimaryNavigator = createBottomTabNavigator(
       tabStyle: {
         //backgroundColor: 'purple',
         //padding: 7,
-        borderRight: 1,
         //borderColor: '#000',
         marginRight: 1,
         marginLeft: 0,
@@ -96,4 +72,4 @@ export const PrimaryNavigator = createBottomTabNavigator(
  * Anything not on this list will be a standard `back` action in
  * react-navigation.
  */
-export const exitRoutes: string[] = ["item", "overstock", "scan", "alarm", "device"]
+export const exitRoutes: string[] = ["item", "overstock", "scan", "alarm"]

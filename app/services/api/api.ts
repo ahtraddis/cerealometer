@@ -80,16 +80,14 @@ export class Api {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
     }
-    // Return raw, unconverted data since portStore.savePorts() parses both this and ref.on() live updates
+    // Return raw response since savePorts() parses both this GET and realtime updates
     return { kind: "ok", ports: response.data }
   }
 
   /**
    * Gets a list of item definitions associated with the user's items
    */
-  // [eschwartz-TODO] Only get item defs associated with the user
   async getItemDefinitions(user_id): Promise<Types.GetItemDefinitionsResult> {
-    //const response: ApiResponse<any> = await this.apisauce.get(`/item_definitions.json`)
     const response: ApiResponse<any> = await this.apisauce.get(`${HTTP_FUNCTION_BASEURL}/getItemDefinitions?user_id=${user_id}`)
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
@@ -108,6 +106,44 @@ export class Api {
       __DEV__ && console.tron.log(e.message)
       return { kind: "bad-data" }
     }
+  }
+
+  /**
+   * Get messages for user
+   */
+  async getMessages(user_id): Promise<Types.GetMessagesResult> {
+    const response: ApiResponse<any> = await this.apisauce.get(`/messages/${user_id}.json`)
+    console.tron.log(response)
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    // Return raw response since saveMessages() parses both this GET and realtime updates
+    return { kind: "ok", messages: response.data }
+  }
+
+  /**
+   * Delete message for the current user
+   */
+  async deleteMessage(id: string): Promise<Types.DeleteItemResult> {
+    if (!id) {
+      __DEV__ && console.tron.log('missing message id')
+      return null
+    }
+    
+    // const response: ApiResponse<any> = await this.apisauce.delete(`/messages/${item_id}.json`)
+    // if (!response.ok) {
+    //   const problem = getGeneralApiProblem(response)
+    //   if (problem) return problem
+    // }
+
+    // try {
+    //   const rawItem = response.data // expecting null
+    //   return { kind: "ok", item: rawItem }
+    // } catch (e) {
+    //   __DEV__ && console.tron.log(e.message)
+    //   return { kind: "bad-data" }
+    // }
   }
 
   /**
@@ -147,7 +183,7 @@ export class Api {
     try {
       const rawUser = response.data
       let convertedUser = rawUser
-      convertedUser.id = user_id // add key
+      convertedUser.uid = user_id // add key
       return { kind: "ok", user: convertedUser }
     } catch (e) {
       __DEV__ && console.tron.log(e.message)

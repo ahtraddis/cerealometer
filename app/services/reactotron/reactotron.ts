@@ -209,6 +209,16 @@ export class Reactotron {
         },
       })
 
+      Tron.onCustomCommand({
+        title: "Reset Message Store",
+        description: "Resets the message store",
+        command: "resetMessageStore",
+        handler: () => {
+          console.tron.log("resetting the message store")
+          this.rootStore.messageStore.reset()
+        },
+      })
+
       // clear if we should
       if (this.config.clearOnLoad) {
         Tron.clear()

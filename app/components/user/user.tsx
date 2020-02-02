@@ -10,10 +10,10 @@ const TEXT: TextStyle = {
 }
 
 export interface UserProps {
-  id: string
-  name: string
-  email: string
-  metrics: UserMetrics
+  // id: string
+  // name: string
+  // email: string
+  // metrics: UserMetrics
 }
 
 const Info = observer(() => {
@@ -21,8 +21,8 @@ const Info = observer(() => {
   let user = userStore.user
   return (
     <View>
-      <Text style={TEXT}>id: {user.id}</Text>
-      <Text style={TEXT}>name: {userStore.user.name}</Text>
+      <Text style={TEXT}>id: {user.uid}</Text>
+      <Text style={TEXT}>name: {user.name}</Text>
       <Text style={TEXT}>email: {user.email}</Text>
       <Text style={TEXT}>metrics: {JSON.stringify(user.metrics, null, 2)}</Text>
     </View>

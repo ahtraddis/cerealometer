@@ -1,8 +1,7 @@
 import * as React from "react"
 import { useEffect, useState } from "react"
-import { Observer, observer } from 'mobx-react-lite'
+import { Observer } from 'mobx-react-lite'
 import { useStores } from "../../models/root-store"
-import * as env from "../../environment-variables"
 import { View, StyleSheet, Dimensions, Text } from "react-native"
 import { Port } from "../port/port"
 import { color } from "../../theme/color"
@@ -26,17 +25,15 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: width * 0.5
-  }
+  },
+  paginationStyleItem: {
+    borderColor: color.palette.cheerio,
+    borderWidth: 6,
+    padding: 5,
+    shadowRadius: 1,
+    marginBottom: 10,
+  },
 });
-const PAGINATION_STYLE_ITEM = {
-  borderColor: color.palette.cheerio,
-  borderWidth: 6,
-  padding: 5,
-  shadowRadius: 1,
-  marginBottom: 10
-}
-
-
 
 export interface PortsProps {
   /**
@@ -45,10 +42,6 @@ export interface PortsProps {
   device_id?: string
   vertical?: boolean
   emptyMessage?: string
-  //
-  dummyUserProp?: any
-  dummyItemProp?: any
-  dummyPortProp?: any
 }
 
 /**
@@ -62,7 +55,7 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
     ...rest
   } = props
 
-  const { userStore, itemStore, itemDefinitionStore, portStore, deviceStore } = useStores()
+  const { userStore, itemStore, itemDefinitionStore, portStore, deviceStore, messageStore } = useStores()
   const [refreshing, setRefreshing] = useState(false)
 
   function onUserChange(snapshot: UserSnapshot) {
@@ -81,25 +74,29 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
   }
 
   useEffect(() => {
-    // [eschwartz-TODO] Hardcoded user id
-    //itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID)
-    //portStore.getPorts(env.HARDCODED_TEST_USER_ID)
+    let refSet, itemsRef, userRef, portsRef
+    if (userStore.user.isLoggedIn) {
+      refSet = true
+      let uid = userStore.user.uid
+      //itemDefinitionStore.getItemDefinitions(uid)
+      //portStore.getPorts(uid)
 
-    // [eschwartz-TODO] hardcoded user id
-    const itemsRef = database().ref('/items').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
-    itemsRef.on('value', onItemsChange);
+      itemsRef = database().ref('/items').orderByChild('user_id').equalTo(uid);
+      itemsRef.on('value', onItemsChange);
 
-    const userRef = database().ref(`/users/${env.HARDCODED_TEST_USER_ID}`)
-    userRef.on('value', onUserChange);
+      userRef = database().ref(`/users/${uid}`)
+      userRef.on('value', onUserChange);
 
-    const portsRef = database().ref('/ports').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
-    portsRef.on('value', onPortsChange);
-
-    // Unsubscribe from changes on unmount
-    return () => {
-      itemsRef.off('value', onItemsChange)
-      userRef.off('value', onUserChange)
-      portsRef.off('value', onPortsChange)
+      portsRef = database().ref('/ports').orderByChild('user_id').equalTo(uid);
+      portsRef.on('value', onPortsChange);
+    }
+    if (refSet) {
+      // Unsubscribe from changes on unmount
+      return () => {
+        itemsRef.off('value', onItemsChange)
+        userRef.off('value', onUserChange)
+        portsRef.off('value', onPortsChange)
+      }
     }
   }, []);
 
@@ -122,15 +119,16 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
   }
 
   const onRefresh = async() => {
-    __DEV__ && console.tron.log("onRefresh()")
-    // refresh ports, item defs, and items
-    setRefreshing(true)
-    // [eschwartz-TODO] Hardcoded user id
-    await itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID) // get first to avoid flash of "Unknown Item" on first load
-    await portStore.getPorts(env.HARDCODED_TEST_USER_ID)
-    await itemStore.getItems(env.HARDCODED_TEST_USER_ID)
-    
-    setRefreshing(false)
+    if (userStore.user.isLoggedIn) {
+      let uid = userStore.user.uid
+      setRefreshing(true)
+      await itemDefinitionStore.getItemDefinitions(uid) // get first to avoid flash of "Unknown Item" on first load
+      await deviceStore.getDevices(uid)
+      await portStore.getPorts(uid)
+      await itemStore.getItems(uid)
+      await messageStore.getMessages(uid)
+      setRefreshing(false)
+    }
   }
 
   const EmptyMessage = () => {
@@ -138,7 +136,10 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
       <View>
         <View style={EMPTY_MESSAGE}>
           <View style={EMPTY_LOADER_VIEW}>
-            <Progress.Circle color={'#fff'} size={14} indeterminate={true} />
+            <Progress.Circle
+              color={'#fff'}
+              size={14}
+              indeterminate={true} />
           </View>
           <View>
             <Text style={EMPTY_MESSAGE_TEXT}>{emptyMessage || "No ports."}</Text>
@@ -148,25 +149,25 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
     )
   }
 
-  let data = portStore.ports
   return (
     <View style={styles.container}>
-      
-      <Observer>{ () => 
-        <SwiperFlatList
-          onRefresh={onRefresh}
-          refreshing={refreshing}
-          vertical={vertical}
-          showPagination
-          paginationStyleItem={PAGINATION_STYLE_ITEM}
-          paginationDefaultColor={'transparent'}
-          paginationActiveColor={color.palette.cheerioCenter}
-          data={data}
-          ListEmptyComponent={EmptyMessage}
-          renderItem={renderPort}
-          //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
-          //keyExtractor={(item: { key: any; }) => item.key}
-        />
+      <Observer>
+        { () => 
+          <SwiperFlatList
+            onRefresh={onRefresh}
+            refreshing={refreshing}
+            vertical={vertical}
+            showPagination
+            paginationStyleItem={styles.paginationStyleItem}
+            paginationDefaultColor={'transparent'}
+            paginationActiveColor={color.palette.cheerioCenter}
+            data={portStore.ports}
+            //data={[{device_id: "-LxNyE47HCaN9ojmR3D2", slot: 1, last_update_time: 0, status: 'VACANT', weight_kg: 0.1234}]}
+            ListEmptyComponent={EmptyMessage}
+            renderItem={renderPort}
+            extraData={{ extraDataForMobX: portStore.ports.length > 0 ? portStore.ports[0] : "" }}
+            keyExtractor={port => (port.device_id + port.slot)}
+          />
         }
       </Observer>
     </View>

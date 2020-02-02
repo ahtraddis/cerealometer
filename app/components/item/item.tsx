@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useStores } from "../../models/root-store"
 import { useState, useEffect } from "react"
-import { View, ViewStyle, ImageStyle, TextStyle, Image, ScrollView } from "react-native"
+import { View, ViewStyle, ImageStyle, TextStyle, Image, StyleSheet } from "react-native"
 import { Text } from "../"
 import { Button, LoadingButton } from "../../components"
 import { ItemDefinition } from "../../models/item-definition"
@@ -11,12 +11,6 @@ import { BOLD } from "../../styles/common"
 import { getBoundedPercentage } from "../../utils/math"
 var moment = require('moment');
 
-const NUTRITION_TEXT: TextStyle = {
-  fontFamily: 'sans-serif-condensed',
-}
-const WRAPPER: ViewStyle = {
-  flex: 1,
-}
 export const ITEM_COMMON: ViewStyle = {
   flex: 1,
   flexDirection: 'row',
@@ -26,65 +20,8 @@ export const ITEM_COMMON: ViewStyle = {
   margin: 10,
   marginTop: 0,
 }
-const ITEM: ViewStyle = {
-  ...ITEM_COMMON,
-  backgroundColor: '#fff',
-}
-const IMAGE_BUTTONS_VIEW: ViewStyle = {
-  flex: 3,
-}
-const IMAGE_VIEW: ViewStyle = {
-  flex: 1,
-  paddingRight: 5,
-  paddingLeft: 5,
-}
-const BUTTON_VIEW: ViewStyle = {
-  flex: 2,
-}
-const ITEM_INFO_VIEW: ViewStyle = {
-  flex: 7,
-  overflow: 'hidden',
-  borderWidth: 1,
-  paddingLeft: 5,
-  paddingRight: 5,
-}
-const IMAGE: ImageStyle = {
-  flex: 1,
-  resizeMode: 'contain',
-}
-const ITEM_INFO: ViewStyle = {}
-const ITEM_NAME: ViewStyle = {
-  marginBottom: 5,
-  borderBottomColor: '#000',
-}
-const ITEM_NAME_TEXT: TextStyle = {
-  ...NUTRITION_TEXT,
-  ...BOLD,
-  fontSize: 22,
-  color: '#000',
-}
-const TEXT_LABEL: TextStyle = {
-  ...NUTRITION_TEXT,
-  color: '#000',
-  ...BOLD,
-  borderBottomColor: '#000',
-  borderBottomWidth: 1,
-  paddingBottom: 2,
-  paddingTop: 2,
-}
-const TEXT_VALUE: TextStyle = {
-  color: '#000',
-  ...NUTRITION_TEXT,
-  fontWeight: 'normal',
-}
-const DIVIDER: ViewStyle = {
-  borderBottomWidth: 10,
-  borderBottomColor: '#000,'
-}
-const BUTTONS: ViewStyle = {
-  justifyContent: 'center',
-  alignItems: 'center',
-  paddingTop: 10,
+const NUTRITION_TEXT: TextStyle = {
+  fontFamily: 'sans-serif-condensed',
 }
 const BUTTON: ViewStyle = {
   padding: 3,
@@ -93,13 +30,84 @@ const BUTTON: ViewStyle = {
   backgroundColor: '#72551e',
   width: 75,
 }
-const BUTTON_DISABLED: ViewStyle = {
-  ...BUTTON,
-  backgroundColor: '#ddcbb3',
-}
-const BUTTON_TEXT: TextStyle = {
-  fontSize: 12,
-}
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+  nutritionText: {
+    ...NUTRITION_TEXT,
+  },
+  container: {
+    ...ITEM_COMMON,
+    backgroundColor: '#fff',
+  },
+  imageButtonsView: {
+    flex: 3,
+  },
+  imageView: {
+    flex: 1,
+    paddingRight: 5,
+    paddingLeft: 5,
+  },
+  buttonView: {
+    flex: 2,
+  },
+  itemInfoView: {
+    flex: 7,
+    overflow: 'hidden',
+    borderWidth: 1,
+    paddingLeft: 5,
+    paddingRight: 5,
+  },
+  image: {
+    flex: 1,
+    resizeMode: 'contain',
+  },
+  itemInfo: {},
+  itemName: {
+    marginBottom: 5,
+    borderBottomColor: '#000',
+  },
+  itemNameText: {
+    ...NUTRITION_TEXT,
+    ...BOLD,
+    fontSize: 22,
+    color: '#000',
+  },
+  textLabel: {
+    ...NUTRITION_TEXT,
+    color: '#000',
+    ...BOLD,
+    borderBottomColor: '#000',
+    borderBottomWidth: 1,
+    paddingBottom: 2,
+    paddingTop: 2,
+  },
+  textValue: {
+    color: '#000',
+    ...NUTRITION_TEXT,
+    fontWeight: 'normal',
+  },
+  divider: {
+    borderBottomWidth: 10,
+    borderBottomColor: '#000',
+  },
+  buttons: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  button: {
+    ...BUTTON,
+  },
+  buttonDisabled: {
+    ...BUTTON,
+    backgroundColor: '#ddcbb3',
+  },
+  buttonText: {
+    fontSize: 12,
+  },
+})
 
 export interface ItemProps {
   id: string
@@ -141,8 +149,9 @@ export function Item(props: ItemProps) {
   const [moving, setMoving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
+  const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/150/000000/FFFFFF?text=%3F'
 
+  const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
   const itemDef = itemDefinition
 
   const tareEnabled = itemDef && port && (port.status == 'LOADED') && (itemDef.net_weight_kg > 0) && (!itemDef.tare_weight_kg || (last_known_weight_kg > itemDef.net_weight_kg))
@@ -186,115 +195,109 @@ export function Item(props: ItemProps) {
     }
   }
 
-  const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/150/000000/FFFFFF?text=%3F'
-
   return (
-    <View style={WRAPPER}>
-      <View style={ITEM}>
-        { true &&
-          <View style={IMAGE_BUTTONS_VIEW}>
-            <View style={IMAGE_VIEW}>
-              { true && (
-                <Image style={IMAGE} source={{uri: itemDef ? itemDef.image_url : PLACEHOLDER_IMAGE }} />
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
+        <View style={styles.imageButtonsView}>
+          <View style={styles.imageView}>
+            <Image
+              style={styles.image}
+              source={{uri: itemDef ? itemDef.image_url : PLACEHOLDER_IMAGE }} />
+          </View>
+          <View style={styles.buttonView}>
+            <View style={styles.buttons}>
+              { (port && !isPortView) && (
+                <Button
+                  disabled={true}
+                  style={styles.buttonDisabled}
+                  textStyle={styles.buttonText}
+                  tx={"item.installed"}
+                />
+              )}
+              { ((port && isPortView) || (!port && !isPortView)) && (
+                <LoadingButton
+                  isLoading={moving}
+                  disabled={!buttonEnabled}
+                  style={buttonEnabled ? styles.button : styles.buttonDisabled}
+                  textStyle={styles.buttonText}
+                  tx={port ? "item.removeFromShelf" : "item.addToShelf"}
+                  onPress={port ? clearPortItem : setPortItem}
+                />
+              )}
+              <LoadingButton
+                isLoading={deleting}
+                style={BUTTON}
+                textStyle={styles.buttonText}
+                tx={"item.deleteButtonLabel"}
+                onPress={deleteItem}
+              />                
+              { port && isPortView && (
+                <LoadingButton
+                  isLoading={taring}
+                  disabled={!tareEnabled}
+                  style={tareEnabled ? styles.button : styles.buttonDisabled}
+                  textStyle={styles.buttonText}
+                  tx={"item.updateTareWeightButtonLabel"}
+                  onPress={updateTareWeight}
+                />
               )}
             </View>
-            <View style={BUTTON_VIEW}>
-              <View style={BUTTONS}>
-                { (port && !isPortView) && (
-                  <Button
-                    disabled={true}
-                    style={BUTTON_DISABLED}
-                    textStyle={BUTTON_TEXT}
-                    tx={"item.installed"}
-                  />
-                )}
-                { ((port && isPortView) || (!port && !isPortView)) && (
-                  <LoadingButton
-                    isLoading={moving}
-                    disabled={!buttonEnabled}
-                    style={buttonEnabled ? BUTTON : BUTTON_DISABLED}
-                    textStyle={BUTTON_TEXT}
-                    tx={port ? "item.removeFromShelf" : "item.addToShelf"}
-                    onPress={port ? clearPortItem : setPortItem}
-                  />
-                )}
-                <LoadingButton
-                  isLoading={deleting}
-                  style={BUTTON}
-                  textStyle={BUTTON_TEXT}
-                  tx={"item.deleteButtonLabel"}
-                  onPress={deleteItem}
-                />                
-                { port && isPortView && (
-                  <LoadingButton
-                    isLoading={taring}
-                    disabled={!tareEnabled}
-                    style={tareEnabled ? BUTTON : BUTTON_DISABLED}
-                    textStyle={BUTTON_TEXT}
-                    tx={"item.updateTareWeightButtonLabel"}
-                    onPress={updateTareWeight}
-                  />
-                )}
-              </View>
-            </View>
           </View>
-        }
-        <View style={ITEM_INFO_VIEW}>
-          <View style={ITEM_INFO}>
-            { true && (
-              <View style={ITEM_NAME}>
-                <Text style={ITEM_NAME_TEXT}>
-                  {itemDef ? itemDef.name : "Unknown Item"}
-                </Text>
-              </View>
-            )}
-            <View style={DIVIDER} />
-            <Text style={TEXT_LABEL}>
+        </View>
+        <View style={styles.itemInfoView}>
+          <View style={styles.itemInfo}>
+            <View style={styles.itemName}>
+              <Text style={styles.itemNameText}>
+                {itemDef ? itemDef.name : "Unknown Item"}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <Text style={styles.textLabel}>
               Last Seen
-              &nbsp;<Text style={TEXT_VALUE}>
+              &nbsp;<Text style={styles.textValue}>
                 {last_update_time ? moment.unix(last_update_time).fromNow() : "Never" }
               </Text>
             </Text>
-            <Text style={TEXT_LABEL}>
+            <Text style={styles.textLabel}>
               Last Weight
-              &nbsp;<Text style={TEXT_VALUE}>
+              &nbsp;<Text style={styles.textValue}>
                 {parseFloat(last_known_weight_kg).toFixed(4)} kg
               </Text>
             </Text>
             { itemDef && (itemDef.net_weight_kg > 0) && (last_known_weight_kg > 0) && (
-              <Text style={TEXT_LABEL}>
+              <Text style={styles.textLabel}>
                 Amount Remaining
-                &nbsp;<Text style={TEXT_VALUE}>
+                &nbsp;<Text style={styles.textValue}>
                   { parseFloat(getBoundedPercentage(itemDef.tare_weight_kg ? (last_known_weight_kg - itemDef.tare_weight_kg) : last_known_weight_kg, itemDef.net_weight_kg)).toFixed(0) }%
                 </Text>
               </Text>
             )}
-            <View style={DIVIDER} />
+            <View style={styles.divider} />
             { itemDef && (
-              <Text style={TEXT_LABEL}>
+              <Text style={styles.textLabel}>
                 Net Weight
-                &nbsp;<Text style={TEXT_VALUE}>
+                &nbsp;<Text style={styles.textValue}>
                   { parseFloat(itemDef.net_weight_kg).toFixed(3) } kg
                 </Text>
               </Text>
             )}
             { itemDef && (
-              <Text style={TEXT_LABEL}>
+              <Text style={styles.textLabel}>
                 Tare Weight
-                &nbsp;<Text style={TEXT_VALUE}>
+                &nbsp;<Text style={styles.textValue}>
                   {itemDef.tare_weight_kg ? parseFloat(itemDef.tare_weight_kg).toFixed(3) + " kg" : "Unknown"}
                 </Text>
               </Text>
             )}
             { itemDef && (
-              <Text style={TEXT_LABEL}>
+              <Text style={styles.textLabel}>
                 UPC
-                &nbsp;<Text style={TEXT_VALUE}>
+                &nbsp;<Text style={styles.textValue}>
                   {itemDef.upc}
                 </Text>
               </Text>
             )}
-            <View style={DIVIDER} />
+            <View style={styles.divider} />
           </View>
         </View>
       </View>

@@ -1,3 +1,8 @@
+require("../app/components/messages/messages.story")
+require("../app/components/message/message.story")
+require("../app/components/user-debug/user-debug.story")
+require("../app/components/login-required/login-required.story")
+require("../app/components/login-form/login-form.story")
 require("../app/components/loading-button/loading-button.story")
 require("../app/components/meter/meter.story")
 require("../app/components/user/user.story")

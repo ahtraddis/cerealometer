@@ -2,61 +2,72 @@ import * as React from "react"
 import { useStores } from "../models/root-store"
 import { useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
-import * as env from "../environment-variables"
-import { NavigationScreenProps } from "react-navigation"
-import { View } from "react-native"
-import { Wallpaper, Meter, Ports, Text } from "../components"
-import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT } from "../styles/common"
+import { NavigationInjectedProps } from "react-navigation"
+import { View, Dimensions } from "react-native"
+import { Wallpaper, Meter, Ports, Text, Screen, LoginRequired, UserDebug } from "../components"
+import { FULL, SCREEN_CONTAINER, SCREEN_HEADER, SCREEN_HEADER_TEXT } from "../styles/common"
 
+import auth from '@react-native-firebase/auth';
 
-export interface ItemsWrapperProps {
+interface ItemsWrapperProps {
   listType?: string
   emptyMessage?: string
   vertical?: boolean
 }
 
 const ItemsWrapper: React.FunctionComponent<ItemsWrapperProps> = observer((props) => {
-  const { userStore, itemStore, portStore } = useStores()
   const { listType, emptyMessage, ...rest } = props
-  useEffect(() => {}, [])
-  // [eschwartz-TODO] Hacks to force rerender. This needs to visibly display something in userStore to make it render observable changes.
   return (
-      <Ports
-        {...props}
-        dummyUserProp={(userStore.user && userStore.user.metrics) ? userStore.user.metrics.overallPercentage : 0}
-        dummyItemProp={(itemStore.items && itemStore.items.length) ? itemStore.items[0] : {}}
-        dummyPortProp={(portStore.ports && portStore.ports.length) ? portStore.ports[0] : {}}
-      />
+    <Ports {...props} />
   )
 });
 
-export interface ItemScreenProps extends NavigationScreenProps<{}> {}
+export interface ItemScreenProps extends NavigationInjectedProps<{}> {}
 
 export const ItemScreen: React.FunctionComponent<ItemScreenProps> = observer((props) => {
   const { deviceStore, portStore, itemDefinitionStore, itemStore, userStore } = useStores()
+  const { width } = Dimensions.get("window")
+  let isLoggedIn = userStore.user.isLoggedIn
+
+  // Handle user state changes
+  function onAuthStateChanged(user) {
+    userStore.updateAuthState(user)
+  }
 
   useEffect(() => {
-    // [eschwartz-TODO] Hardcoded user id
-    deviceStore.getDevices(env.HARDCODED_TEST_USER_ID)
-    //itemStore.getItems(env.HARDCODED_TEST_USER_ID)
-    userStore.getUser(env.HARDCODED_TEST_USER_ID)
-    // [eschwartz-TODO] Get only item defs for user
-    //itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID);
-    //portStore.getPorts(env.HARDCODED_TEST_USER_ID)
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    if (isLoggedIn) {
+      let uid = userStore.user.uid
+      //itemDefinitionStore.getItemDefinitions(uid);
+      //deviceStore.getDevices(uid)
+      //itemStore.getItems(uid)
+      //userStore.getUser(uid)
+      //portStore.getPorts(uid)
+    }
+    return subscriber
   }, [])
 
+  if (!isLoggedIn) {
+    return (
+      <LoginRequired />
+    )
+  }
+
   return (
-    <View style={FULL}>
+    <View style={FULL} >
       <Wallpaper />
-      <View style={SCREEN_HEADER}>
-        <Text style={SCREEN_HEADER_TEXT} tx={"itemScreen.header"} />
-      </View>
-      <Meter />
-      <ItemsWrapper
-        vertical={false}
-        listType={"active"}
-        emptyMessage={"Waiting for device to connect..."}
-      />
+      <Screen style={SCREEN_CONTAINER} preset="scroll">
+        <View style={SCREEN_HEADER}>
+          <Text style={SCREEN_HEADER_TEXT} tx={"itemScreen.header"} />
+        </View>
+        <Meter size={width - 140} />
+        <ItemsWrapper
+          vertical={false}
+          listType={"active"}
+          emptyMessage={"Waiting for device to connect..."}
+        />
+      </Screen>
+      <UserDebug />
     </View>
   )
 })

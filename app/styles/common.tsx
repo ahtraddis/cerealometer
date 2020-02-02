@@ -9,6 +9,7 @@ export const BOLD: TextStyle = { fontWeight: 'bold' }
 export const BLACK: TextStyle = { color: color.palette.black }
 export const WHITE: TextStyle = { color: color.palette.white }
 export const HIDDEN: TextStyle = { display: 'none' }
+export const TINY_TEXT: TextStyle = { fontSize: 10 }
 
 export const BUTTON: ViewStyle = {
   backgroundColor: "#5D2555",
@@ -57,6 +58,10 @@ export const MESSAGE: ViewStyle = {
 }
 export const MESSAGE_TEXT: TextStyle = {
   color: '#fff'
+}
+export const SCREEN_CONTAINER: ViewStyle = {
+  flex: 1,
+  paddingTop: 0,
 }
 export const SCREEN_HEADER: ViewStyle = {
   backgroundColor: color.palette.darkPurple,

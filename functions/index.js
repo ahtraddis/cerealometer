@@ -68,7 +68,7 @@ exports.getItemDefinitions = functions.https.onRequest(async (req, res) => {
   // get user's items
   const itemsSnap = await admin.database().ref('/items').orderByChild('user_id').equalTo(user_id).once('value')
   const items = itemsSnap.val()
-  console.log("items: ", items)
+  //console.log("items: ", items)
 
   const arrayToObject = (array) => array.reduce((obj, item) => {
     let key = Object.keys(item)[0]
@@ -91,7 +91,7 @@ exports.getItemDefinitions = functions.https.onRequest(async (req, res) => {
     result = await Promise.all(promises)
   }
   const response = arrayToObject(result)
-  console.log("response: ", response)
+  //console.log("response: ", response)
   res.status(200).send(response)
 });
 
@@ -103,22 +103,17 @@ exports.getUpcData = functions.https.onRequest(async (req, res) => {
   let response = {}
   if (data) {
     let key = Object.keys(data)[0] // in case of multiple
-    console.log("getUpcData(): found existing entry in item_definitions: ", data[key])
+    //console.log("getUpcData(): found existing entry in item_definitions: ", data[key])
     data[key].id = key
     response.item_definition = data[key]
     res.status(200).send(response);
   } else {
-    //console.log(`getUpcData(): UPC '${upc}' not found in item_definitions, querying barcodelookup.com`)
     console.log(`getUpcData(): UPC '${upc}' not found in item_definitions, querying upcitemdb.com`)
-    //const url = `https://api.barcodelookup.com/v2/products?barcode=${upc}&key=${BARCODE_API_KEY}`
     const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`
 
     fetch(url)
       .then(res => {
-        //console.log("res: ", JSON.stringify(res), null, 2)
-        console.log("res.headers:", res.headers)
         const headers = res.headers
-         
         const xRateLimitLimit = headers.get('x-ratelimit-limit')
         const xRateLimitRemaining = headers.get('x-ratelimit-remaining')
         const xRateLimitReset = headers.get('x-ratelimit-reset')
@@ -127,15 +122,7 @@ exports.getUpcData = functions.https.onRequest(async (req, res) => {
         return res.json()
       })
       .then(json => {
-        console.log("json: ", JSON.stringify(json, null, 2))
-        // Parsing for barcodelookup.com:
-        // let product = json.products[0]
-        // let brand = product.brand || null
-        // let name = product.product_name || null
-        // let description = product.description || null
-        // let image_url = product.images[0] || null
-        // let size = product.size // "17 oz"
-        
+        console.log("json: ", JSON.stringify(json, null, 2))        
         // Parsing for upcitemdb.com:
         if (json.code != "OK") {
           res.status(400).send(json)
@@ -155,11 +142,52 @@ exports.getUpcData = functions.https.onRequest(async (req, res) => {
           let currency = item.currency || null
           let lowest_recorded_price = item.lowest_recorded_price || null
           let highest_recorded_price = item.highest_recorded_price || null
+          // Some listed images are bad. Pick the walmartimages.com ones when available?
           let image_url = item.images[0] || null
-          // skipping offers [Array]
+          let offers = item.offers || null // array
+
+          // look for "1.23 oz", "1.23ounces" or similar pattern in various text fields
+          // note: weight fields sometimes indicates net weight for multi-pack items,
+          // e.g. "768 grams" for Yamamotoyama tea 16-pack (16 x 48g)
+          let netWeightRegex = /([\d.]+)\s*(oz|ounces|g|grams)[\s)]*(.*)$/i
+          let matchStr, val, units, weightKg = 0
+
+          if (title && title.match(netWeightRegex)) {
+            [matchStr, val, units] = title.match(netWeightRegex);
+          } else if (description && description.match(netWeightRegex)) {
+            [matchStr, val, units] = description.match(netWeightRegex);
+          } else if (offers) {
+            offers.forEach(offer => {
+              if (offer.title && offer.title.match(netWeightRegex)) {
+                [matchStr, val, units] = offer.title.match(netWeightRegex);
+                console.log(`matched in offer.title: '${offer.title}`);
+              }
+            })
+          }
+          console.log(`matchStr: '${matchStr}', val: '${val}', units: '${units}'`);
+
+          if (val && units) {
+            val = parseFloat(val);
+            units = units.toLowerCase();
+            let divisor = 1.0;
+            switch (units) {
+              case 'oz':
+                divisor = 35.274;
+                break;
+              case 'g':
+                divisor = 1000.0;
+                break;
+              default:
+                console.log(`unmatched units '${units}'`);
+                divisor = 1.0;
+            }
+            weightKg = val / divisor;
+            console.log("weightKg: ", weightKg)
+          }
           
           let result = {
             _source: 'upcitemdb',
+            create_time: getEpoch(),
             // main fields to get from any db
             upc: upc,
             brand: brand,
@@ -167,8 +195,8 @@ exports.getUpcData = functions.https.onRequest(async (req, res) => {
             description: description,
             image_url: image_url,
             // computed fields
-            net_weight_kg: 0, // TODO: find me
-            tare_weight_kg: 0, // TODO: find me
+            net_weight_kg: weightKg,
+            tare_weight_kg: 0,
             // extra non-essential fields
             ean: ean,
             title: title,
@@ -223,7 +251,7 @@ exports.clearPortItem = functions.https.onRequest(async (req, res) => {
   if (req.method != "POST") return res.status(405).end()
 
   const { device_id, slot } = req.body
-  console.log(`method: ${req.method}, device_id: ${device_id}, slot=${slot}`)
+  //console.log(`method: ${req.method}, device_id: ${device_id}, slot=${slot}`)
 
   const portSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}`).once('value')
   const port = portSnap.val()
@@ -287,22 +315,31 @@ async function updateMetricsForUserId(user_id) {
       }
     })
   }
+  let overallPercentage = totalKg ? (100 * totalNetWeightKg / totalKg) : 0
   let metrics = {
     totalKg: totalKg,
     totalNetWeightKg: totalNetWeightKg,
-    overallPercentage: totalKg ? (100 * totalNetWeightKg / totalKg) : 0,
+    overallPercentage: overallPercentage,
   }
   await admin.database().ref(`/users/${user_id}/metrics`).set(metrics)
   //console.log(`updated metrics for user_id '${user_id}':`, JSON.stringify(metrics, null, 2))
 
   // add message
-  // let data = {
-  //   title: "Title",
-  //   message: moment().format('LLL')
-  // }
-  // const snap = admin.database().ref(`/messages/${user_id}`).push(data)
-  // const messageKey = snap.key
-  // console.log(`message key '${messageKey}' has been created:`, data)
+  // Placeholder thermometer image:
+  // https://www.raspberrypi.org/documentation/configuration/images/over_temperature_80_85.png
+  // Peanut Butter Chex:
+  // https://i5.walmartimages.com/asr/f6a51049-73b0-487a-b2c0-2d8e9aeb7b22_1.3954a6f2d22eacc575662819850e9042.jpeg?odnHeight=450&odnWidth=450&odnBg=ffffff
+  let data = {
+    title: "Level Chex",
+    create_time: getEpoch(),
+    //message: moment().format('LLL'),
+    message: `Current danger level is ${overallPercentage.toFixed(0)}%. You're running a little hot.`,
+    //image_url: 'https://placeimg.com/50/50/animals',
+    image_url: 'https://i5.walmartimages.com/asr/f6a51049-73b0-487a-b2c0-2d8e9aeb7b22_1.3954a6f2d22eacc575662819850e9042.jpeg?odnHeight=450&odnWidth=450&odnBg=ffffff',
+  }
+  const snap = admin.database().ref(`/messages/${user_id}`).push(data)
+  const messageKey = snap.key
+  //console.log(`message key '${messageKey}' has been created:`, data)
 }
 
 exports.itemDefinitionChanged = functions.database.ref('/item_definitions/{item_definition_id}')
@@ -324,6 +361,21 @@ exports.itemDefinitionChanged = functions.database.ref('/item_definitions/{item_
     return null
   }
 );
+
+exports.itemDefinitionDeleted = functions.database.ref('/item_definitions/{item_definition_id}').onDelete(async (snap, context) => {
+  const { item_definition_id } = context.params
+  
+  const itemsAffectedSnap = await admin.database().ref('/items').orderByChild('item_definition_id').equalTo(item_definition_id).once('value');
+  // create a map with all items to delete
+  const updates = {};
+  itemsAffectedSnap.forEach(item => {
+    updates[item.key] = null;
+  });
+  //console.log("updates: ", updates)
+  // execute all updates in one go and return the result ot end the function
+  return admin.database().ref('/items').update(updates);
+});
+
 
 // Log event when cereal scale status changes, e.g. box is removed or returned
 exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/data/{slot_id}/weight_kg')
@@ -375,7 +427,7 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/data/{slo
 
     if (new_status != port.status) {
       const updateStatusSnap = await rootRef.child(`/ports/${device_id}/data/${slot_id}/status`).set(new_status)
-      console.log(`updated status from prev_status '${port.status}' to new_status '${new_status}'`);
+      //console.log(`updated status from prev_status '${port.status}' to new_status '${new_status}'`);
     }
 
     if ((port.weight_kg != weightKgBefore)
@@ -386,7 +438,7 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/data/{slo
       item.last_known_weight_kg = port.weight_kg
       item.last_update_time = getEpoch()
       const updateItemSnap = await rootRef.child(`/items/${item_id}`).set(newItem)
-      console.log('updated item:', JSON.stringify(newItem, null, 2))
+      //console.log('updated item:', JSON.stringify(newItem, null, 2))
     }
 
     const deviceSnap = await rootRef.child(`/devices/${device_id}`).once('value')
@@ -397,12 +449,15 @@ exports.slotWeightChanged = functions.database.ref('/ports/{device_id}/data/{slo
   }
 );
 
+
+
+
 exports.resetPort = functions.database.ref('/items/{item_id}').onDelete(async (snap, context) => {
   const deletedItem = snap.val()
   const user_id = deletedItem.user_id
 
   const { item_id } = context.params
-  console.log(`item '${item_id}' has been deleted`)
+  //console.log(`item '${item_id}' has been deleted`)
   // Unset any item_id references in /ports
   // [eschwartz-TODO] orderByChild doesn't seem to work here to query item_id in /ports, perhaps due to the <slot> param one level up?
   // Querying all ports for now.
@@ -435,7 +490,7 @@ exports.setItemDefinitionTareWeight = functions.https.onRequest(async (req, res)
   const { item_definition_id, tare_weight_kg } = req.body
   const itemDefSnap = await admin.database().ref(`/item_definitions/${item_definition_id}`).once('value')
   const itemDef = itemDefSnap.val()
-  console.log("itemDef:", JSON.stringify(itemDef, null, 2))
+  //console.log("itemDef:", JSON.stringify(itemDef, null, 2))
 
   // update tare weight as long as reported value seems reasonable
   if ((tare_weight_kg > PRESENCE_THRESHOLD_KG) && (tare_weight_kg < itemDef.net_weight_kg)) {
@@ -496,7 +551,7 @@ exports.sendByeEmail = functions.auth.user().onDelete((user) => {
 // Sends a welcome email to the given user.
 async function sendWelcomeEmail(email, displayName) {
   const mailOptions = {
-    from: `${APP_NAME} <noreply@firebase.com>`,
+    from: `${APP_NAME} <donutreply@whyanext.com>`,
     to: email,
   };
 
@@ -511,7 +566,7 @@ async function sendWelcomeEmail(email, displayName) {
 // Sends a goodbye email to the given user.
 async function sendGoodbyeEmail(email, displayName) {
   const mailOptions = {
-    from: `${APP_NAME} <noreply@firebase.com>`,
+    from: `${APP_NAME} <donutreply@whyanext.com>`,
     to: email,
   };
 

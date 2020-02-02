@@ -4,6 +4,7 @@ import { UserSnapshot } from "../../models/user"
 import { PortSnapshot } from "../../models/port"
 import { ItemDefinitionSnapshot } from "../../models/item-definition"
 import { ItemSnapshot } from "../../models/item"
+import { MessageSnapshot } from "../../models/message"
 
 export type GetItemsResult = { kind: "ok"; items: ItemSnapshot[] } | GeneralApiProblem
 export type GetDevicesResult = { kind: "ok"; devices: DeviceSnapshot[] } | GeneralApiProblem
@@ -16,3 +17,5 @@ export type GetUserResult = { kind: "ok"; user: UserSnapshot } | GeneralApiProbl
 export type GetUpcDataResult = { kind: "ok"; item_definition: ItemDefinitionSnapshot } | GeneralApiProblem
 export type AddItemResult = { kind: "ok"; item: ItemSnapshot } | GeneralApiProblem
 export type DeleteItemResult = { kind: "ok"; item: ItemSnapshot } | GeneralApiProblem
+export type GetMessagesResult = { kind: "ok"; messages: MessageSnapshot[] } | GeneralApiProblem
+export type DeleteMessageResult = { kind: "ok" } | GeneralApiProblem

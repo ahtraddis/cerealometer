@@ -1,21 +1,64 @@
 import * as React from "react"
-import { ViewStyle } from "react-native"
-import { Screen, Text } from "../components"
-import { color } from "../theme"
-import { NavigationScreenProps } from "react-navigation"
+import { useStores } from "../models/root-store"
+import { useEffect, useState } from "react"
+import { observer } from "mobx-react-lite"
+import { UserSnapshot } from "../models/user"
+import { NavigationInjectedProps } from "react-navigation"
+import { View, ScrollView } from "react-native"
+import { Screen, Text, LoginRequired, UserDebug, Meter, Messages, Wallpaper } from "../components"
+import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT, SCREEN_CONTAINER } from "../styles/common"
+import database from '@react-native-firebase/database'
 
-const ROOT: ViewStyle = {
-  backgroundColor: color.palette.black,
-}
-
-export interface AlarmScreenProps extends NavigationScreenProps<{}> {
-}
-
-export const AlarmScreen: React.FunctionComponent<AlarmScreenProps> = (props) => {
-  
+const MessagesWrapper: React.FunctionComponent = observer((props) => {
   return (
-    <Screen style={ROOT} preset="scroll">
-      <Text preset="header" tx="alarmScreen.header" />
-    </Screen>
+    <Messages {...props} />
   )
-}
+});
+
+export interface AlarmScreenProps extends NavigationInjectedProps<{}> {}
+
+export const AlarmScreen: React.FunctionComponent<AlarmScreenProps> = observer((props) => {
+  
+  const { userStore } = useStores();
+
+  function onUserChange(snapshot: UserSnapshot) {
+    userStore.setUser(snapshot.val())
+  }
+
+  let isLoggedIn = userStore.user.isLoggedIn
+
+  useEffect(() => {
+    let refSet, userRef
+    if (isLoggedIn) {
+      refSet = true
+      let uid = userStore.user.uid
+      userRef = database().ref(`/users/${uid}`)
+      userRef.on('value', onUserChange);
+    }
+    if (refSet) {
+      return () => userRef.off('value', onUserChange)
+    }
+  }, [])
+
+  if (!isLoggedIn) {
+    return (
+      <LoginRequired />
+    )
+  }
+
+  return (
+    <View style={FULL}>
+      <Wallpaper />
+      <Screen style={SCREEN_CONTAINER}>
+        <View style={SCREEN_HEADER}>
+          <Text style={SCREEN_HEADER_TEXT} tx={"alarmScreen.header"} />
+        </View>
+        <Meter />
+        <ScrollView style={{marginTop: 10, paddingTop: 0, paddingBottom: 15}}>
+          <MessagesWrapper />
+        </ScrollView>
+      </Screen>
+      <UserDebug />
+    </View>
+  )
+})

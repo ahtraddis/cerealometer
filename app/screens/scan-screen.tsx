@@ -2,11 +2,11 @@ import * as React from "react"
 import update from 'immutability-helper'
 import { useState, useEffect } from "react"
 import { useStores } from "../models/root-store"
-import { NavigationScreenProps } from "react-navigation"
-import { ViewStyle, ImageStyle, View, Image, TextStyle, Vibration, ScrollView, Dimensions } from "react-native"
-import { Screen, Text, Header, Wallpaper, Button, LoadingButton } from "../components"
+import { NavigationInjectedProps } from "react-navigation"
+import { StyleSheet, ViewStyle, View, Image, Vibration, ScrollView, Dimensions } from "react-native"
+import { Screen, Text, Header, Wallpaper, Button, LoadingButton, LoginRequired, UserDebug } from "../components"
 import { color } from "../theme"
-import { BLACK, WHITE, FULL, HEADER, HEADER_TITLE } from "../styles/common"
+import { BLACK, WHITE, FULL, HEADER, HEADER_TITLE, SCREEN_CONTAINER } from "../styles/common"
 import * as delay from "../utils/delay"
 var _ = require('underscore')
 import { RNCamera } from 'react-native-camera';
@@ -17,52 +17,6 @@ const ITEM_HEIGHT = 60;
 
 const { width } = Dimensions.get("window");
 
-const SCREEN_CONTAINER: ViewStyle = {
-  flex: 1,
-}
-const MAIN_CONTAINER: ViewStyle = {
-  flex: 1,
-}
-const INSTRUCTION_CONTAINER: ViewStyle = {
-  flex: 1,
-  padding: 10,
-  justifyContent: 'center',
-}
-const CAMERA_CONTAINER: ViewStyle = {
-  flex: 3,
-}
-const RESULTS_CONTAINER: ViewStyle = {
-  flex: 4,
-  flexDirection: 'column',
-}
-const RESULTS_LIST: ViewStyle = {
-  flex: 5,
-  paddingTop: 20,
-}
-const NO_RESULTS_TEXT: TextStyle = {
-  textAlign: 'center',
-  fontSize: 20,
-  opacity: .5,
-}
-const NO_RESULTS: ViewStyle = {
-  flex: 1,
-  paddingTop: 20,
-}
-const RESULTS_BUTTONS: ViewStyle = {
-  flex: 1,
-  alignItems: 'center',
-}
-const BUTTONS: ViewStyle = {
-  flex: 1,
-  flexDirection: 'row',
-}
-const CAMERA_PREVIEW: ViewStyle = {
-  flex: 1,
-  width: width,
-  overflow: 'hidden', // cam view exceeds view height
-  justifyContent: 'space-around',
-  alignItems: 'center',
-}
 const ITEM_CONTAINER: ViewStyle = {
   backgroundColor: color.palette.lightPlum,
   height: ITEM_HEIGHT,
@@ -74,86 +28,6 @@ const ITEM_CONTAINER: ViewStyle = {
   justifyContent: 'center',
   borderRadius: 3,
 }
-const ITEM_FOUND_CONTAINER: ViewStyle = {
-  ...ITEM_CONTAINER,
-  backgroundColor: color.palette.white,
-}
-const OUTER: ViewStyle = {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  flexDirection: 'row',
-}
-const IMAGE_VIEW: ViewStyle = {
-  flex: 1,
-  width: ITEM_HEIGHT,
-  height: ITEM_HEIGHT,
-  paddingLeft: 5,
-}
-const IMAGE: ImageStyle = {
-  height: ITEM_HEIGHT - 10,
-  resizeMode: 'contain',
-  marginTop: 5
-}
-const INFO_VIEW: ViewStyle = {
-  flex: 4,
-  height: ITEM_HEIGHT,
-  paddingLeft: 10,
-  paddingRight: 0,
-}
-const INFO_CONTENT_VIEW: ViewStyle = {
-  flex: 1,
-  flexDirection: 'row',
-}
-const BUTTONS_VIEW: ViewStyle = {
-  flex: 1,
-  paddingLeft: 10,
-}
-const TITLE_VIEW: ViewStyle = {
-  marginBottom: 5,
-  flex: 8,
-  overflow: 'hidden',
-  marginTop: 5,
-  alignItems: 'center',
-  justifyContent: 'center',
-}
-const QUAN_VIEW: ViewStyle = {
-  flex: 0,
-  display: 'none', // [eschwartz-TODO] Hiding quan +/- for now
-  justifyContent: 'center',
-  alignContent: 'flex-start',
-}
-const QUAN_COLUMN: ViewStyle = {
-  flex: 1,
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-}
-const QUAN_BUTTON_VIEW: ViewStyle = {
-  flex: 1,
-  justifyContent: 'center',
-  padding: 5,
-}
-const QUAN_BUTTON: ViewStyle = {
-  backgroundColor: '#aaa',
-  width: 20,
-}
-const QUAN_BUTTON_TEXT: TextStyle = {
-  fontSize: 20,
-}
-const QUAN_TEXT: TextStyle = {
-  color: '#000',
-  fontSize: 15,
-}
-const TITLE_TEXT: TextStyle = {
-  ...BLACK,
-  fontSize: 14,
-}
-const ITEM_BUTTON_VIEW: ViewStyle = {
-  paddingRight: 5,
-  flex: 0,
-  flexDirection: 'column',
-}
 const ITEM_BUTTON: ViewStyle = {
   marginTop: 5,
   marginBottom: 5,
@@ -161,32 +35,166 @@ const ITEM_BUTTON: ViewStyle = {
   paddingBottom: 10,
   backgroundColor: color.palette.darkPurple,
 }
-const ITEM_BUTTON_DISABLED: ViewStyle = {
-  ...ITEM_BUTTON,
-  backgroundColor: '#bbb'
-}
-const ITEM_BUTTON_TEXT: TextStyle = {
-  ...WHITE,
-  fontSize: 12,
-}
-const ACTION_BUTTON: ViewStyle = {
-  padding: 10,
-  backgroundColor: color.palette.darkPurple,
-  width: 100,
-  marginLeft: 5,
-  marginRight: 5,
-  marginBottom: 10,
-}
-const ACTION_BUTTON_TEXT: TextStyle = {
-  fontSize: 14,
-}
-const FETCHING_TEXT: TextStyle = {
-  color: '#ccc',
-}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  instructions: {
+    flex: 1,
+    padding: 10,
+    justifyContent: 'center',
+  },
+  camera: {
+    flex: 3,
+  },
+  results: {
+    flex: 4,
+    flexDirection: 'column',
+  },
+  resultsList: {
+    flex: 5,
+    paddingTop: 20,
+  },
+  noResults: {
+    flex: 1,
+    paddingTop: 20,
+  },
+  noResultsText: {
+    textAlign: 'center',
+    fontSize: 20,
+    opacity: .5,
+  },
+  resultsButtons: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  buttons: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  cameraPreview: {
+    flex: 1,
+    width: width,
+    overflow: 'hidden', // cam view exceeds view height
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  itemContainer: {
+    ...ITEM_CONTAINER,
+  },
+  itemFoundContainer: {
+    ...ITEM_CONTAINER,
+    backgroundColor: color.palette.white,
+  },
+  outer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  imageView: {
+    flex: 1,
+    width: ITEM_HEIGHT,
+    height: ITEM_HEIGHT,
+    paddingLeft: 5,
+  },
+  image: {
+    height: ITEM_HEIGHT - 10,
+    resizeMode: 'contain',
+    marginTop: 5
+  },
+  infoView: {
+    flex: 4,
+    height: ITEM_HEIGHT,
+    paddingLeft: 10,
+    paddingRight: 0,
+  },
+  infoContentView: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  buttonsView: {
+    flex: 1,
+    paddingLeft: 10,
+  },
+  titleView: {
+    marginBottom: 5,
+    flex: 8,
+    overflow: 'hidden',
+    marginTop: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quanView: {
+    flex: 0,
+    display: 'none', // [eschwartz-TODO] Hiding quan +/- for now
+    justifyContent: 'center',
+    alignContent: 'flex-start',
+  },
+  quanColumn: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quanButtonView: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 5,
+  },
+  quanButton: {
+    backgroundColor: '#aaa',
+    width: 20,
+  },
+  quanButtonText: {
+    fontSize: 20,
+  },
+  quanText: {
+    color: '#000',
+    fontSize: 15,
+  },
+  titleText: {
+    ...BLACK,
+    fontSize: 14,
+  },
+  itemButtonView: {
+    paddingRight: 5,
+    flex: 0,
+    flexDirection: 'column',
+  },
+  itemButton: {
+    ...ITEM_BUTTON,
+  },
+  itemButtonDisabled: {
+    ...ITEM_BUTTON,
+    backgroundColor: '#bbb'
+  },
+  itemButtonText: {
+    ...WHITE,
+    fontSize: 12,
+  },
+  actionButton: {
+    padding: 10,
+    backgroundColor: color.palette.darkPurple,
+    width: 100,
+    marginLeft: 5,
+    marginRight: 5,
+    marginBottom: 10,
+  },
+  actionButtonText: {
+    fontSize: 14,
+  },
+  fetchingText: {
+    color: '#ccc',
+  },
+})
 
 export interface ItemLookupResultProps {
   upc: string
 }
+
+export interface ScanScreenProps extends NavigationInjectedProps<{}> {}
 
 export function ItemLookupResult(props: ItemLookupResultProps) {
   const { upc } = props
@@ -216,13 +224,13 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
   }
 
   const addItem = async(itemDefinition, quan) => {
-    if (!userStore.user.id) {
+    if (!userStore.user.uid) {
       __DEV__ && console.tron.log("missing user id")
       return
     }
     setAdding(true)
     await delay.delay(500)
-    await itemStore.addItem(userStore.user.id, itemDefinition.id, quan)
+    await itemStore.addItem(userStore.user.uid, itemDefinition.id, quan)
     // [escshwartz-TODO] Handle failure case
     setAdded(true)
     setAdding(false)
@@ -232,17 +240,17 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
   const decrementQuan = () => setQuan(Math.max(0, quan - 1))
   
   return (
-    <View style={itemDefinition ? ITEM_FOUND_CONTAINER : ITEM_CONTAINER}>
+    <View style={itemDefinition ? styles.itemFoundContainer : styles.itemContainer}>
       { !itemDefinition && (
-        <View style={OUTER}>
+        <View style={styles.outer}>
           <View>
             { fetching && (
-              <Text style={FETCHING_TEXT}>
+              <Text style={styles.fetchingText}>
                 Looking up UPC {upc}...
               </Text>
             )}
             { !fetching && (
-              <Text style={FETCHING_TEXT}>
+              <Text style={styles.fetchingText}>
                 Sorry, UPC {upc} not found.
               </Text>
             )}
@@ -250,35 +258,35 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
         </View>
       )}
       { itemDefinition && (
-        <View style={OUTER}>
-          <View style={IMAGE_VIEW}>
+        <View style={styles.outer}>
+          <View style={styles.imageView}>
             { itemDefinition.image_url &&
-              <Image style={IMAGE} source={{uri: itemDefinition.image_url}} />
+              <Image style={styles.image} source={{uri: itemDefinition.image_url}} />
             }
           </View>
-          <View style={INFO_VIEW}>
-            <View style={INFO_CONTENT_VIEW}>
-              <View style={TITLE_VIEW}>
-                <Text style={TITLE_TEXT} text={itemDefinition.name} />
+          <View style={styles.infoView}>
+            <View style={styles.infoContentView}>
+              <View style={styles.titleView}>
+                <Text style={styles.titleText} text={itemDefinition.name} />
               </View>
-              <View style={QUAN_VIEW}>
-                <View style={QUAN_COLUMN}>
-                  <View style={QUAN_BUTTON_VIEW}>
+              <View style={styles.quanView}>
+                <View style={styles.quanColumn}>
+                  <View style={styles.quanButtonView}>
                     <Button
                       tx={"scanScreen.incrementButtonLabel"}
-                      style={QUAN_BUTTON}
-                      textStyle={QUAN_BUTTON_TEXT}
+                      style={styles.quanButton}
+                      textStyle={styles.quanButtonText}
                       onPress={incrementQuan}
                     />
                   </View>
-                  <View style={QUAN_BUTTON_VIEW}>
-                    <Text style={QUAN_TEXT}>{quan}</Text>
+                  <View style={styles.quanButtonView}>
+                    <Text style={styles.quanText}>{quan}</Text>
                   </View>
-                  <View style={QUAN_BUTTON_VIEW}>
+                  <View style={styles.quanButtonView}>
                     <Button
                       tx={"scanScreen.decrementButtonLabel"}
-                      style={QUAN_BUTTON}
-                      textStyle={QUAN_BUTTON_TEXT}
+                      style={styles.quanButton}
+                      textStyle={styles.quanButtonText}
                       onPress={decrementQuan}
                     />
                   </View>
@@ -286,12 +294,12 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
               </View>
             </View>
           </View>
-          <View style={BUTTONS_VIEW}>
-            <View style={ITEM_BUTTON_VIEW}>
+          <View style={styles.buttonsView}>
+            <View style={styles.itemButtonView}>
               <LoadingButton
                 isLoading={adding}
-                style={(quan > 0) ? ITEM_BUTTON : ITEM_BUTTON_DISABLED}
-                textStyle={ITEM_BUTTON_TEXT}
+                style={(quan > 0) ? styles.itemButton : styles.itemButtonDisabled}
+                textStyle={styles.itemButtonText}
                 tx={"scanScreen.addItemLabel"}
                 onPress={() => addItem(itemDefinition, quan)}
               />
@@ -303,12 +311,12 @@ export function ItemLookupResult(props: ItemLookupResultProps) {
   )
 }
 
-// [eschwartz-TODO] May need to change back to NavigationInjectedProps. Study this.
-export interface ScanScreenProps extends NavigationScreenProps<{}> {}
-
 export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
   const [lookupItems, setLookupItems] = useState({});
   const [count, setCount] = useState(0);
+  const { userStore } = useStores();
+
+  let isLoggedIn = userStore.user.isLoggedIn
 
   useEffect(() => {}, []);
 
@@ -342,23 +350,29 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
     })
   }
 
+  if (!isLoggedIn) {
+    return (
+      <LoginRequired />
+    )
+  }
+
   return (
     <View style={FULL}>
       <Wallpaper />
       <Screen style={SCREEN_CONTAINER} preset="scroll">
-        <View style={MAIN_CONTAINER}>
-          <View style={INSTRUCTION_CONTAINER}>
+        <View style={styles.container}>
+          <View style={styles.instructions}>
             <Header
               headerTx={"scanScreen.header"}
               style={HEADER}
               titleStyle={HEADER_TITLE} />
           </View>
-          <View style={CAMERA_CONTAINER}>
+          <View style={styles.camera}>
             <RNCamera
               /*ref={ref => {
                 this.camera = ref;
               }}*/
-              style={CAMERA_PREVIEW}
+              style={styles.cameraPreview}
               type={RNCamera.Constants.Type.back}
               flashMode={RNCamera.Constants.FlashMode.off}
               captureAudio={false}
@@ -379,12 +393,12 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
               }}
             />
           </View>
-          <View style={RESULTS_CONTAINER}>
+          <View style={styles.results}>
             <ScrollView>
-              <View style={RESULTS_LIST}>
+              <View style={styles.resultsList}>
                 { _.isEmpty(lookupItems) && (
-                  <View style={NO_RESULTS}>
-                    <Text tx={"scanScreen.noResults"} style={NO_RESULTS_TEXT} />
+                  <View style={styles.noResults}>
+                    <Text tx={"scanScreen.noResults"} style={styles.noResultsText} />
                   </View>
                 )}
                 { !_.isEmpty(lookupItems) && Object.keys(lookupItems).map((upc, i) => {
@@ -396,12 +410,12 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
                   )
                 })}
               </View>
-              <View style={RESULTS_BUTTONS}>
-                <View style={BUTTONS}>
+              <View style={styles.resultsButtons}>
+                <View style={styles.buttons}>
                   { !_.isEmpty(lookupItems) && (
                     <View>
-                      <Button style={ACTION_BUTTON}
-                        textStyle={ACTION_BUTTON_TEXT}
+                      <Button style={styles.actionButton}
+                        textStyle={styles.actionButtonText}
                         tx={"scanScreen.clearResultsLabel"}
                         onPress={clearResults}
                       />
@@ -412,6 +426,7 @@ export const ScanScreen: React.FunctionComponent<ScanScreenProps> = (props) => {
             </ScrollView>
           </View>
         </View>
+        <UserDebug />
       </Screen>
     </View>
   )

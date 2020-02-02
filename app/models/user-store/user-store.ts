@@ -2,7 +2,6 @@ import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { UserModel, UserSnapshot, User, UserMetricsModel } from "../user/user"
 import { withEnvironment } from "../extensions"
 import { GetUserResult } from "../../services/api"
-import * as env from "../../environment-variables"
 
 /**
  * UserStoreModel description
@@ -18,7 +17,6 @@ export const UserStoreModel = types
     saveUser: (userSnapshot: UserSnapshot) => {
       const userModel: User = UserModel.create(userSnapshot)
       self.user = userModel
-      //__DEV__ && console.tron.log(userModel)
     },
   }))
   .actions(self => ({
@@ -33,14 +31,40 @@ export const UserStoreModel = types
   }))
   .actions(self => ({
     setUser: flow(function*(user) {
+      //__DEV__ && console.tron.log("setUser()")
       //__DEV__ && console.tron.log(user)
-      self.user = UserModel.create({
-        // [eschwartz-TODO] Hardcoded user id
-        id: env.HARDCODED_TEST_USER_ID,
-        name: user.name,
-        metrics: UserMetricsModel.create(user.metrics),
-        email: user.email,
-      })
+      if (user) {
+        if (user.name) self.user.name = user.name
+        if (user.metrics) self.user.metrics = UserMetricsModel.create(user.metrics)
+      } else {
+        console.tron.error("missing user")
+      }
+    }),
+  }))
+  .actions(self => ({
+    updateAuthState: flow(function*(user) {
+      self.user.isLoggedIn = (user && user.uid) ? true : false
+      if (user) {
+        const {
+          uid,
+          phoneNumber,
+          displayName,
+          isAnonymous,
+          email,
+          emailVerified,
+          providerId,
+          photoURL,
+        } = user
+
+        self.user.uid = uid
+        self.user.phoneNumber = phoneNumber || undefined  // can't be null
+        self.user.displayName = displayName || undefined
+        self.user.isAnonymous = isAnonymous || undefined
+        self.user.email = email || undefined
+        self.user.emailVerified = emailVerified || undefined
+        self.user.providerId = providerId || undefined
+        self.user.photoURL = photoURL || undefined
+      }
     }),
   }))
   .actions(self => ({

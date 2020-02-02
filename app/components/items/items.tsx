@@ -2,7 +2,6 @@ import * as React from "react"
 import { useEffect, useState } from "react"
 import { Observer } from 'mobx-react-lite'
 import { useStores } from "../../models/root-store"
-import * as env from "../../environment-variables"
 import { View, StyleSheet, Dimensions, Text } from "react-native"
 import { Item } from "../item/item"
 import { color } from "../../theme/color"
@@ -24,15 +23,15 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: width * 0.5
+  },
+  paginationStyleItem: {
+    borderColor: color.palette.cheerio,
+    borderWidth: 6,
+    padding: 5,
+    shadowRadius: 1,
+    marginBottom: 10,
   }
 });
-const PAGINATION_STYLE_ITEM = {
-  borderColor: color.palette.cheerio,
-  borderWidth: 6,
-  padding: 5,
-  shadowRadius: 1,
-  marginBottom: 10
-}
 
 export interface ItemsProps {
   /**
@@ -40,9 +39,6 @@ export interface ItemsProps {
    */
   device_id?: string
 
-  dummyUserProp?: any
-  dummyItemProp?: any
-  dummyPortProp?: any
   listType?: string
   vertical?: boolean
   emptyMessage?: string
@@ -75,26 +71,29 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   }
 
   useEffect(() => {
-    // [eschwartz-TODO] Hardcoded user id
-    //itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID)
-    //portStore.getPorts(env.HARDCODED_TEST_USER_ID)
+    let refSet, itemsRef, userRef, portsRef
+    if (userStore.user.isLoggedIn) {
+      refSet = true
+      const uid = userStore.user.uid
+      //itemDefinitionStore.getItemDefinitions(uid)
+      //portStore.getPorts(uid)
+      itemsRef = database().ref('/items').orderByChild('user_id').equalTo(uid);
+      //itemsRef.on('value', onItemsChange);
 
-    // [eschwartz-TODO] hardcoded user id
-    const itemsRef = database().ref('/items').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
-    //itemsRef.on('value', onItemsChange);
+      userRef = database().ref(`/users/${uid}`)
+      //userRef.on('value', onUserChange);
 
-    const userRef = database().ref(`/users/${env.HARDCODED_TEST_USER_ID}`)
-    //userRef.on('value', onUserChange);
-
-    const portsRef = database().ref('/ports').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
-    //portsRef.on('value', onPortsChange);
-
-    // Unsubscribe from changes on unmount
-    // return () => {
-    //   itemsRef.off('value', onItemsChange)
-    //   userRef.off('value', onUserChange)
-    //   portsRef.off('value', onPortsChange)
-    // }
+      portsRef = database().ref('/ports').orderByChild('user_id').equalTo(uid);
+      //portsRef.on('value', onPortsChange);
+    }
+    if (refSet) {
+      // Unsubscribe from changes on unmount
+      return () => {
+        itemsRef.off('value', onItemsChange)
+        userRef.off('value', onUserChange)
+        portsRef.off('value', onPortsChange)
+      }
+    }
   }, []);
 
   const renderItem = ({ item }) => {
@@ -114,14 +113,15 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   }
 
   const onRefresh = async() => {
-    __DEV__ && console.tron.log("onRefresh()")
-    setRefreshing(true)
-    
-    // [eschwartz-TODO] Hardcoded user id
-    await itemDefinitionStore.getItemDefinitions(env.HARDCODED_TEST_USER_ID) // get first
-    await portStore.getPorts(env.HARDCODED_TEST_USER_ID)
-    await itemStore.getItems(env.HARDCODED_TEST_USER_ID)
-    setRefreshing(false)
+    __DEV__ && console.tron.log("onRefresh()")    
+    if (userStore.user.isLoggedIn) {
+      let uid = userStore.user.uid
+      setRefreshing(true)
+      await itemDefinitionStore.getItemDefinitions(uid) // get first
+      await portStore.getPorts(uid)
+      await itemStore.getItems(uid)
+      setRefreshing(false)
+    }
   }
 
   const EmptyMessage = () => {
@@ -153,14 +153,14 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
           refreshing={refreshing}
           vertical={vertical}
           showPagination
-          paginationStyleItem={PAGINATION_STYLE_ITEM}
+          paginationStyleItem={styles.paginationStyleItem}
           paginationDefaultColor={'transparent'}
           paginationActiveColor={color.palette.cheerioCenter}
           data={data}
           ListEmptyComponent={EmptyMessage}
           renderItem={renderItem}
-          //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
-          //keyExtractor={(item: { key: any; }) => item.key}
+          extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
+          keyExtractor={item => item.id}
         />
         }
       </Observer>

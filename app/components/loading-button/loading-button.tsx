@@ -81,7 +81,7 @@ export function LoadingButton(props: LoadingButtonProps) {
       ref={ref}
       style={viewStyle}
     >
-      {showLoader ? (
+      {false && showLoader ? (
         <AnimatedView style={fadeOutProps}>
           <Progress.Circle color={'#fff'} size={15} indeterminate={true} />
         </AnimatedView>
@@ -92,4 +92,5 @@ export function LoadingButton(props: LoadingButtonProps) {
       )}
     </TouchableOpacity>
   );
+
 }

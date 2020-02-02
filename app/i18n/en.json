@@ -8,16 +8,17 @@
   "errors": {
     "invalidEmail": "Invalid email address."
   },
+
   "itemScreen": {
     "header": "Cerealometer",
+  },
+  "overstockScreen": {
+    "header": "Backstock"
   },
   "deviceScreen": {
     "header": "Devices",
     "navigate": "Other screen",
     "goToScanScreen": "Go to Scan Screen"
-  },
-  "overstockScreen": {
-    "header": "Overstock"
   },
   "scanScreen": {
     "header": "Scan your cereal",
@@ -33,6 +34,25 @@
   "alarmScreen": {
     "header": "Alarms"
   },
+  "settingsScreen": {
+    "header": "Settings"
+  },
+  "registerScreen": {
+    "header": "Sign Up"
+  },
+  "loginScreen": {
+    "header": "Login"
+  },
+  "forgotScreen": {
+    "header": "Forgot"
+  },
+  "loginRequired": {
+    "message": "Login is required to access this page",
+    "buttonLabel": "Login"
+  },
+  "port": {
+    "vacantSlotLabel": "Available slot"
+  },
   "item": {
     "addToShelf": "INSTALL",
     "removeFromShelf": "UNINSTALL",
@@ -40,10 +60,13 @@
     "deleteButtonLabel": "ATE IT",
     "updateTareWeightButtonLabel": "SET TARE",
   },
-  "port": {
-    "vacantSlotLabel": "Available slot"
+  "messages": {
+    "emptyLabel": "No alarms. Cool!"
   },
-
+  "message": {
+    "dismissButtonLabel": "Dismiss"
+  },
+  
   "storybook": {
     "placeholder": "Placeholder",
     "field": "Field"

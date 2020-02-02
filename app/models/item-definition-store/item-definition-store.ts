@@ -16,21 +16,8 @@ export const ItemDefinitionStoreModel = types
   .actions(self => ({
     saveItemDefinitions: (itemDefinitionSnapshots: ItemDefinitionSnapshot[]) => {
       // create model instances from the plain objects
-      // const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c))
-      // self.itemDefinitions.replace(itemDefinitionModels)
-
-      // Replace or append item defs without overwriting any previously retrieved ones
-      itemDefinitionSnapshots.map(itemDefSnap => {
-        const itemDefinitionModel = ItemDefinitionModel.create(itemDefSnap)
-        const index = self.itemDefinitions.findIndex((itemdef) => (itemdef.id == itemDefinitionModel.id))
-        if (index != -1) {
-          //__DEV__ && console.tron.log("found itemDefinitionModel at index ", index)
-          self.itemDefinitions[index] = itemDefinitionModel
-        } else {
-          //__DEV__ && console.tron.log("adding itemDefinitionModel")
-          self.itemDefinitions.push(itemDefinitionModel)
-        }
-      })
+      const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c))
+      self.itemDefinitions.replace(itemDefinitionModels)
     },
   }))
   .actions(self => ({
@@ -63,7 +50,7 @@ export const ItemDefinitionStoreModel = types
   }))
   .actions(self => ({
     getUpcData: flow(function*(upc) {
-      // First check local store for cached item def, otherwise fetch it.
+      // First check store for cached item def, otherwise fetch it.
       // If not found, cloud function will query UPC database and create a new item def.
       const storedItemDef = self.itemDefinitions.find((itemdef) => (itemdef.upc == upc))
       if (storedItemDef) return storedItemDef

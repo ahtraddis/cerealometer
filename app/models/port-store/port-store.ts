@@ -15,7 +15,7 @@ export const PortStoreModel = types
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
-    savePorts: (portSnapshots: PortSnapshot[]) => {
+    savePorts: (snapshots: PortSnapshot[]) => {
       // Expected structure from API or from Realtime Database update:
       // "-LxNyE47HCaN9ojmR3D2": {
       //   "data": {
@@ -31,12 +31,15 @@ export const PortStoreModel = types
       // },
       // ...
 
-      // Flatten into array, adding device_id and slot keys. Note that it's possible for an array element to be null if a port was deleted.
+      // Flatten into array, adding device_id and slot keys.
+      // Note that it's possible for an array element to be null if a port was deleted.
       let result = []
-      if (!_.isEmpty(portSnapshots)) {
-        Object.keys(portSnapshots).map((device_id) => {
-          let deviceData = portSnapshots[device_id].data
-          if (deviceData) {
+      //__DEV__ && console.tron.log("snapshots: ", snapshots)
+      if (!_.isEmpty(snapshots)) {
+        Object.keys(snapshots).map((device_id) => {
+          //__DEV__ && console.tron.log("device_id: ", device_id)
+          if (snapshots[device_id] && snapshots[device_id].data) {
+            let deviceData = snapshots[device_id].data
             Object.keys(deviceData).map((slot) => {
               let portData = deviceData[slot]
               if (portData) {
@@ -54,6 +57,7 @@ export const PortStoreModel = types
           }
         })
       }
+      
       const portsModels: Port[] = result.map(c => PortModel.create(c))
       self.ports = portsModels
     },

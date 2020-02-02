@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useStores } from "../../models/root-store"
-import { View, ViewStyle, TextStyle } from "react-native"
+import { View, StyleSheet } from "react-native"
 import { Item as ItemType } from "../../models/item"
 import { Port as PortType } from "../../models/port"
 import { ItemDefinition } from "../../models/item-definition"
@@ -11,65 +11,66 @@ import { ITEM_COMMON } from "../../components/item/item"
 import { color } from "../../theme/color"
 import * as Progress from 'react-native-progress'
 
-const PORT: ViewStyle = {
-  flex: 1,
-}
-const PORT_INFO_VIEW: ViewStyle = {
-  flexDirection: 'row'
-}
-const SLOT_LABEL_VIEW: ViewStyle = {
-  flex: 1,
-  height: 18,
-  justifyContent: 'center',
-  marginBottom: 10,
-}
-const SLOT_LABEL_TEXT: TextStyle = {
-  fontSize: 16,
-  textAlign: 'center',
-}
-const VACANT_SLOT: ViewStyle = {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-}
-const VACANT_MESSAGE: ViewStyle = {
-  flex: 3,
-  justifyContent: 'center',
-  alignItems: 'center',
-}
-const VACANT_MESSAGE_TITLE: TextStyle = {
-  fontSize: 30,
-  color: '#777',
-  marginBottom: 10
-}
-const VACANT_MESSAGE_TEXT: TextStyle = {
-  fontSize: 20,
-  color: '#777',
-}
-const VACANT_MESSAGE_MESSAGE: TextStyle = {
-  flexDirection: 'row',
-  justifyContent: 'center',
-}
-const VACANT_MESSAGE_ICON: TextStyle = {
-  justifyContent: 'center',
-  paddingRight: 5,
-}
-const VACANT_MESSAGE_TEXT_CONTAINER: TextStyle = {
-  justifyContent: 'center',
-}
-
-const VACANT_DEBUG: ViewStyle = {
-  flex: 0,
-  //display: 'none',
-}
-const VACANT_SLOT_DEBUG_TEXT: TextStyle = {
-  fontSize: 14,
-  color: '#777',
-}
-const ITEM: ViewStyle = {
-  ...ITEM_COMMON,
-  backgroundColor: color.palette.darkerPurple,
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  portInfoView: {
+    flexDirection: 'row'
+  },
+  slotLabelView: {
+    flex: 1,
+    height: 18,
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  slotLabelText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  vacantSlot: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  vacantMessage: {
+    flex: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  vacantMessageTitle: {
+    fontSize: 30,
+    color: '#777',
+    marginBottom: 10
+  },
+  vacantMessageText: {
+    fontSize: 20,
+    color: '#777',
+  },
+  vacantMessageBody: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  vacantMessageIcon: {
+    justifyContent: 'center',
+    paddingRight: 5,
+  },
+  vacantMessageTextContainer: {
+    justifyContent: 'center',
+  },
+  vacantDebug: {
+    flex: 0,
+    //display: 'none',
+  },
+  vacantSlotDebugText: {
+    fontSize: 14,
+    color: '#777',
+  },
+  item: {
+    ...ITEM_COMMON,
+    backgroundColor: color.palette.darkerPurple,
+  },
+})
 
 export interface PortProps {
   port: PortType
@@ -109,22 +110,22 @@ export function Port(props: PortProps) {
   }
 
   return (
-    <View style={PORT}>
-      <View style={PORT_INFO_VIEW}>
-        <View style={SLOT_LABEL_VIEW}>
-          <Text style={SLOT_LABEL_TEXT}>
+    <View style={styles.container}>
+      <View style={styles.portInfoView}>
+        <View style={styles.slotLabelView}>
+          <Text style={styles.slotLabelText}>
             SLOT {port.slot + 1}
           </Text>
         </View>
       </View>
       { !item && (
-        <View style={ITEM}>
-          <View style={VACANT_SLOT}>
-            <View style={VACANT_MESSAGE}>
-              <Text style={VACANT_MESSAGE_TITLE} text={statusTitle} />
-              <View style={VACANT_MESSAGE_MESSAGE}>
+        <View style={styles.item}>
+          <View style={styles.vacantSlot}>
+            <View style={styles.vacantMessage}>
+              <Text style={styles.vacantMessageTitle} text={statusTitle} />
+              <View style={styles.vacantMessageBody}>
                 { (port.status == 'CLEARING') && (
-                  <View style={VACANT_MESSAGE_ICON}>
+                  <View style={styles.vacantMessageIcon}>
                     <Progress.Circle
                       color={'#777'}
                       size={14}
@@ -132,13 +133,13 @@ export function Port(props: PortProps) {
                     />
                   </View>
                 )}
-                <View style={VACANT_MESSAGE_TEXT_CONTAINER}>
-                  <Text style={VACANT_MESSAGE_TEXT} text={statusMsg} />
+                <View style={styles.vacantMessageTextContainer}>
+                  <Text style={styles.vacantMessageText} text={statusMsg} />
                 </View>
               </View>
             </View>
-            <View style={VACANT_DEBUG}>
-              <Text style={VACANT_SLOT_DEBUG_TEXT}>
+            <View style={styles.vacantDebug}>
+              <Text style={styles.vacantSlotDebugText}>
                 device_id: {port.device_id},
                 status: {port.status},
                 weight_kg: {port.weight_kg},
