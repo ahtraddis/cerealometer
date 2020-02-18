@@ -3,7 +3,6 @@ import { getGeneralApiProblem } from "./api-problem"
 import { ApiConfig, DEFAULT_API_CONFIG, HTTP_FUNCTION_BASEURL } from "./api-config"
 import * as Types from "./api.types"
 import { DeviceSnapshot } from "../../models/device"
-import { ItemSnapshot } from "../../models/item"
 import { ItemDefinitionSnapshot } from "../../models/item-definition"
 
 /**
@@ -99,6 +98,10 @@ export class Api {
       const convertedItemDefinitions: ItemDefinitionSnapshot[] = Object.keys(rawItemDefinitions).map(s => {
         let result = rawItemDefinitions[s]
         result.id = s // add key from parent
+        // It's easy to accidentally set numeric fields to strings or "" in the console.
+        // Set to 0 in that case.
+        if (isNaN(result.net_weight_kg) || (result.net_weight_kg == "")) result.net_weight_kg = 0
+        if (isNaN(result.tare_weight_kg) || (result.tare_weight_kg == "")) result.tare_weight_kg = 0
         return result
       })
       return { kind: "ok", item_definitions: convertedItemDefinitions }
@@ -113,7 +116,6 @@ export class Api {
    */
   async getMessages(user_id): Promise<Types.GetMessagesResult> {
     const response: ApiResponse<any> = await this.apisauce.get(`/messages/${user_id}.json`)
-    console.tron.log(response)
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
@@ -125,6 +127,7 @@ export class Api {
   /**
    * Delete message for the current user
    */
+  // [eschwartz-TODO] Decide whether to handle delete in messageStore or here
   async deleteMessage(id: string): Promise<Types.DeleteItemResult> {
     if (!id) {
       __DEV__ && console.tron.log('missing message id')
@@ -155,19 +158,8 @@ export class Api {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
     }
-
-    try {
-      const rawItems = response.data
-      const convertedItems: ItemSnapshot[] = Object.keys(rawItems).map(s => {
-        let result = rawItems[s]
-        result.id = s // add key from parent
-        return result
-      })
-      return { kind: "ok", items: convertedItems }
-    } catch (e) {
-      __DEV__ && console.tron.log(e.message)
-      return { kind: "bad-data" }
-    }
+    // Return raw response since saveItems() parses both this GET and realtime updates
+    return { kind: "ok", items: response.data }
   }
 
   /**

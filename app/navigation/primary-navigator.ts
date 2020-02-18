@@ -4,14 +4,21 @@ import {
   OverstockScreen,
   ScanScreen,
   AlarmScreen,
+  MeterScreen,
 } from "../screens"
 
 export const PrimaryNavigator = createBottomTabNavigator(
   {
+    meter: {
+      screen: MeterScreen,
+      navigationOptions: ( {navigation }) => ({
+        title: "Meter",
+        headerTitleAlign: 'center',
+      }),
+    },
     item: {
       screen: ItemScreen,
       navigationOptions: ( {navigation }) => ({
-        headerTitle: "Shelf",
         title: "Shelf",
         headerTitleAlign: 'center',
       }),
@@ -19,7 +26,7 @@ export const PrimaryNavigator = createBottomTabNavigator(
     overstock: {
       screen: OverstockScreen,
       navigationOptions: ( {navigation }) => ({
-        title: "Backstock",
+        title: "Overstock",
         headerTitleAlign: 'center',
       }),
     },
@@ -72,4 +79,4 @@ export const PrimaryNavigator = createBottomTabNavigator(
  * Anything not on this list will be a standard `back` action in
  * react-navigation.
  */
-export const exitRoutes: string[] = ["item", "overstock", "scan", "alarm"]
+export const exitRoutes: string[] = ["item", "overstock", "scan", "alarm", "meter"]

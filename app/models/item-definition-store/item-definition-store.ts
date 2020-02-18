@@ -22,13 +22,16 @@ export const ItemDefinitionStoreModel = types
   }))
   .actions(self => ({
     saveItemDefinition: (itemDefinitionSnapshot: ItemDefinitionSnapshot) => {
+      
+      // add or update a single ItemDef to store
       const itemDefinitionModel: ItemDefinition = ItemDefinitionModel.create(itemDefinitionSnapshot)
+      console.tron.log("itemDefinitionModel: ", itemDefinitionModel)
       const index = self.itemDefinitions.findIndex((itemdef) => (itemdef.id == itemDefinitionModel.id))
       if (index != -1) {
-        //__DEV__ && console.tron.log("found itemDefinitionModel at index ", index)
+        // update
         self.itemDefinitions[index] = itemDefinitionModel
       } else {
-        //__DEV__ && console.tron.log("adding itemDefinitionModel")
+        // append
         self.itemDefinitions.push(itemDefinitionModel)
       }
     },
@@ -51,7 +54,7 @@ export const ItemDefinitionStoreModel = types
   .actions(self => ({
     getUpcData: flow(function*(upc) {
       // First check store for cached item def, otherwise fetch it.
-      // If not found, cloud function will query UPC database and create a new item def.
+      // If not found, HTTP function will query UPC database and create a new item def.
       const storedItemDef = self.itemDefinitions.find((itemdef) => (itemdef.upc == upc))
       if (storedItemDef) return storedItemDef
 

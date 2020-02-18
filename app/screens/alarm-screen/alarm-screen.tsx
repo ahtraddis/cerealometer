@@ -1,24 +1,17 @@
 import * as React from "react"
-import { useStores } from "../models/root-store"
-import { useEffect, useState } from "react"
+import { useStores } from "../../models/root-store"
+import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
-import { UserSnapshot } from "../models/user"
+import { UserSnapshot } from "../../models/user"
 import { NavigationInjectedProps } from "react-navigation"
-import { View, ScrollView } from "react-native"
-import { Screen, Text, LoginRequired, UserDebug, Meter, Messages, Wallpaper } from "../components"
-import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT, SCREEN_CONTAINER } from "../styles/common"
+import { View, SafeAreaView } from "react-native"
+import { Screen, Text, LoginRequired, Messages, Wallpaper } from "../../components"
+import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT, SCREEN_CONTAINER } from "../../styles/common"
 import database from '@react-native-firebase/database'
-
-const MessagesWrapper: React.FunctionComponent = observer((props) => {
-  return (
-    <Messages {...props} />
-  )
-});
 
 export interface AlarmScreenProps extends NavigationInjectedProps<{}> {}
 
 export const AlarmScreen: React.FunctionComponent<AlarmScreenProps> = observer((props) => {
-  
   const { userStore } = useStores();
 
   function onUserChange(snapshot: UserSnapshot) {
@@ -53,12 +46,10 @@ export const AlarmScreen: React.FunctionComponent<AlarmScreenProps> = observer((
         <View style={SCREEN_HEADER}>
           <Text style={SCREEN_HEADER_TEXT} tx={"alarmScreen.header"} />
         </View>
-        <Meter />
-        <ScrollView style={{marginTop: 10, paddingTop: 0, paddingBottom: 15}}>
-          <MessagesWrapper />
-        </ScrollView>
+        <SafeAreaView style={{marginTop: 10, paddingTop: 0, paddingBottom: 40}}>
+          <Messages />
+        </SafeAreaView>
       </Screen>
-      <UserDebug />
     </View>
   )
 })

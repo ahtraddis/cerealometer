@@ -1,6 +1,31 @@
 import { ViewStyle, TextStyle } from "react-native"
 import { color } from "../theme"
 
+export const PLACEHOLDER_IMAGE_URL = 'https://react.semantic-ui.com/images/wireframe/image.png'
+
+export const googleChartColors = [
+  '#3366CC',
+  '#DC3912',
+  '#FF9900',
+  '#109618',
+  '#990099',
+  '#3B3EAC',
+  '#0099C6',
+  '#DD4477',
+  '#66AA00',
+  '#B82E2E',
+  '#316395',
+  '#994499',
+  '#22AA99',
+  '#AAAA11',
+  '#6633CC',
+  '#E67300',
+  '#8B0707',
+  '#329262',
+  '#5574A6',
+  '#3B3EAC',
+]
+
 export const TEXT: TextStyle = {
   color: color.palette.white,
   fontFamily: "Montserrat",
@@ -91,4 +116,21 @@ export const EMPTY_LOADER_VIEW: ViewStyle = {
 export const EMPTY_MESSAGE_TEXT: TextStyle = {
   color: '#fff',
   fontSize: 16,
+}
+
+export const SIDEBAR: ViewStyle = {
+  marginTop: 0,
+  flex: 1,
+  backgroundColor: color.palette.darkerPurple,
+  opacity: .5
+}
+export const SIDEBAR_LEFT: ViewStyle = {
+  ...SIDEBAR,
+  borderTopRightRadius: 3,
+  borderBottomRightRadius: 3
+}
+export const SIDEBAR_RIGHT: ViewStyle = {
+  ...SIDEBAR,
+  borderTopLeftRadius: 3,
+  borderBottomLeftRadius: 3
 }

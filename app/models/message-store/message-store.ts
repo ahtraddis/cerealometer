@@ -18,17 +18,16 @@ export const MessageStoreModel = types
   .actions(self => ({
     saveMessages: (snapshots: MessageSnapshot[]) => {
       // Expected structure from API or from Realtime Database update:
+      //
       // "-LzybI3XC4stZQN9KGL6": {
       //   "create_time": 1580627644,
       //   "image_url": "<url>",
       //   "message": "Current danger level is 57%.",
       //   "title": "Level Chex"
-      // }
-      // ...
+      // }, ...
 
       // Flatten into array and add key to each element
       let result = []
-      //__DEV__ && console.tron.log(`snapshots: ${JSON.stringify(snapshots)}`)
       if (!_.isEmpty(snapshots)) {
         Object.keys(snapshots).map((message_id) => {
           if (snapshots[message_id]) {
@@ -40,8 +39,8 @@ export const MessageStoreModel = types
           }
         })
       }
-      
-      const messageModels: Message[] = result.map(c => MessageModel.create(c))
+      const sortedResult = result.slice().sort((a, b) => b.create_time - a.create_time)
+      const messageModels: Message[] = sortedResult.map(c => MessageModel.create(c))
       self.messages = messageModels
     },
   }))
@@ -63,6 +62,11 @@ export const MessageStoreModel = types
   .actions(self => ({
     deleteMessage: flow(function*(user_id: string, id: string) {
       const messageRef = database().ref(`/messages/${user_id}/${id}`).remove()
+    }),
+  }))
+  .actions(self => ({
+    reset: flow(function*() {
+      self.messages = []
     }),
   }))
 

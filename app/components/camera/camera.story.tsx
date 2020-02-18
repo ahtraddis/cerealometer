@@ -1,16 +1,16 @@
 import * as React from "react"
 import { storiesOf } from "@storybook/react-native"
 import { StoryScreen, Story, UseCase } from "../../../storybook/views"
-import { User } from "./user"
+import { Camera } from "./camera"
 
 declare var module
 
-storiesOf("User", module)
+storiesOf("Camera", module)
   .addDecorator(fn => <StoryScreen>{fn()}</StoryScreen>)
   .add("Style Presets", () => (
     <Story>
       <UseCase text="Primary" usage="The primary.">
-        <User text="User" />
+        <Camera text="Camera" />
       </UseCase>
     </Story>
   ))

@@ -13,12 +13,13 @@
     "header": "Cerealometer",
   },
   "overstockScreen": {
-    "header": "Backstock"
+    "header": "Overstock"
   },
   "deviceScreen": {
     "header": "Devices",
     "navigate": "Other screen",
-    "goToScanScreen": "Go to Scan Screen"
+    "goToScanScreen": "Go to Scan Screen",
+    "emptyLabel": "No devices detected"
   },
   "scanScreen": {
     "header": "Scan your cereal",
@@ -29,7 +30,9 @@
     "incrementButtonLabel": "+",
     "decrementButtonLabel": "-",
     "addItemLabel": "Add",
-    "clearResultsLabel": "Clear results"
+    "clearResultsLabel": "Clear results",
+    "lookingUpUpcLabel": "Looking up UPC %{upc}...",
+    "upcNotFound": "Sorry, UPC %{upc} not found."
   },
   "alarmScreen": {
     "header": "Alarms"
@@ -46,12 +49,26 @@
   "forgotScreen": {
     "header": "Forgot"
   },
+  "meterScreen": {
+    "header": "Meter"
+  },
+
   "loginRequired": {
     "message": "Login is required to access this page",
     "buttonLabel": "Login"
   },
+  "login": {
+    "loginButton": "Login"
+  },
+
   "port": {
-    "vacantSlotLabel": "Available slot"
+    "vacantSlotLabel": "Available slot",
+    "clearingTitle": "Please remove item",
+    "clearingMessage": "Waiting for slot %{slot} to clear...",
+    "vacantTitle": "Slot available",
+    "vacantNoItemsTitle": "No cereal!",
+    "vacantMessage": "To select item, tap Overstock.",
+    "vacantNoItemsMessage": "To resolve, tap Scan."
   },
   "item": {
     "addToShelf": "INSTALL",
@@ -61,10 +78,14 @@
     "updateTareWeightButtonLabel": "SET TARE",
   },
   "messages": {
-    "emptyLabel": "No alarms. Cool!"
+    "emptyLabel": "No alarms. Cool!",
+    "messageCountLabel": "%{count} messages"
   },
   "message": {
     "dismissButtonLabel": "Dismiss"
+  },
+  "camera": {
+    "notAuthorized": "Camera not authorized"
   },
   
   "storybook": {

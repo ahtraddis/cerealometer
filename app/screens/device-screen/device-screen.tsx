@@ -1,14 +1,12 @@
 import * as React from "react"
-import { useStores } from "../models/root-store"
+import { useStores } from "../../models/root-store"
 import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { NavigationInjectedProps } from "react-navigation"
-import { ViewStyle, View, FlatList } from "react-native"
-import { Screen, Wallpaper, Text, LoginRequired, UserDebug } from "../components"
-import { Device } from "../components"
-import { FULL, SCREEN_CONTAINER, SCREEN_HEADER, SCREEN_HEADER_TEXT, EMPTY_MESSAGE, EMPTY_MESSAGE_TEXT } from "../styles/common"
-
-const DEVICE_LIST: ViewStyle = {}
+import { View, FlatList } from "react-native"
+import { Screen, Wallpaper, Text, LoginRequired, UserDebug } from "../../components"
+import { Device } from "../../components"
+import { FULL, SCREEN_CONTAINER, SCREEN_HEADER, SCREEN_HEADER_TEXT, EMPTY_MESSAGE, EMPTY_MESSAGE_TEXT } from "../../styles/common"
 
 export interface DeviceScreenProps extends NavigationInjectedProps<{}> {}
 
@@ -20,7 +18,7 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
   useEffect(() => {
     if (isLoggedIn) {
       let uid = userStore.user.uid
-      //deviceStore.getDevices(uid);
+      deviceStore.getDevices(uid);
     }
   }, [])
 
@@ -33,7 +31,7 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
   const Empty = () => {
     return (
       <View style={EMPTY_MESSAGE}>
-        <Text style={EMPTY_MESSAGE_TEXT}>No devices detected</Text>
+        <Text style={EMPTY_MESSAGE_TEXT} tx={"deviceScreen.emptyLabel"} />
       </View>
     )
   }
@@ -52,7 +50,6 @@ export const DeviceScreen: React.FunctionComponent<DeviceScreenProps> = observer
           <Text style={SCREEN_HEADER_TEXT} tx={"deviceScreen.header"} />
         </View>
         <FlatList
-          style={DEVICE_LIST}
           data={deviceStore.devices}
           ListEmptyComponent={Empty}
           renderItem={renderDevice}

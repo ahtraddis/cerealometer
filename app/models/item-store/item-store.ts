@@ -15,15 +15,25 @@ export const ItemStoreModel = types
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
-    saveItems: (itemSnapshots: ItemSnapshot[]) => {
+    saveItems: (snapshots: ItemSnapshot[]) => {
+      let result = []
+      if (!_.isEmpty(snapshots)) {
+        Object.keys(snapshots).map((item_id) => {
+          let itemData = snapshots[item_id]
+          itemData.id = item_id
+          result.push(itemData)
+        })
+      }
+      const sortedResult = result.slice().sort((a, b) => b.last_update_time - a.last_update_time)
       // create model instances from the plain objects
-      const itemModels: Item[] = itemSnapshots.map(c => ItemModel.create(c))
+      const itemModels: Item[] = sortedResult.map(c => ItemModel.create(c))
       self.items.replace(itemModels)
     },
   }))
   .actions(self => ({
     getItems: flow(function*(user_id) {
       const result: GetItemsResult = yield self.environment.api.getItems(user_id)
+      //console.tron.log(result)
       if (result.kind === "ok") {
         self.saveItems(result.items)
       } else {
@@ -33,18 +43,7 @@ export const ItemStoreModel = types
   }))
   .actions(self => ({
     updateItems: flow(function*(snapshot) {
-      let data = snapshot.val()
-      if (_.isEmpty(data)) {
-        self.items = []
-      } else {
-        let newItems = []
-        Object.keys(data).map((key) => {
-          let obj = data[key]
-          obj.id = key
-          newItems.push(obj)
-        })
-        self.items = newItems
-      }
+      self.saveItems(snapshot.val())
     }),
   }))
   .actions(self => ({

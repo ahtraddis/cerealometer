@@ -31,8 +31,6 @@ export const UserStoreModel = types
   }))
   .actions(self => ({
     setUser: flow(function*(user) {
-      //__DEV__ && console.tron.log("setUser()")
-      //__DEV__ && console.tron.log(user)
       if (user) {
         if (user.name) self.user.name = user.name
         if (user.metrics) self.user.metrics = UserMetricsModel.create(user.metrics)

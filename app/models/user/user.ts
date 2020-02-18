@@ -10,6 +10,10 @@ export const UserMetricsModel = types
       totalNetWeightKg: types.maybe(types.number),
       totalKg: types.maybe(types.number),
       overallPercentage: types.maybe(types.number),
+      itemCount: types.maybe(types.number),
+      crunchiness: types.maybe(types.number),
+      sweetness: types.maybe(types.number),
+      favoriteness: types.maybe(types.number),
   })
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

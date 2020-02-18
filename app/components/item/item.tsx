@@ -1,113 +1,16 @@
 import * as React from "react"
 import { useStores } from "../../models/root-store"
 import { useState, useEffect } from "react"
-import { View, ViewStyle, ImageStyle, TextStyle, Image, StyleSheet } from "react-native"
+import { View, Image } from "react-native"
 import { Text } from "../"
 import { Button, LoadingButton } from "../../components"
 import { ItemDefinition } from "../../models/item-definition"
 import { Port } from "../../models/port"
 import { Device } from "../../models/device"
-import { BOLD } from "../../styles/common"
+import { styles, BUTTON } from "./item.styles"
+import { PLACEHOLDER_IMAGE_URL } from "../../styles/common"
 import { getBoundedPercentage } from "../../utils/math"
 var moment = require('moment');
-
-export const ITEM_COMMON: ViewStyle = {
-  flex: 1,
-  flexDirection: 'row',
-  padding: 10,
-  paddingLeft: 0,
-  borderRadius: 3,
-  margin: 10,
-  marginTop: 0,
-}
-const NUTRITION_TEXT: TextStyle = {
-  fontFamily: 'sans-serif-condensed',
-}
-const BUTTON: ViewStyle = {
-  padding: 3,
-  marginTop: 10,
-  marginBottom: 5,
-  backgroundColor: '#72551e',
-  width: 75,
-}
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-  },
-  nutritionText: {
-    ...NUTRITION_TEXT,
-  },
-  container: {
-    ...ITEM_COMMON,
-    backgroundColor: '#fff',
-  },
-  imageButtonsView: {
-    flex: 3,
-  },
-  imageView: {
-    flex: 1,
-    paddingRight: 5,
-    paddingLeft: 5,
-  },
-  buttonView: {
-    flex: 2,
-  },
-  itemInfoView: {
-    flex: 7,
-    overflow: 'hidden',
-    borderWidth: 1,
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  image: {
-    flex: 1,
-    resizeMode: 'contain',
-  },
-  itemInfo: {},
-  itemName: {
-    marginBottom: 5,
-    borderBottomColor: '#000',
-  },
-  itemNameText: {
-    ...NUTRITION_TEXT,
-    ...BOLD,
-    fontSize: 22,
-    color: '#000',
-  },
-  textLabel: {
-    ...NUTRITION_TEXT,
-    color: '#000',
-    ...BOLD,
-    borderBottomColor: '#000',
-    borderBottomWidth: 1,
-    paddingBottom: 2,
-    paddingTop: 2,
-  },
-  textValue: {
-    color: '#000',
-    ...NUTRITION_TEXT,
-    fontWeight: 'normal',
-  },
-  divider: {
-    borderBottomWidth: 10,
-    borderBottomColor: '#000',
-  },
-  buttons: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 10,
-  },
-  button: {
-    ...BUTTON,
-  },
-  buttonDisabled: {
-    ...BUTTON,
-    backgroundColor: '#ddcbb3',
-  },
-  buttonText: {
-    fontSize: 12,
-  },
-})
 
 export interface ItemProps {
   id: string
@@ -140,7 +43,8 @@ export function Item(props: ItemProps) {
   
   useEffect(() => {
     // [eschwartz-TODO] Hack to force render
-    //setCount(count + 1)
+    setCount(count + 1)
+    //return () => console.tron.log("Item cleanup")
   }, []);
 
   const { itemStore, itemDefinitionStore, portStore } = useStores()
@@ -149,14 +53,12 @@ export function Item(props: ItemProps) {
   const [moving, setMoving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/150/000000/FFFFFF?text=%3F'
-
   const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
   const itemDef = itemDefinition
 
-  const tareEnabled = itemDef && port && (port.status == 'LOADED') && (itemDef.net_weight_kg > 0) && (!itemDef.tare_weight_kg || (last_known_weight_kg > itemDef.net_weight_kg))
+  const tareEnabled = itemDef && port && (port.status == 'LOADED') && (itemDef.net_weight_kg > 0)
   const buttonEnabled = port || vacantPort
-  
+
   const clearPortItem = async() => {
     const port = portStore.ports.find((port) => (port.item_id == id))
     setMoving(true)
@@ -187,7 +89,8 @@ export function Item(props: ItemProps) {
    */
   const updateTareWeight = async() => {
     // Only update if item is on the scale and weight exceeds the known net weight
-    if (port && (port.status == 'LOADED') && (last_known_weight_kg > itemDef.net_weight_kg)) {
+    //if (port && (port.status == 'LOADED') && (last_known_weight_kg > itemDef.net_weight_kg)) {
+    if (port && (port.status == 'LOADED')) {
       const tareWeightKg = last_known_weight_kg - itemDef.net_weight_kg
       setTaring(true)
       await itemDefinitionStore.updateTareWeight(item_definition_id, tareWeightKg)
@@ -202,7 +105,7 @@ export function Item(props: ItemProps) {
           <View style={styles.imageView}>
             <Image
               style={styles.image}
-              source={{uri: itemDef ? itemDef.image_url : PLACEHOLDER_IMAGE }} />
+              source={{uri: (itemDef && (itemDef.image_url != "")) ? itemDef.image_url : PLACEHOLDER_IMAGE_URL }} />
           </View>
           <View style={styles.buttonView}>
             <View style={styles.buttons}>
@@ -261,14 +164,14 @@ export function Item(props: ItemProps) {
             <Text style={styles.textLabel}>
               Last Weight
               &nbsp;<Text style={styles.textValue}>
-                {parseFloat(last_known_weight_kg).toFixed(4)} kg
+                {last_known_weight_kg.toFixed(4)} kg
               </Text>
             </Text>
             { itemDef && (itemDef.net_weight_kg > 0) && (last_known_weight_kg > 0) && (
               <Text style={styles.textLabel}>
                 Amount Remaining
                 &nbsp;<Text style={styles.textValue}>
-                  { parseFloat(getBoundedPercentage(itemDef.tare_weight_kg ? (last_known_weight_kg - itemDef.tare_weight_kg) : last_known_weight_kg, itemDef.net_weight_kg)).toFixed(0) }%
+                  { getBoundedPercentage(itemDef.tare_weight_kg ? (last_known_weight_kg - itemDef.tare_weight_kg) : last_known_weight_kg, itemDef.net_weight_kg).toFixed(0) }%
                 </Text>
               </Text>
             )}
@@ -277,7 +180,7 @@ export function Item(props: ItemProps) {
               <Text style={styles.textLabel}>
                 Net Weight
                 &nbsp;<Text style={styles.textValue}>
-                  { parseFloat(itemDef.net_weight_kg).toFixed(3) } kg
+                  {itemDef.net_weight_kg ? itemDef.net_weight_kg.toFixed(3) + " kg" : "Unknown" }
                 </Text>
               </Text>
             )}
@@ -285,7 +188,7 @@ export function Item(props: ItemProps) {
               <Text style={styles.textLabel}>
                 Tare Weight
                 &nbsp;<Text style={styles.textValue}>
-                  {itemDef.tare_weight_kg ? parseFloat(itemDef.tare_weight_kg).toFixed(3) + " kg" : "Unknown"}
+                  {itemDef.tare_weight_kg ? itemDef.tare_weight_kg.toFixed(3) + " kg" : "Unknown"}
                 </Text>
               </Text>
             )}

@@ -1,39 +1,21 @@
 import * as React from "react"
-import { useEffect, useState } from "react"
-import { Observer } from 'mobx-react-lite'
+import { useEffect, useState, useRef } from "react"
+import { observer } from 'mobx-react-lite'
+import { observable } from "mobx"
 import { useStores } from "../../models/root-store"
-import { View, StyleSheet, Dimensions, Text } from "react-native"
+import { View, Text, Image, TouchableHighlight, TouchableWithoutFeedback } from "react-native"
 import { Port } from "../port/port"
 import { color } from "../../theme/color"
 import { EMPTY_MESSAGE, EMPTY_LOADER_VIEW, EMPTY_MESSAGE_TEXT } from "../../styles/common"
+import { styles } from "./ports.styles"
 import { UserSnapshot } from "../../models/user"
 import { ItemSnapshot } from "../../models/item"
 import { PortSnapshot } from "../../models/port"
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import database from '@react-native-firebase/database'
+import { Icon } from 'react-native-elements'
 import * as Progress from 'react-native-progress'
-
-export const { width, height } = Dimensions.get('window');
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  child: {
-    height: height * 0.5,
-    width
-  },
-  text: {
-    fontSize: width * 0.5
-  },
-  paginationStyleItem: {
-    borderColor: color.palette.cheerio,
-    borderWidth: 6,
-    padding: 5,
-    shadowRadius: 1,
-    marginBottom: 10,
-  },
-});
+var _ = require('underscore');
 
 export interface PortsProps {
   /**
@@ -57,14 +39,16 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
 
   const { userStore, itemStore, itemDefinitionStore, portStore, deviceStore, messageStore } = useStores()
   const [refreshing, setRefreshing] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const sliderRef = useRef(null)
 
   function onUserChange(snapshot: UserSnapshot) {
-    __DEV__ && console.tron.log("ports: onUserChange()")
+    //__DEV__ && console.tron.log("ports: onUserChange()")
     userStore.setUser(snapshot.val())
   }
 
   function onItemsChange(snapshot: ItemSnapshot[]) {
-    __DEV__ && console.tron.log("ports: onItemsChange()")
+    //__DEV__ && console.tron.log("ports: onItemsChange()")
     itemStore.updateItems(snapshot)
   }
 
@@ -99,6 +83,15 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
       }
     }
   }, []);
+
+  var portData = observable({
+    ports: portStore.ports,
+    counter: 0,
+  })
+
+  setInterval(() => {
+    portData.counter++ // workaround
+  }, 1000)
 
   // note: { item } here is the Port being rendered
   const renderPort = ({ item }) => {
@@ -149,27 +142,85 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
     )
   }
 
+  // const onChangeIndex = ({ index, prevIndex }) => {
+  //   console.tron.log({ index, prevIndex })
+  //   setCurrentIndex(index)
+  // };
+
+  const Shelf = observer(({portData}) => {
+    var access = portData.counter
+    return (
+      <View style={styles.shelf}>
+        { portData.ports.map((port, index) => {
+          let itemInstance = port.item_id ? itemStore.items.find(i => (i.id == port.item_id)) : null
+          let itemDef = itemInstance ? itemDefinitionStore.itemDefinitions.find(i => (i.id == itemInstance.item_definition_id)) : null
+
+          let currentIndex = (sliderRef && sliderRef.current) ? sliderRef.current.getCurrentIndex() : 0
+          let isSelected = (currentIndex == port.slot)
+
+          const scrollToSlot = () => {
+            if (sliderRef && sliderRef.current) {
+              sliderRef.current.scrollToIndex({index: port.slot, animated: true});
+            }
+          }
+
+          return (
+            <View key={index}>
+              <View style={styles.statusDebug}>
+                <Text style={styles.statusDebugText}>{port.status}</Text>
+              </View>
+              <View style={styles.slot}>
+                <TouchableWithoutFeedback onPress={scrollToSlot}>
+                  { (itemDef && (itemDef.image_url != "")) ? (
+                    <Image style={styles.image} source={{uri: itemDef.image_url}}/>
+                  ) : (
+                    <Icon
+                      type='material-community'
+                      color='#ddd'
+                      size={40}
+                      name='bowl' />
+                  )}
+                </TouchableWithoutFeedback>
+              </View>
+              <View style={isSelected ? styles.slotCaptionHighlight : styles.slotCaption}>
+                <Text style={styles.slotCaptionText}>{port.slot + 1}</Text>
+              </View>
+            </View>
+          )
+        })}
+      </View>
+    )
+  })
+  
+  const ListComponent = observer(({portData}) => {
+    // [eschwartz-TODO] Observed changes on port data is not working. Accessing other changing data
+    // (counter) on same observable object as a workaround to force re-render.
+    var access = portData.counter
+    return (
+      <View>
+        <SwiperFlatList
+          ref={sliderRef}
+          //onChangeIndex={onChangeIndex}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          vertical={vertical}
+          paginationStyleItem={styles.paginationStyleItem}
+          paginationDefaultColor={'transparent'}
+          paginationActiveColor={color.palette.cheerioCenter}
+          data={portData.ports}
+          ListEmptyComponent={EmptyMessage}
+          renderItem={renderPort}
+          //extraData={{ extraDataForMobX: portStore.ports.length > 0 ? portStore.ports[0] : "" }}
+          keyExtractor={port => (port.device_id + port.slot)}
+        />
+      </View>
+    )
+  })
+
   return (
     <View style={styles.container}>
-      <Observer>
-        { () => 
-          <SwiperFlatList
-            onRefresh={onRefresh}
-            refreshing={refreshing}
-            vertical={vertical}
-            showPagination
-            paginationStyleItem={styles.paginationStyleItem}
-            paginationDefaultColor={'transparent'}
-            paginationActiveColor={color.palette.cheerioCenter}
-            data={portStore.ports}
-            //data={[{device_id: "-LxNyE47HCaN9ojmR3D2", slot: 1, last_update_time: 0, status: 'VACANT', weight_kg: 0.1234}]}
-            ListEmptyComponent={EmptyMessage}
-            renderItem={renderPort}
-            extraData={{ extraDataForMobX: portStore.ports.length > 0 ? portStore.ports[0] : "" }}
-            keyExtractor={port => (port.device_id + port.slot)}
-          />
-        }
-      </Observer>
+      <Shelf portData={portData} />
+      <ListComponent portData={portData} />
     </View>
   )
 }

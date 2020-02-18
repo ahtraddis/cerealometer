@@ -140,6 +140,23 @@ export class Reactotron {
 
       // Register Custom Commands
       Tron.onCustomCommand({
+        title: "Reset All Stores",
+        description: "Resets all stores",
+        command: "resetAllStores",
+        handler: () => {
+          console.tron.log("resetting all stores")
+          clear()
+          this.rootStore.navigationStore.reset()
+          this.rootStore.itemStore.reset()
+          this.rootStore.itemDefinitionStore.reset()
+          this.rootStore.portStore.reset()
+          this.rootStore.userStore.reset()
+          this.rootStore.deviceStore.reset()
+          this.rootStore.messageStore.reset()
+        },
+      })
+      
+      Tron.onCustomCommand({
         title: "Reset Root Store",
         description: "Resets the MST store",
         command: "resetStore",

@@ -2,8 +2,8 @@ import * as React from "react"
 import { observer } from "mobx-react-lite"
 import { NavigationInjectedProps } from "react-navigation"
 import { View } from "react-native"
-import { Wallpaper, Screen, Text, UserDebug } from "../components"
-import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT, SCREEN_CONTAINER } from "../styles/common"
+import { Wallpaper, Screen, Text, UserDebug } from "../../components"
+import { FULL, SCREEN_HEADER, SCREEN_HEADER_TEXT, SCREEN_CONTAINER } from "../../styles/common"
 
 export interface ForgotScreenProps extends NavigationInjectedProps<{}> {}
 

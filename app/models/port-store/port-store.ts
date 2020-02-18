@@ -11,13 +11,17 @@ export const PortStoreModel = types
   .model("PortStore")
   .props({
     ports: types.optional(types.array(PortModel), []),
+    //timestamp: types.maybe(types.number)
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     savePorts: (snapshots: PortSnapshot[]) => {
+      //console.tron.log("savePorts(): snapshots: ", snapshots)
       // Expected structure from API or from Realtime Database update:
+      //
       // "-LxNyE47HCaN9ojmR3D2": {
+      //   "user_id": "EwuJsWWAv3YL90FwMK2CRsEuxSi1",
       //   "data": {
       //     "0": {
       //       "item_id": "-LymVh8HGJJ0RabGJ0Rj",
@@ -27,17 +31,13 @@ export const PortStoreModel = types
       //     },
       //     ...
       //   },
-      //   "user_id": "1",
-      // },
-      // ...
-
+      // }, ...
+      
       // Flatten into array, adding device_id and slot keys.
       // Note that it's possible for an array element to be null if a port was deleted.
       let result = []
-      //__DEV__ && console.tron.log("snapshots: ", snapshots)
       if (!_.isEmpty(snapshots)) {
         Object.keys(snapshots).map((device_id) => {
-          //__DEV__ && console.tron.log("device_id: ", device_id)
           if (snapshots[device_id] && snapshots[device_id].data) {
             let deviceData = snapshots[device_id].data
             Object.keys(deviceData).map((slot) => {
@@ -45,9 +45,9 @@ export const PortStoreModel = types
               if (portData) {
                 portData.device_id = device_id
                 portData.slot = parseInt(slot)
-                // On init of a new device, 'status', 'item_id', and 'last_update_time' will be momentarily
-                // unpopulated before the portCreated() HTTP function runs. Populate them
-                // here to ensure valid models.
+                // On init of a new device, 'status', 'item_id', and 'last_update_time' will
+                // be momentarily unpopulated before the portCreated() HTTP function runs.
+                // Populate them here to ensure valid models.
                 if (!('status' in portData)) portData.status = 'UNKNOWN'
                 if (!('item_id' in portData)) portData.item_id = ''
                 if (!('last_update_time' in portData)) portData.last_update_time = 0
@@ -57,9 +57,10 @@ export const PortStoreModel = types
           }
         })
       }
-      
       const portsModels: Port[] = result.map(c => PortModel.create(c))
+      //console.tron.log("portsModels: ", portsModels)
       self.ports = portsModels
+      //self.timestamp = Math.floor(new Date().getTime()/1000.0)
     },
   }))
   .actions(self => ({

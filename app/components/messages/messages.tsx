@@ -3,27 +3,16 @@ import { useEffect, useState } from "react"
 import { Observer } from 'mobx-react-lite'
 import { useStores } from "../../models/root-store"
 import { MessageSnapshot } from "../../models/message"
-import { View, FlatList, StyleSheet } from "react-native"
+import { View, FlatList } from "react-native"
 import { Text, Message } from "../../components"
 import { EMPTY_MESSAGE, EMPTY_MESSAGE_TEXT } from "../../styles/common"
+import { styles } from "./messages.styles"
 import database from '@react-native-firebase/database'
-
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: 10,
-    paddingBottom: 10,
-    paddingLeft: 5,
-    paddingRight: 5,
-  }
-})
-
-export interface MessagesProps {}
 
 /**
  * Display list of user's messages
  */
-export const Messages: React.FunctionComponent<MessagesProps> = (props) => {
-
+export const Messages: React.FunctionComponent = (props) => {
   const { userStore, messageStore } = useStores()
   const [refreshing, setRefreshing] = useState(false)
 
@@ -37,7 +26,7 @@ export const Messages: React.FunctionComponent<MessagesProps> = (props) => {
       let uid = userStore.user.uid
       messageRef = database().ref(`/messages/${uid}`)
       messageRef.on('value', onMessagesChange);
-      messageStore.getMessages(uid)
+      //messageStore.getMessages(uid)
     }
     return () => {
       if (messageRef) {
@@ -45,12 +34,6 @@ export const Messages: React.FunctionComponent<MessagesProps> = (props) => {
       }
     }
   }, []);
-
-  const renderMessage = ({ item }) => {
-    return (
-      <Message {...item} />
-    )
-  }
 
   const onRefresh = async() => {
     __DEV__ && console.tron.log("onRefresh()")    
@@ -60,6 +43,12 @@ export const Messages: React.FunctionComponent<MessagesProps> = (props) => {
       await messageStore.getMessages(uid)
       setRefreshing(false)
     }
+  }
+
+  const renderMessage = ({ item }) => {
+    return (
+      <Message {...item} />
+    )
   }
 
   const EmptyMessage = () => {
@@ -73,9 +62,13 @@ export const Messages: React.FunctionComponent<MessagesProps> = (props) => {
       </View>
     )
   }
-
   return (
     <View style={styles.container}>
+      { false && (messageStore.messages.length > 0) &&
+        <View style={styles.messageCount}>
+          <Text tx={"messages.messageCountLabel"} txOptions={{count: messageStore.messages.length}} />
+        </View>
+      }
       <Observer>{ () =>
         <FlatList
           onRefresh={onRefresh}

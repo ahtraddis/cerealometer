@@ -1,8 +1,8 @@
 import * as React from "react"
 import { NavigationInjectedProps } from "react-navigation"
 import { View } from "react-native"
-import { Wallpaper, Screen, Text, UserDebug } from "../components"
-import { FULL, SCREEN_CONTAINER, SCREEN_HEADER, SCREEN_HEADER_TEXT } from "../styles/common"
+import { Wallpaper, Screen, Text, UserDebug } from "../../components"
+import { FULL, SCREEN_CONTAINER, SCREEN_HEADER, SCREEN_HEADER_TEXT } from "../../styles/common"
 
 export interface RegisterScreenProps extends NavigationInjectedProps<{}> {}
 

@@ -3,57 +3,10 @@ import { useStores } from "../../models/root-store"
 import { useEffect, useState } from "react"
 import { useNavigation } from 'react-navigation-hooks';
 import { observer } from "mobx-react-lite"
-import { View, ViewStyle, TouchableHighlight, TextInput, Image, StyleSheet } from "react-native"
+import { View, ViewStyle, TouchableHighlight, TextInput } from "react-native"
 import { Text } from "../../components"
-import { color } from "../../theme"
-
+import { styles } from "./login-form.styles"
 import auth from '@react-native-firebase/auth';
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: color.palette.darkerPurple,
-  },
-  inputContainer: {
-    borderBottomColor: '#F5FCFF',
-    backgroundColor: '#ffffff',
-    borderRadius: 5,
-    borderBottomWidth: 1,
-    width: 250,
-    height: 45,
-    marginBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  inputs: {
-    height: 45,
-    marginLeft: 16,
-    borderBottomColor: '#ffffff',
-    flex: 1,
-  },
-  inputIcon: {
-    width: 30,
-    height: 30,
-    marginLeft: 15,
-    justifyContent: 'center'
-  },
-  buttonContainer: {
-    height: 45,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 250,
-    borderRadius: 5,
-  },
-  loginButton: {
-    backgroundColor: color.palette.darkOrange,
-  },
-  loginText: {
-    color: 'white',
-  }
-});
 
 interface ErrorListProps {
   errors: string[],
@@ -104,7 +57,6 @@ export const LoginForm: React.FunctionComponent<LoginFormProps> = observer((prop
     try {
       let result = await auth().signInWithEmailAndPassword(email, password);
       // result object includes user, additionalUserInfo
-      console.tron.log(result);
       if (result) {
         navigate('item')
       }
@@ -139,16 +91,20 @@ export const LoginForm: React.FunctionComponent<LoginFormProps> = observer((prop
   }
 
   const loginPressed = async() => {
-    console.tron.log("login-form: logging in...")
+    //console.tron.log("login-form: logging in...")
     login(email, password)
   }
 
+  // [eschwartz-TODO] REMOVE AFTER TESTING!
+  const loginTestPressed = async() => {
+    setEmail('eric@whyanext.com')
+    setPassword('test123')
+  }
+
   const logoutPressed = async() => {
-    console.tron.log("login-form: logging out...")
-    //console.tron.log("userStore.user: ", userStore.user)
+    //console.tron.log("login-form: logging out...")
     try {
       let result = await auth().signOut();
-      //console.tron.log(result);
     } catch (e) {
       console.tron.error(e.message);
     }
@@ -171,11 +127,9 @@ export const LoginForm: React.FunctionComponent<LoginFormProps> = observer((prop
     errors.push('Other error')
   }
   
-
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <Image style={styles.inputIcon} source={{uri: 'https://placeimg.com/25/25/tech'}}/>
         <TextInput
           style={styles.inputs}
           placeholder="Email"
@@ -186,7 +140,6 @@ export const LoginForm: React.FunctionComponent<LoginFormProps> = observer((prop
         />
       </View>
       <View style={styles.inputContainer}>
-        <Image style={styles.inputIcon} source={{uri: 'https://placeimg.com/25/25/tech'}}/>
         <TextInput
           style={styles.inputs}
           placeholder="Password"
@@ -201,7 +154,7 @@ export const LoginForm: React.FunctionComponent<LoginFormProps> = observer((prop
         style={[styles.buttonContainer, styles.loginButton]}
         onPress={() => loginPressed()}
       >
-        <Text style={styles.loginText}>Login</Text>
+        <Text style={styles.loginText} tx={"login.loginButton"} />
       </TouchableHighlight>
 
       <ErrorList errors={errors}/>
@@ -229,6 +182,14 @@ export const LoginForm: React.FunctionComponent<LoginFormProps> = observer((prop
             <Text>Logout</Text>
         </TouchableHighlight>
       )}
+
+      <TouchableHighlight
+        style={{marginTop: 20}}
+        onPress={() => loginTestPressed()}
+      >
+        <Text style={styles.loginText}>TEST: POPULATE CORRECT LOGIN</Text>
+      </TouchableHighlight>
+
     </View>
   )
 });

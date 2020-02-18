@@ -1,8 +1,10 @@
 import * as React from "react"
 import { useEffect, useState } from "react"
-import { Observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react-lite'
+import { observable } from "mobx"
 import { useStores } from "../../models/root-store"
-import { View, StyleSheet, Dimensions, Text } from "react-native"
+import { View, Text, FlatList } from "react-native"
+import { styles } from "./items.styles"
 import { Item } from "../item/item"
 import { color } from "../../theme/color"
 import { UserSnapshot } from "../../models/user"
@@ -11,27 +13,6 @@ import { PortSnapshot } from "../../models/port"
 import { EMPTY_MESSAGE, EMPTY_MESSAGE_TEXT } from "../../styles/common"
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import database from '@react-native-firebase/database'
-
-const { width, height } = Dimensions.get('window');
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  child: {
-    height: height * 0.5,
-    width
-  },
-  text: {
-    fontSize: width * 0.5
-  },
-  paginationStyleItem: {
-    borderColor: color.palette.cheerio,
-    borderWidth: 6,
-    padding: 5,
-    shadowRadius: 1,
-    marginBottom: 10,
-  }
-});
 
 export interface ItemsProps {
   /**
@@ -55,23 +36,24 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   const [count, setCount] = useState(0)
 
   function onUserChange(snapshot: UserSnapshot) {
-    __DEV__ && console.tron.log("items: onUserChange()")
+    //__DEV__ && console.tron.log("items: onUserChange()")
     userStore.setUser(snapshot)
   }
 
   function onItemsChange(snapshot: ItemSnapshot[]) {
-    __DEV__ && console.tron.log("items: onItemsChange()")
+    //__DEV__ && console.tron.log("items: onItemsChange()")
     itemStore.updateItems(snapshot)
     setCount(count + 1) // hack to force rerender
   }
 
   function onPortsChange(snapshot: PortSnapshot[]) {
-    __DEV__ && console.tron.log("items: onPortsChange()")
+    //__DEV__ && console.tron.log("items: onPortsChange()")
     portStore.updatePorts(snapshot)
   }
 
   useEffect(() => {
     let refSet, itemsRef, userRef, portsRef
+    //console.tron.log("items.tsx: itemStore.items: ", itemStore.items)
     if (userStore.user.isLoggedIn) {
       refSet = true
       const uid = userStore.user.uid
@@ -113,7 +95,7 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
   }
 
   const onRefresh = async() => {
-    __DEV__ && console.tron.log("onRefresh()")    
+    //__DEV__ && console.tron.log("onRefresh()")    
     if (userStore.user.isLoggedIn) {
       let uid = userStore.user.uid
       setRefreshing(true)
@@ -136,34 +118,65 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
     )
   }
 
-  let data = itemStore.items
-  if (listType == "active") {
-    data = data.filter((item) => portStore.ports.find((port) => (port.item_id == item.id)))
-  } else if (listType == "inactive") {
-    data = data.filter((item) => !portStore.ports.find((port) => (port.item_id == item.id)))
-  } else if (listType == "all") {
-    // default, no filter
-  }
+  //let data = itemStore.items
+  let data = (itemStore && itemStore.items && (itemStore.items.length > 0)) ? itemStore.items : []
+  // if (listType == "active") {
+  //   data = data.filter((item) => portStore.ports.find((port) => (port.item_id == item.id)))
+  // } else if (listType == "inactive") {
+  //   data = data.filter((item) => !portStore.ports.find((port) => (port.item_id == item.id)))
+  // } else if (listType == "all") {
+  //   // default, no filter
+  // }
+
+  var itemData = observable({
+    items: itemStore.items,
+    counter: 0
+  })
+
+  setInterval(() => {
+    itemData.counter++ // [eschwartz-TODO] Hack, fix me
+  }, 1000)
+    
+  const ListComponent = observer(({itemData}) => {
+    // [eschwartz-TODO] Observed changes on item data is not working. Accessing other changing data
+    // (counter) on same observable object as a workaround to force re-render.
+    var access = itemData.counter
+    return (
+      <View>
+        { vertical ? (
+          <FlatList
+            onRefresh={onRefresh}
+            refreshing={refreshing}
+            data={itemData.items}
+            ListEmptyComponent={EmptyMessage}
+            renderItem={renderItem}
+            extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
+            keyExtractor={item => item.id}
+        />
+        ) : (
+          <SwiperFlatList
+            onRefresh={onRefresh}
+            refreshing={refreshing}
+            vertical={vertical}
+            showPagination
+            paginationStyleItem={styles.paginationStyleItem}
+            paginationDefaultColor={'transparent'}
+            paginationActiveColor={color.palette.cheerioCenter}
+            data={itemData.items}
+            ListEmptyComponent={EmptyMessage}
+            renderItem={renderItem}
+            extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
+            keyExtractor={item => item.id}
+          />
+        )}
+      </View>
+    )
+  })
 
   return (
     <View style={styles.container}>
-      <Observer>{ () => 
-        <SwiperFlatList
-          onRefresh={onRefresh}
-          refreshing={refreshing}
-          vertical={vertical}
-          showPagination
-          paginationStyleItem={styles.paginationStyleItem}
-          paginationDefaultColor={'transparent'}
-          paginationActiveColor={color.palette.cheerioCenter}
-          data={data}
-          ListEmptyComponent={EmptyMessage}
-          renderItem={renderItem}
-          extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
-          keyExtractor={item => item.id}
-        />
-        }
-      </Observer>
+      <ListComponent itemData={itemData} />
     </View>
   )
+
 }
