@@ -42,7 +42,7 @@ By now you must be asking, HOW DOES IT KNOW how much cereal I have left?
 The app communicates with a [homemade IoT device](https://github.com/ahtraddis/cerealometer-hardware) I like to call the Shelf, for reasons that will become obvious once you see that... it's a shelf.
 At the heart of the circuitry is a nicely-groomed nest of breadboard wires. Oh, and also the [SparkFun ESP8266 Thing Dev Board](https://www.sparkfun.com/products/13711). Load cells inside the Shelf track the net weight of each cereal box<sup>*</sup>, and the WiFi-connected microcontroller uploads this vital data to the cloud. Also, RGB LEDs communicate status for each, uh, cereal port.
 
-<img align="right" src="images/hardware/chex.jpg" width=100 />
+<img align="right" src="images/hardware/grahams.jpg" height="75" />
 
 <sup>*</sup>Accurate to within about five grahams</sub>
 
