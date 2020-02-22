@@ -1,8 +1,3 @@
-<style
-  type="text/css">
-    //body {background-color: white}
-</style>
-
 <div align="center" class="test">
 Introducing...
 <br>
