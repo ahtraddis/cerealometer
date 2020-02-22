@@ -1,8 +1,7 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemModel, ItemSnapshot, Item } from "../item/item"
 import { withEnvironment } from "../extensions"
-import { AddItemResult, GetItemsResult } from "../../services/api"
-//import update from 'immutability-helper'
+import { AddItemResult, DeleteItemResult, GetItemsResult } from "../../services/api"
 var _ = require('underscore');
 
 /**
@@ -16,18 +15,25 @@ export const ItemStoreModel = types
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
-    saveItems: (itemSnapshots: ItemSnapshot[]) => {
-      //console.log("item-store: saveItems(): itemSnapshots:", JSON.stringify(itemSnapshots, null, 2))
+    saveItems: (snapshots: ItemSnapshot[]) => {
+      let result = []
+      if (!_.isEmpty(snapshots)) {
+        Object.keys(snapshots).map((item_id) => {
+          let itemData = snapshots[item_id]
+          itemData.id = item_id
+          result.push(itemData)
+        })
+      }
+      const sortedResult = result.slice().sort((a, b) => b.last_update_time - a.last_update_time)
       // create model instances from the plain objects
-      const itemModels: Item[] = itemSnapshots.map(c => ItemModel.create(c))
+      const itemModels: Item[] = sortedResult.map(c => ItemModel.create(c))
       self.items.replace(itemModels)
-      //console.log("item-store: saveItems(): self.items:", JSON.stringify(self.items, null, 2))
     },
   }))
   .actions(self => ({
     getItems: flow(function*(user_id) {
       const result: GetItemsResult = yield self.environment.api.getItems(user_id)
-      //console.log("item-store: getItems() result:", JSON.stringify(result, null, 2))
+      //console.tron.log(result)
       if (result.kind === "ok") {
         self.saveItems(result.items)
       } else {
@@ -37,39 +43,17 @@ export const ItemStoreModel = types
   }))
   .actions(self => ({
     updateItems: flow(function*(snapshot) {
-      //console.log("item-store: updateItems(): snapshot.val(): ", JSON.stringify(snapshot.val(), null, 2))
-      //console.log("item-store: updateItems(): self.items:", JSON.stringify(self.items, null, 2))
-      if (_.isEmpty(snapshot.val())) {
-        self.items = []
-      } else {
-        Object.keys(snapshot.val()).map((key) => {
-          //console.log(`looking for key '${key}' in self.items`)
-          var obj = snapshot.val()[key]
-          obj.id = key
-
-          let index = self.items.findIndex(i => (i.id == key))
-          //let new_obj = update(self.items[index], {$merge: {}});
-          if (index != -1) {
-            //console.log("updating obj: ", obj)
-            self.items[index] = obj
-          } else {
-            //console.log("adding obj: ", obj)
-            self.items.push(obj)
-          }
-        })
-      }
-      //console.log("item-store: updateItems(): itemStore:", JSON.stringify(self.items, null, 2))
+      self.saveItems(snapshot.val())
     }),
   }))
   .actions(self => ({
-    clearItems: flow(function*() {
+    reset: flow(function*() {
       self.items = []
     }),
   }))
   .actions(self => ({
-    addItem: flow(function*(user_id, item_definition_id) {
-      //console.log(`item-store: addItem(): user_id = '${user_id}', item_definition_id = '${item_definition_id}'`, item_definition_id)
-      const result: AddItemResult = yield self.environment.api.addItem(user_id, item_definition_id)
+    addItem: flow(function*(user_id, item_definition_id, quantity) {
+      const result: AddItemResult = yield self.environment.api.addItem(user_id, item_definition_id, quantity)
       if (result.kind === "ok") {
         return result.item
       } else {
@@ -77,7 +61,17 @@ export const ItemStoreModel = types
       }
     }),
   }))
-
+  .actions(self => ({
+    deleteItem: flow(function*(item_id) {
+      const result: DeleteItemResult = yield self.environment.api.deleteItem(item_id)
+      if (result.kind === "ok") {
+        return result.item
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
+    }),
+  }))
+  
   /**
   * Un-comment the following to omit model attributes from your snapshots (and from async storage).
   * Useful for sensitive data like passwords, or transitive state like whether a modal is open.

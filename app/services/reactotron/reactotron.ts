@@ -140,6 +140,23 @@ export class Reactotron {
 
       // Register Custom Commands
       Tron.onCustomCommand({
+        title: "Reset All Stores",
+        description: "Resets all stores",
+        command: "resetAllStores",
+        handler: () => {
+          console.tron.log("resetting all stores")
+          clear()
+          this.rootStore.navigationStore.reset()
+          this.rootStore.itemStore.reset()
+          this.rootStore.itemDefinitionStore.reset()
+          this.rootStore.portStore.reset()
+          this.rootStore.userStore.reset()
+          this.rootStore.deviceStore.reset()
+          this.rootStore.messageStore.reset()
+        },
+      })
+      
+      Tron.onCustomCommand({
         title: "Reset Root Store",
         description: "Resets the MST store",
         command: "resetStore",
@@ -156,6 +173,66 @@ export class Reactotron {
         handler: () => {
           console.tron.log("resetting navigation store")
           this.rootStore.navigationStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Item Store",
+        description: "Resets the item store",
+        command: "resetItemStore",
+        handler: () => {
+          console.tron.log("resetting item store")
+          this.rootStore.itemStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Item Definition Store",
+        description: "Resets the item definition store",
+        command: "resetItemDefinitionStore",
+        handler: () => {
+          console.tron.log("resetting the item definition store")
+          this.rootStore.itemDefinitionStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Port Store",
+        description: "Resets the port store",
+        command: "resetPortStore",
+        handler: () => {
+          console.tron.log("resetting the port store")
+          this.rootStore.portStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset User Store",
+        description: "Resets the user store",
+        command: "resetUserStore",
+        handler: () => {
+          console.tron.log("resetting the user store")
+          this.rootStore.userStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Device Store",
+        description: "Resets the device store",
+        command: "resetDeviceStore",
+        handler: () => {
+          console.tron.log("resetting the device store")
+          this.rootStore.deviceStore.reset()
+        },
+      })
+
+      Tron.onCustomCommand({
+        title: "Reset Message Store",
+        description: "Resets the message store",
+        command: "resetMessageStore",
+        handler: () => {
+          console.tron.log("resetting the message store")
+          this.rootStore.messageStore.reset()
         },
       })
 

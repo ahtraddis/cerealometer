@@ -17,9 +17,10 @@ export const getRandomInt = (min, max) => {
 /**
  * Convert ratio to percentage bounded by 0 and 100
  *
- * @param numerator Numberator
- * @param denominator Denominator
+ * @param {number} numerator Numerator
+ * @param {number} denominator Denominator
+ * @return {number} Percentage, bounded by 0 and 100
  */
 export const getBoundedPercentage = (numerator: number, denominator: number) => {
-  return Math.min(Math.max(parseInt(100.0 * numerator / denominator), 0), 100);
+  return Math.min(Math.max(100.0 * numerator / denominator, 0), 100);
 }

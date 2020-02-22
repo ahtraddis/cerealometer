@@ -2,30 +2,38 @@ import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { withEnvironment } from "../extensions"
 
 /**
- * Model description here for TypeScript hints.
+ * UserMetricsModel description
  */
-
 export const UserMetricsModel = types
   .model("UserMetrics")
   .props({
-      totalItemWeightKg: types.maybe(types.number),
-      totalGrams: types.maybe(types.number),
-      overallPercentage: types.maybe(types.number),
+      totalNetWeightKg: types.maybe(types.number),
+      totalKg: types.maybe(types.number),
+      itemCount: types.maybe(types.number),
+      variety: types.maybe(types.number),
+      quantity: types.maybe(types.number),
+      favoritity: types.maybe(types.number),
+      overall: types.maybe(types.number),
   })
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
 
-//const map = types.map(types.string, types.boolean)
-
 export const UserModel = types
   .model("User")
   .props({
-    id: types.maybe(types.string),
-    name: types.maybe(types.string),
+    // defined by Firebase auth
+    uid: types.maybe(types.string),
+    phoneNumber: types.maybe(types.string),
+    displayName: types.maybe(types.string),
+    isAnonymous: types.maybe(types.boolean),
     email: types.maybe(types.string),
+    emailVerified: types.maybe(types.boolean),
+    providerId: types.maybe(types.string),
+    photoURL: types.maybe(types.string),
+    // custom
+    isLoggedIn: types.maybe(types.boolean),
+    name: types.maybe(types.string),
     metrics: types.maybe(UserMetricsModel),
-    // [eschwartz-TODO] not sure how to do this for devices yet!
-    //devices: types.optional(types.map(<map of key-value pairs>) {}),
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

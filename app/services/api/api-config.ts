@@ -1,5 +1,6 @@
 import { API_URL } from "react-native-dotenv"
 import * as env from "../../environment-variables"
+import * as config from "../../config"
 
 /**
  * The options used to configure the API.
@@ -20,8 +21,8 @@ export interface ApiConfig {
  * The default configuration for the app.
  */
 export const DEFAULT_API_CONFIG: ApiConfig = {
-  url: env.API || "https://my-project-1518494092131.firebaseio.com",
+  url: env.API || config.FIREBASE_BASEURL,
   timeout: 10000,
 }
 
-export const HTTP_FUNCTION_BASEURL: string = "https://us-central1-my-project-1518494092131.cloudfunctions.net";
+export const HTTP_FUNCTION_BASEURL: string = config.HTTP_FUNCTION_BASEURL

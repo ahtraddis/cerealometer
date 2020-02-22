@@ -1,59 +1,71 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { PortModel, PortSnapshot, Port } from "../port/port"
 import { GetPortsResult, SetPortItemResult, ClearPortItemResult } from "../../services/api"
-var _ = require('underscore');
 import { withEnvironment } from "../extensions"
+var _ = require('underscore');
 
 /**
- * Model description here for TypeScript hints.
+ * PortStoreModel model description
  */
 export const PortStoreModel = types
   .model("PortStore")
   .props({
     ports: types.optional(types.array(PortModel), []),
+    //timestamp: types.maybe(types.number)
   })
   .extend(withEnvironment)
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
-    savePorts: (portSnapshots: PortSnapshot[]) => {
-      //console.log("port-store: savePorts(): portSnapshots:", JSON.stringify(portSnapshots, null, 2))
-
+    savePorts: (snapshots: PortSnapshot[]) => {
+      //console.tron.log("savePorts(): snapshots: ", snapshots)
       // Expected structure from API or from Realtime Database update:
+      //
       // "-LxNyE47HCaN9ojmR3D2": {
-      //   "0": {
-      //     "status": "VACANT",
-      //     "weight_kg": 0.05069,
-      //     "item_id": "-LymVh8HGJJ0RabGJ0Rj"
-      //   }
-      //   ...
-
-      // flatten into array, adding device_id and slot keys
+      //   "user_id": "EwuJsWWAv3YL90FwMK2CRsEuxSi1",
+      //   "data": {
+      //     "0": {
+      //       "item_id": "-LymVh8HGJJ0RabGJ0Rj",
+      //       "last_update_time": 1580336911,
+      //       "status": "VACANT",
+      //       "weight_kg": 0.05069,
+      //     },
+      //     ...
+      //   },
+      // }, ...
+      
+      // Flatten into array, adding device_id and slot keys.
+      // Note that it's possible for an array element to be null if a port was deleted.
       let result = []
-      if (!_.isEmpty(portSnapshots)) {
-        Object.keys(portSnapshots).map((device_id) => {
-          let deviceData = portSnapshots[device_id]
-          Object.keys(deviceData).map((slot) => {
-            let portData = deviceData[slot]
-            portData.device_id = device_id
-            portData.slot = parseInt(slot)
-            // On init of a new device, 'status' and 'item_id' will be momentarily
-            // unpopulated before portCreated() cloud function runs. Fill them in
-            // here to ensure valid models.
-            if (!('status' in portData)) portData.status = 'UNKNOWN'
-            if (!('item_id' in portData)) portData.item_id = ''
-            result.push(portData)
-          })
+      if (!_.isEmpty(snapshots)) {
+        Object.keys(snapshots).map((device_id) => {
+          if (snapshots[device_id] && snapshots[device_id].data) {
+            let deviceData = snapshots[device_id].data
+            Object.keys(deviceData).map((slot) => {
+              let portData = deviceData[slot]
+              if (portData) {
+                portData.device_id = device_id
+                portData.slot = parseInt(slot)
+                // On init of a new device, 'status', 'item_id', and 'last_update_time' will
+                // be momentarily unpopulated before the portCreated() HTTP function runs.
+                // Populate them here to ensure valid models.
+                if (!('status' in portData)) portData.status = 'UNKNOWN'
+                if (!('item_id' in portData)) portData.item_id = ''
+                if (!('last_update_time' in portData)) portData.last_update_time = 0
+                result.push(portData)
+              }
+            })
+          }
         })
       }
       const portsModels: Port[] = result.map(c => PortModel.create(c))
+      //console.tron.log("portsModels: ", portsModels)
       self.ports = portsModels
+      //self.timestamp = Math.floor(new Date().getTime()/1000.0)
     },
   }))
   .actions(self => ({
     getPorts: flow(function*(user_id: string) {
-      // [eschwartz-TODO] Send user_id to getPorts() (retrieving all ports for now)
-      const result: GetPortsResult = yield self.environment.api.getPorts()
-      //console.log("port-store: getPorts(): result:", JSON.stringify(result, null, 2))
+      const result: GetPortsResult = yield self.environment.api.getPorts(user_id)
       if (result.kind === "ok") {
         self.savePorts(result.ports)
       } else {
@@ -63,22 +75,33 @@ export const PortStoreModel = types
   }))
   .actions(self => ({
     updatePorts: flow(function*(snapshot) {
-      //console.log("port-store: updatePorts(): snapshot.val(): ", JSON.stringify(snapshot.val(), null, 2))
-      //console.log("port-store: updatePorts(): self.ports:", JSON.stringify(self.ports, null, 2))
       self.savePorts(snapshot.val())
     }),
   }))
   .actions(self => ({
     setPortItem: flow(function*(device_id: string, slot: number, item_id: string) {
       const result: SetPortItemResult = yield self.environment.api.setPortItem(device_id, slot, item_id)
-      console.log("setPortItem result: ", result)
+      if (result.kind === "ok") {
+        return result.port
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
     }),
   }))
   .actions(self => ({
     clearPortItem: flow(function*(device_id: string, slot: number) {
       const result: ClearPortItemResult = yield self.environment.api.clearPortItem(device_id, slot)
-      console.log("clearPortItem result: ", result)
+      if (result.kind === "ok") {
+        return result.port
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
     }),
+  }))
+  .actions(self => ({
+    reset: () => {
+      self.ports = []
+    }
   }))
 
   /**

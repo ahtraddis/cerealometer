@@ -1,94 +1,101 @@
 import * as React from "react"
-import { View, ViewStyle, Image, ImageStyle, StyleSheet } from "react-native"
+import { useStores } from "../../models/root-store"
+import { View } from "react-native"
+import { Item as ItemType } from "../../models/item"
+import { Port as PortType } from "../../models/port"
+import { ItemDefinition } from "../../models/item-definition"
+import { Device } from "../../models/device"
+import { Item } from "../../components"
 import { Text } from "../"
-
-import * as conversion from "../../utils/conversion"
-
-const PORT: ViewStyle = {
-  flex: 1,
-  flexDirection: 'row',
-  backgroundColor: "#333",
-  marginTop: 10
-}
-const PORT_IMAGE_VIEW: ViewStyle = {
-  flex: 1,
-  height: 200,
-  borderTopWidth: 5,
-  borderBottomWidth: 5,
-  borderColor: 'transparent'
-}
-const PORT_IMAGE: ImageStyle = {
-  flex: 1,
-  resizeMode: 'contain',
-}
-const PORT_INFO_VIEW: ViewStyle = {
-  flex: 1,
-  height: 200,
-  justifyContent: "center",
-}
-const PORT_INFO: ViewStyle = {
-  padding: 10
-}
-const PORT_ITEM: ViewStyle = {}
-const PORT_SLOT: ViewStyle = {}
-const PORT_WEIGHT: ViewStyle = {}
-const PORT_STATUS: ViewStyle = {}
+import { styles } from "./port.styles"
+import * as Progress from 'react-native-progress'
 
 export interface PortProps {
-  slot: number
-  item_id: string
-  status: string
-  weight_kg: number
+  port: PortType
+  item: ItemType
+  itemDefinition: ItemDefinition
+  device: Device
 }
 
-export function Port(props: PortProps) {
-
-  // grab the props
-  const { slot, item_id, status, weight_kg, ...rest } = props
-
-  let statusColor = "transparent";
-  if (props.status == "LOADED") {
-    statusColor = "green"
-  } else if (props.status == "UNLOADED") {
-    statusColor = "red"
-  } else if (props.status == "VACANT") {
-    statusColor = "transparent"
-  } else {
-    statusColor = "transparent"
-  }
-
+export const ClearingMessage = props => {
+  const { slot } = props
   return (
-    <View style={PORT}>
-      <View style={[PORT_IMAGE_VIEW, {borderBottomColor: statusColor}]}>
-        <Image style={PORT_IMAGE} source={{uri: props.image_url}} />
-      </View>
-      <View style={PORT_INFO_VIEW}>
-        <View style={PORT_INFO}>
-          <View style={PORT_SLOT}>
-            <Text>
-              slot: {props.slot}
-            </Text>
-          </View>
-          { props.item.name && (
-              <View style={PORT_ITEM}>
-                <Text>
-                  item.name: {props.item.name},
-                </Text>
-              </View>
-            )
-          }
-          <View style={PORT_WEIGHT}>
-            <Text>
-              weight_kg: {conversion.kilogramsToOunces(props.weight_kg).toFixed(1)} oz
-            </Text>
-          </View>
-          <View style={PORT_STATUS}>
-            <Text>
-              status: {props.status}
-            </Text>
+    <View style={styles.item}>
+      <View style={styles.vacantSlot}>
+        <View style={styles.vacantMessage}>
+          <Text style={styles.vacantMessageTitle} tx={"port.clearingTitle"} />
+          <View style={styles.vacantMessageBody}>
+            <View style={styles.vacantMessageIcon}>
+              <Progress.Circle
+                style={styles.progress}
+                color={'#777'}
+                size={14}
+                indeterminate={true}
+              />
+            </View>
+            <View style={styles.vacantMessageTextContainer}>
+              <Text
+                style={styles.vacantMessageText}
+                tx={"port.clearingMessage"}
+                txOptions={{slot: slot + 1}} />
+            </View>
           </View>
         </View>
       </View>
+    </View>
+  )
+}
+
+/**
+ * Wrapper component for Item, adding port info for Shelf screen
+ * 
+ * @param props 
+ */
+export function Port(props: PortProps) {
+  const {
+    port,
+    item,
+    itemDefinition,
+    device,
+    ...rest
+  } = props
+
+  const { itemStore } = useStores()
+
+  return (
+    <View style={styles.container}>
+      { (port.status == 'CLEARING') && (
+        <ClearingMessage slot={port.slot} />
+      )}
+      { !item && (port.status != 'CLEARING') && (
+        <View style={styles.item}>
+          <View style={styles.vacantSlot}>
+            <View style={styles.vacantMessage}>
+              <Text
+                style={styles.vacantMessageTitle}
+                tx={itemStore.items.length ? "port.vacantTitle" : "port.vacantNoItemsTitle"}
+              />
+              <View style={styles.vacantMessageBody}>
+                <View style={styles.vacantMessageTextContainer}>
+                  <Text
+                    style={styles.vacantMessageText}
+                    tx={itemStore.items.length ? "port.vacantMessage" : "port.vacantNoItemsMessage"}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+      { item && itemDefinition && (port.status != 'CLEARING') && (
+        <Item
+          {...item}
+          port={port}
+          itemDefinition={itemDefinition}
+          device={device}
+          isPortView={true}
+        />
+      )}
     </View>
   )
 }

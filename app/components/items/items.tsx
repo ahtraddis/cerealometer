@@ -1,37 +1,19 @@
 import * as React from "react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { observer } from 'mobx-react-lite'
+import { observable } from "mobx"
 import { useStores } from "../../models/root-store"
-import * as env from "../../environment-variables"
-import { View, ViewStyle, StyleSheet, Dimensions, Text } from "react-native"
+import { View, FlatList, Image } from "react-native"
+import { Text } from "../"
+import { styles } from "./items.styles"
 import { Item } from "../item/item"
 import { color } from "../../theme/color"
+const cheerioImg = require("../../static/cheerio.png") 
 import { UserSnapshot } from "../../models/user"
 import { ItemSnapshot } from "../../models/item"
 import { PortSnapshot } from "../../models/port"
-import { MESSAGE_TEXT } from "../../styles/common"
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import database from '@react-native-firebase/database'
-
-export const { width, height } = Dimensions.get('window');
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  child: {
-    height: height * 0.5,
-    width
-  },
-  text: {
-    fontSize: width * 0.5
-  }
-});
-const LIST_STYLE: ViewStyle = {
-
-}
-const MESSAGE: ViewStyle = {
-  backgroundColor: color.palette.darkPurple,
-  padding: 20,
-}
 
 export interface ItemsProps {
   /**
@@ -39,12 +21,8 @@ export interface ItemsProps {
    */
   device_id?: string
 
-  dummyUserProp?: any
-  dummyItemProp?: any
-  dummyPortProp?: any
   listType?: string
   vertical?: boolean
-  showSlotHeader?: boolean
   emptyMessage?: string
 }
 
@@ -52,76 +30,59 @@ export interface ItemsProps {
  * Display list of user's items
  */
 export const Items: React.FunctionComponent<ItemsProps> = (props) => {
-  const { device_id, vertical, showSlotHeader, listType, emptyMessage, ...rest } = props
+  const { device_id, vertical, listType, emptyMessage, ...rest } = props
 
   const { userStore, itemStore, itemDefinitionStore, portStore, deviceStore } = useStores()
+  const [refreshing, setRefreshing] = useState(false)
+  const [count, setCount] = useState(0)
 
   function onUserChange(snapshot: UserSnapshot) {
-    //console.log("items: onUserChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
-    userStore.setUser(snapshot.val())
+    //__DEV__ && console.tron.log("items: onUserChange()")
+    userStore.setUser(snapshot)
   }
 
   function onItemsChange(snapshot: ItemSnapshot[]) {
-    //console.log("items: onItemsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    //__DEV__ && console.tron.log("items: onItemsChange()")
     itemStore.updateItems(snapshot)
-    //console.log("items: onItemsChange(): itemStore.items: ", JSON.stringify(itemStore.items, null, 2))
+    setCount(count + 1) // hack to force rerender
   }
 
   function onPortsChange(snapshot: PortSnapshot[]) {
-    //console.log("items: onPortsChange() fired, snapshot:", JSON.stringify(snapshot, null, 2))
+    //__DEV__ && console.tron.log("items: onPortsChange()")
     portStore.updatePorts(snapshot)
   }
 
   useEffect(() => {
-    itemDefinitionStore.getItemDefinitions()
-    //console.log("items: itemDefinitionStore.item_definitions:", JSON.stringify(itemDefinitionStore.item_definitions, null, 2))
-    // [eschwartz-TODO] Hardcoded user id
-    portStore.getPorts(env.HARDCODED_TEST_USER_ID)
-    //console.log("items: itemStore.items:", JSON.stringify(itemStore.items, null, 2))
+    let refSet, itemsRef, userRef, portsRef
+    console.tron.log("items.tsx: itemStore.items: ", itemStore.items)
+    if (userStore.user.isLoggedIn) {
+      refSet = true
+      const uid = userStore.user.uid
+      itemDefinitionStore.getItemDefinitions(uid)
+      //portStore.getPorts(uid)
+      itemsRef = database().ref('/items').orderByChild('user_id').equalTo(uid);
+      //itemsRef.on('value', onItemsChange);
 
-    // [eschwartz-TODO] hardcoded user id
-    const itemsRef = database().ref('/items').orderByChild('user_id').equalTo(env.HARDCODED_TEST_USER_ID);
-    itemsRef.on('value', onItemsChange);
+      userRef = database().ref(`/users/${uid}`)
+      //userRef.on('value', onUserChange);
 
-    const userRef = database().ref(`/users/${env.HARDCODED_TEST_USER_ID}`)
-    userRef.on('value', onUserChange);
-
-    const portsRef = database().ref('/ports')
-    portsRef.on('value', onPortsChange);
-
-    // Unsubscribe from changes on unmount
-    return () => {
-      itemsRef.off('value', onItemsChange)
-      userRef.off('value', onUserChange)
-      portsRef.off('value', onPortsChange)
+      portsRef = database().ref('/ports').orderByChild('user_id').equalTo(uid);
+      //portsRef.on('value', onPortsChange);
     }
-  }, []); // run once
-
-
-  const clearPortItem = async(item_id) => {
-    const port = portStore.ports.find((port) => (port.item_id == item_id))
-    console.log("clearPortItem: found port to clear: ", port)
-    let result = await portStore.clearPortItem(port.device_id, port.slot)
-    console.log("clearPortItem result: ", result)
-  }
-
-  const setPortItem = async(item_id) => {
-    const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
-    if (vacantPort) {
-      console.log("setPortItem: found vacant port: ", vacantPort)
-      let result = await portStore.setPortItem(vacantPort.device_id, vacantPort.slot, item_id)
-      console.log("setPortItem result: ", result)
+    if (refSet) {
+      // Unsubscribe from changes on unmount
+      return () => {
+        itemsRef.off('value', onItemsChange)
+        userRef.off('value', onUserChange)
+        portsRef.off('value', onPortsChange)
+      }
     }
-  }
+  }, []);
 
   const renderItem = ({ item }) => {
-    //console.log("items: renderItem(): item: ", item)
     let itemDefinition = itemDefinitionStore.itemDefinitions.find(itemdef => (itemdef.id == item.item_definition_id))
     let port = portStore.ports.find((port) => (port.item_id == item.id))
     let device = port ? deviceStore.devices.find((device) => (device.id == port.device_id)) : null
-
-    const vacantPort = portStore.ports.find((port) => (port.status == 'VACANT'))
-
     return (
       <View style={styles.child}>
         <Item
@@ -129,43 +90,98 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
           itemDefinition={itemDefinition}
           port={port}
           device={device}
-          showSlotHeader={showSlotHeader}
-          buttonEnabled={port || vacantPort}
-          buttonCallback={port ? clearPortItem : setPortItem}
-          buttonLabel={port ? "item.removeFromShelf" : "item.addToShelf" + ((port || vacantPort) ? '' : 'Disabled')}
         />
       </View>
     )
   }
 
-  let data = itemStore.items
-  if (listType == "active") {
-    data = data.filter((item) => portStore.ports.find((port) => (port.item_id == item.id)))
-  } else if (listType == "inactive") {
-    data = data.filter((item) => !portStore.ports.find((port) => (port.item_id == item.id)))
-  } else if (listType == "all") {
-    // default, no filter
+  const onRefresh = async() => {
+    //__DEV__ && console.tron.log("onRefresh()")    
+    if (userStore.user.isLoggedIn) {
+      let uid = userStore.user.uid
+      setRefreshing(true)
+      await itemDefinitionStore.getItemDefinitions(uid) // get first
+      await portStore.getPorts(uid)
+      await itemStore.getItems(uid)
+      setRefreshing(false)
+    }
   }
 
+  const EmptyMessage = () => {
+    return (
+      <View style={styles.empty}>
+        <Image style={{width: 50, height: 50, opacity: .5, marginBottom: 10}} source={cheerioImg} />
+        <Text
+          style={styles.noItemsTitle}
+          tx={"items.noItemsTitle"}
+        />
+        <Text
+          style={styles.noItemsText}
+          tx={"items.noItemsMessage"}
+        />
+      </View>
+    )
+  }
+
+  //let data = itemStore.items
+  let data = (itemStore && itemStore.items && (itemStore.items.length > 0)) ? itemStore.items : []
+  // if (listType == "active") {
+  //   data = data.filter((item) => portStore.ports.find((port) => (port.item_id == item.id)))
+  // } else if (listType == "inactive") {
+  //   data = data.filter((item) => !portStore.ports.find((port) => (port.item_id == item.id)))
+  // } else if (listType == "all") {
+  //   // default, no filter
+  // }
+
+  var itemData = observable({
+    items: itemStore.items,
+    counter: 0
+  })
+
+  setInterval(() => {
+    itemData.counter++ // [eschwartz-TODO] Hack, fix me
+  }, 1000)
+    
+  const ListComponent = observer(({itemData}) => {
+    // [eschwartz-TODO] Observed changes on item data is not working. Accessing other changing data
+    // (counter) on same observable object as a workaround to force re-render.
+    var access = itemData.counter
+    return (
+      <View>
+        { vertical ? (
+          <FlatList
+            onRefresh={onRefresh}
+            refreshing={refreshing}
+            data={itemData.items}
+            ListEmptyComponent={EmptyMessage}
+            renderItem={renderItem}
+            extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
+            keyExtractor={item => item.id}
+        />
+        ) : (
+          <SwiperFlatList
+            onRefresh={onRefresh}
+            refreshing={refreshing}
+            vertical={vertical}
+            showPagination
+            paginationStyleItem={styles.paginationStyleItem}
+            paginationDefaultColor={'transparent'}
+            paginationActiveColor={color.palette.cheerioCenter}
+            data={itemData.items}
+            ListEmptyComponent={EmptyMessage}
+            renderItem={renderItem}
+            extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
+            keyExtractor={item => item.id}
+          />
+        )}
+      </View>
+    )
+  })
 
   return (
     <View style={styles.container}>
-      { !data.length && (
-        <View style={MESSAGE}>
-          <Text style={MESSAGE_TEXT}>{emptyMessage || "No items."}</Text>
-        </View>
-      )}
-      { (data.length > 0) && (
-        <SwiperFlatList
-          vertical={vertical}
-          showPagination
-          style={LIST_STYLE}
-          data={data}
-          renderItem={renderItem}
-          //extraData={{ extraDataForMobX: itemStore.items.length > 0 ? itemStore.items[0] : "" }}
-          //keyExtractor={(item: { key: any; }) => item.key}
-        />
-      )}
+      <ListComponent itemData={itemData} />
     </View>
   )
+
 }

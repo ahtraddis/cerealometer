@@ -1,7 +1,8 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { ItemDefinitionModel, ItemDefinitionSnapshot, ItemDefinition } from "../item-definition/item-definition"
 import { withEnvironment } from "../extensions"
-import { GetItemDefinitionsResult, GetUpcDataResult } from "../../services/api"
+import { GetItemDefinitionsResult, UpdateItemDefinitionResult, GetUpcDataResult } from "../../services/api"
+
 /**
  * Model description here for TypeScript hints.
  */
@@ -14,15 +15,30 @@ export const ItemDefinitionStoreModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({
     saveItemDefinitions: (itemDefinitionSnapshots: ItemDefinitionSnapshot[]) => {
-      //console.log("item-definition-store: saveItemDefinitions(): itemDefinitionSnapshots: ", JSON.stringify(itemDefinitionSnapshots, null, 2))
       // create model instances from the plain objects
       const itemDefinitionModels: ItemDefinition[] = itemDefinitionSnapshots.map(c => ItemDefinitionModel.create(c))
       self.itemDefinitions.replace(itemDefinitionModels)
     },
   }))
   .actions(self => ({
-    getItemDefinitions: flow(function*() {
-      const result: GetItemDefinitionsResult = yield self.environment.api.getItemDefinitions()
+    saveItemDefinition: (itemDefinitionSnapshot: ItemDefinitionSnapshot) => {
+      
+      // add or update a single ItemDef to store
+      const itemDefinitionModel: ItemDefinition = ItemDefinitionModel.create(itemDefinitionSnapshot)
+      console.tron.log("itemDefinitionModel: ", itemDefinitionModel)
+      const index = self.itemDefinitions.findIndex((itemdef) => (itemdef.id == itemDefinitionModel.id))
+      if (index != -1) {
+        // update
+        self.itemDefinitions[index] = itemDefinitionModel
+      } else {
+        // append
+        self.itemDefinitions.push(itemDefinitionModel)
+      }
+    },
+  }))
+  .actions(self => ({
+    getItemDefinitions: flow(function*(user_id: string) {
+      const result: GetItemDefinitionsResult = yield self.environment.api.getItemDefinitions(user_id)
       if (result.kind === "ok") {
         self.saveItemDefinitions(result.item_definitions)
       } else {
@@ -31,8 +47,29 @@ export const ItemDefinitionStoreModel = types
     }),
   }))
   .actions(self => ({
+    reset: flow(function*() {
+      self.itemDefinitions = []
+    }),
+  }))
+  .actions(self => ({
     getUpcData: flow(function*(upc) {
+      // First check store for cached item def, otherwise fetch it.
+      // If not found, HTTP function will query UPC database and create a new item def.
+      const storedItemDef = self.itemDefinitions.find((itemdef) => (itemdef.upc == upc))
+      if (storedItemDef) return storedItemDef
+
       const result: GetUpcDataResult = yield self.environment.api.getUpcData(upc)
+      if (result.kind === "ok") {
+        self.saveItemDefinition(result.item_definition)
+        return result.item_definition
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
+    }),
+  }))
+  .actions(self => ({
+    updateTareWeight: flow(function*(itemDefinitionId, tareWeightKg) {
+      const result: UpdateItemDefinitionResult = yield self.environment.api.updateTareWeight(itemDefinitionId, tareWeightKg)
       if (result.kind === "ok") {
         return result.item_definition
       } else {

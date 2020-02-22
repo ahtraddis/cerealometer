@@ -9,7 +9,6 @@ coverage
 yarn.lock
 yarn-error.log
 lerna-debug.log
-node_modules
 .vscode/*
 testgrounds
 IntegrationTest
@@ -17,11 +16,26 @@ integration_test
 ios/Pods
 package-lock.json
 
+# node.js
+#
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Gradle
+build/
+.gradle
+
+# Local configuration file (sdk path, etc)
+local.properties
+
 # TS build
 /build
 
-#
-android/app/build
-android/app/google-services.json
-android/.gradle
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Local project files
 workspace/*
+
+app/config_DUMMY.ts

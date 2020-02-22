@@ -9,6 +9,7 @@ export const PortModel = types
     device_id: types.string,
     slot: types.integer,
     item_id: types.string,
+    last_update_time: types.number,
     status: types.string,
     weight_kg: types.number,
   })
