@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react"
 import { observer } from 'mobx-react-lite'
 import { observable } from "mobx"
 import { useStores } from "../../models/root-store"
-import { View, Text, Image, TouchableHighlight, TouchableWithoutFeedback } from "react-native"
+import { View, Text, Image, TouchableHighlight } from "react-native"
 import { Port } from "../port/port"
 import { color } from "../../theme/color"
 import { EMPTY_MESSAGE, EMPTY_LOADER_VIEW, EMPTY_MESSAGE_TEXT } from "../../styles/common"
@@ -62,7 +62,7 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
     if (userStore.user.isLoggedIn) {
       refSet = true
       let uid = userStore.user.uid
-      //itemDefinitionStore.getItemDefinitions(uid)
+      itemDefinitionStore.getItemDefinitions(uid)
       //portStore.getPorts(uid)
 
       itemsRef = database().ref('/items').orderByChild('user_id').equalTo(uid);
@@ -142,49 +142,50 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
     )
   }
 
-  // const onChangeIndex = ({ index, prevIndex }) => {
-  //   console.tron.log({ index, prevIndex })
-  //   setCurrentIndex(index)
-  // };
+  const indexChanged = ({ index, prevIndex }) => {
+    console.tron.log({ index, prevIndex })
+    setCurrentIndex(index)
+  };
+
+  const scrollToSlot = (slot) => {
+    if (sliderRef && sliderRef.current) {
+      sliderRef.current.scrollToIndex({index: slot, animated: true});
+    }
+  }
 
   const Shelf = observer(({portData}) => {
     var access = portData.counter
+
     return (
       <View style={styles.shelf}>
         { portData.ports.map((port, index) => {
           let itemInstance = port.item_id ? itemStore.items.find(i => (i.id == port.item_id)) : null
           let itemDef = itemInstance ? itemDefinitionStore.itemDefinitions.find(i => (i.id == itemInstance.item_definition_id)) : null
 
-          let currentIndex = (sliderRef && sliderRef.current) ? sliderRef.current.getCurrentIndex() : 0
-          let isSelected = (currentIndex == port.slot)
-
-          const scrollToSlot = () => {
-            if (sliderRef && sliderRef.current) {
-              sliderRef.current.scrollToIndex({index: port.slot, animated: true});
-            }
-          }
+          let isSelected = (sliderRef && sliderRef.current && (sliderRef.current.getCurrentIndex() == port.slot))
+          let thumb = (itemDef && (itemDef.image_url != "")) ?
+            <Image style={styles.image} source={{uri: itemDef.image_url}}/> :
+            <Icon
+              type='material-community'
+              color='#ddd'
+              size={40}
+              name='bowl' />
 
           return (
             <View key={index}>
               <View style={styles.statusDebug}>
                 <Text style={styles.statusDebugText}>{port.status}</Text>
               </View>
-              <View style={styles.slot}>
-                <TouchableWithoutFeedback onPress={scrollToSlot}>
-                  { (itemDef && (itemDef.image_url != "")) ? (
-                    <Image style={styles.image} source={{uri: itemDef.image_url}}/>
-                  ) : (
-                    <Icon
-                      type='material-community'
-                      color='#ddd'
-                      size={40}
-                      name='bowl' />
-                  )}
-                </TouchableWithoutFeedback>
-              </View>
-              <View style={isSelected ? styles.slotCaptionHighlight : styles.slotCaption}>
-                <Text style={styles.slotCaptionText}>{port.slot + 1}</Text>
-              </View>
+              <TouchableHighlight onPress={() => scrollToSlot(port.slot)}>
+                <View>
+                <View style={[styles.slot, (itemDef && (itemDef.image_url != "")) ? {opacity: 1} : {opacity: 0.1}]}>
+                  {thumb}
+                </View>
+                <View style={isSelected ? styles.slotCaptionHighlight : styles.slotCaption}>
+                  <Text style={styles.slotCaptionText}>{port.slot + 1}</Text>
+                </View>
+                </View>
+              </TouchableHighlight>
             </View>
           )
         })}
@@ -200,7 +201,7 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
       <View>
         <SwiperFlatList
           ref={sliderRef}
-          //onChangeIndex={onChangeIndex}
+          //onChangeIndex={indexChanged}
           onRefresh={onRefresh}
           refreshing={refreshing}
           vertical={vertical}
@@ -219,6 +220,7 @@ export const Ports: React.FunctionComponent<PortsProps> = (props) => {
 
   return (
     <View style={styles.container}>
+      {/* <View><Text style={{color: '#ddd', fontSize: 16}}>Eric's Cereal Shelf 1</Text></View> */}
       <Shelf portData={portData} />
       <ListComponent portData={portData} />
     </View>

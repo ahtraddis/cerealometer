@@ -8,7 +8,7 @@ export const ITEM_COMMON: ViewStyle = {
   paddingLeft: 0,
   margin: 15,
   marginTop: 0,
-  marginBottom: 25,
+  marginBottom: 30,
 }
 export const NUTRITION_TEXT: TextStyle = {
   fontFamily: 'sans-serif-condensed',
@@ -20,6 +20,7 @@ export const BUTTON: ViewStyle = {
   backgroundColor: '#72551e',
   width: 75,
 }
+
 export const styles = StyleSheet.create({
   wrapper: {
     flex: 1,

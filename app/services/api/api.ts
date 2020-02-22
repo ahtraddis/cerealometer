@@ -208,7 +208,7 @@ export class Api {
   }
 
   /**
-   * Add (create) item for the current user
+   * Add (create) item(s) for the current user
    */
   async addItem(user_id: string, item_definition_id: string, quantity: number): Promise<Types.AddItemResult> {
     if (!item_definition_id) {

@@ -6,6 +6,7 @@ export const { width, height } = Dimensions.get('window');
 export const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		alignItems: 'center',
 	},
 	child: {
 		height: height * 0.5,
@@ -21,7 +22,6 @@ export const styles = StyleSheet.create({
 		shadowRadius: 1,
 		marginBottom: 10,
 	},
-
 	shelf: {
 		flex: 0,
 		flexDirection: 'row',
@@ -36,6 +36,7 @@ export const styles = StyleSheet.create({
 		borderRightWidth: 1,
 		marginRight: 1,
 		backgroundColor: '#fff',
+		//opacity: .2,
 		padding: 5,
 		alignItems: 'center',
 		justifyContent: 'center'
@@ -47,7 +48,9 @@ export const styles = StyleSheet.create({
 	},
 	statusDebug: {
 		display: 'none',
-		alignItems: 'center'
+		alignItems: 'center',
+		marginBottom: 2,
+		opacity: 0.5,
 	},
 	statusDebugText: {
 		color: '#fff',
@@ -55,14 +58,15 @@ export const styles = StyleSheet.create({
 	},
 	slotCaption: {
 		alignItems: 'center',
-		backgroundColor: color.palette.orangeDarker,
+		backgroundColor: color.palette.darkPurple,
+		opacity: 1,
 		borderColor: 'transparent',
 		marginRight: 1,
 		marginTop: 1,
 	},
 	slotCaptionHighlight: {
 		alignItems: 'center',
-		backgroundColor: '#7c5114',
+		backgroundColor: color.palette.orangeDarker,
 		borderColor: 'transparent',
 		marginRight: 1,
 		marginTop: 1,

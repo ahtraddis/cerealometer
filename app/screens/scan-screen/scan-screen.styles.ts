@@ -159,7 +159,7 @@ export const styles = StyleSheet.create({
     fontSize: 12,
   },
   actionButton: {
-    padding: 10,
+    padding: 5,
     backgroundColor: color.palette.darkPurple,
     width: 100,
     marginLeft: 5,

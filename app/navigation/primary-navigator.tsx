@@ -1,3 +1,4 @@
+import * as React from "react"
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import {
   ItemScreen,
@@ -6,27 +7,49 @@ import {
   AlarmScreen,
   MeterScreen,
 } from "../screens"
+import { Icon } from 'react-native-elements'
 
 export const PrimaryNavigator = createBottomTabNavigator(
   {
     meter: {
       screen: MeterScreen,
       navigationOptions: ( {navigation }) => ({
-        title: "Meter",
-        headerTitleAlign: 'center',
+        title: "Metrics",
+        tabBarIcon: ({ tintColor }) =>
+          <Icon
+            size={18}
+            type="simple-line-icon"
+            name="chart"
+            color={tintColor}
+          />,
+        headerTitleAlign: 'center',        
       }),
     },
     item: {
       screen: ItemScreen,
       navigationOptions: ( {navigation }) => ({
         title: "Shelf",
+        tabBarIcon: ({ tintColor }) =>
+          <Icon
+            size={24}
+            type="material-community"
+            name="bowl"
+            color={tintColor}
+          />,
         headerTitleAlign: 'center',
       }),
     },
     overstock: {
       screen: OverstockScreen,
       navigationOptions: ( {navigation }) => ({
-        title: "Overstock",
+        title: "Items",
+        tabBarIcon: ({ tintColor }) =>
+          <Icon
+            size={24}
+            type="material-community"
+            name="silverware-spoon"
+            color={tintColor}
+          />,
         headerTitleAlign: 'center',
       }),
     },
@@ -34,6 +57,13 @@ export const PrimaryNavigator = createBottomTabNavigator(
       screen: ScanScreen,
       navigationOptions: ( {navigation }) => ({
         title: "Scan",
+        tabBarIcon: ({ tintColor }) =>
+          <Icon
+            size={24}
+            type="material-community"
+            name="barcode-scan"
+            color={tintColor}
+          />,
         headerTitleAlign: 'center',
       }),
     },
@@ -41,6 +71,13 @@ export const PrimaryNavigator = createBottomTabNavigator(
       screen: AlarmScreen,
       navigationOptions: ( {navigation }) => ({
         title: "Alarms",
+        tabBarIcon: ({ tintColor }) =>
+          <Icon
+            size={22}
+            type="material-community"
+            name="alarm-light-outline"
+            color={tintColor}
+          />,
         headerTitleAlign: 'center',
       }),
     },
@@ -49,20 +86,16 @@ export const PrimaryNavigator = createBottomTabNavigator(
     initialRouteName: "item",
     tabBarOptions: {
       style: {
-        height: 36,
-        backgroundColor: '#555',
+        height: 45,
+        backgroundColor: 'transparent',
       },
       tabStyle: {
-        //backgroundColor: 'purple',
-        //padding: 7,
-        //borderColor: '#000',
         marginRight: 1,
         marginLeft: 0,
       },
       labelPosition: 'below-icon',
       labelStyle: {
-        //backgroundColor: 'green'
-        fontSize: 13,
+        fontSize: 12,
       },
       activeBackgroundColor: '#1e0033',
       inactiveBackgroundColor: '#ccc',

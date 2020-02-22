@@ -3,14 +3,15 @@ import { useEffect, useState } from "react"
 import { observer } from 'mobx-react-lite'
 import { observable } from "mobx"
 import { useStores } from "../../models/root-store"
-import { View, Text, FlatList } from "react-native"
+import { View, FlatList, Image } from "react-native"
+import { Text } from "../"
 import { styles } from "./items.styles"
 import { Item } from "../item/item"
 import { color } from "../../theme/color"
+const cheerioImg = require("../../static/cheerio.png") 
 import { UserSnapshot } from "../../models/user"
 import { ItemSnapshot } from "../../models/item"
 import { PortSnapshot } from "../../models/port"
-import { EMPTY_MESSAGE, EMPTY_MESSAGE_TEXT } from "../../styles/common"
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import database from '@react-native-firebase/database'
 
@@ -53,11 +54,11 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
 
   useEffect(() => {
     let refSet, itemsRef, userRef, portsRef
-    //console.tron.log("items.tsx: itemStore.items: ", itemStore.items)
+    console.tron.log("items.tsx: itemStore.items: ", itemStore.items)
     if (userStore.user.isLoggedIn) {
       refSet = true
       const uid = userStore.user.uid
-      //itemDefinitionStore.getItemDefinitions(uid)
+      itemDefinitionStore.getItemDefinitions(uid)
       //portStore.getPorts(uid)
       itemsRef = database().ref('/items').orderByChild('user_id').equalTo(uid);
       //itemsRef.on('value', onItemsChange);
@@ -108,12 +109,16 @@ export const Items: React.FunctionComponent<ItemsProps> = (props) => {
 
   const EmptyMessage = () => {
     return (
-      <View>
-        <View style={EMPTY_MESSAGE}>
-          <View>
-            <Text style={EMPTY_MESSAGE_TEXT}>{emptyMessage || "No ports."}</Text>
-          </View>
-        </View>
+      <View style={styles.empty}>
+        <Image style={{width: 50, height: 50, opacity: .5, marginBottom: 10}} source={cheerioImg} />
+        <Text
+          style={styles.noItemsTitle}
+          tx={"items.noItemsTitle"}
+        />
+        <Text
+          style={styles.noItemsText}
+          tx={"items.noItemsMessage"}
+        />
       </View>
     )
   }

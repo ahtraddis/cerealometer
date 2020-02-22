@@ -10,6 +10,7 @@ import { RootStore, RootStoreProvider, setupRootStore } from "./models/root-stor
 
 import { contains } from "ramda"
 import { enableScreens } from "react-native-screens"
+import SplashScreen from 'react-native-splash-screen'
 
 // This puts screens in a native ViewController or Activity. If you want fully native
 // stack navigation, use `createNativeStackNavigator` in place of `createStackNavigator`:
@@ -53,6 +54,7 @@ export const App: React.FunctionComponent<{}> = () => {
   const [rootStore, setRootStore] = useState<RootStore | undefined>(undefined) // prettier-ignore
   useEffect(() => {
     setupRootStore().then(setRootStore)
+    SplashScreen.hide();
   }, [])
 
   // Before we show the app, we have to wait for our state to be ready.

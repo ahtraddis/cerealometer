@@ -8,6 +8,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: color.palette.darkerPurple,
   },
+  upper: {
+    flex: 1,
+  },
   inputContainer: {
     borderBottomColor: '#F5FCFF',
     backgroundColor: '#ffffff',
@@ -17,7 +20,25 @@ export const styles = StyleSheet.create({
     height: 45,
     marginBottom: 20,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 15,
+    marginBottom: 15,
+  },
+  form: {
+    flex: 2,
+  },
+  errorContainer: {
+    flex: 1,
+  },
+  logo: {
+    width: 300,
+    height: 100,
+    resizeMode: 'center',
   },
   inputs: {
     height: 45,
@@ -29,9 +50,23 @@ export const styles = StyleSheet.create({
     width: 30,
     height: 30,
     marginLeft: 15,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
-  buttonContainer: {
+  button: {
+    backgroundColor: color.palette.darkOrange,
+    height: 45,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 250,
+    borderRadius: 5,
+    padding: 5,
+    marginBottom: 5,
+  },
+  buttonText: {
+    fontSize: 15,
+  },
+  linkContainer: {
     height: 45,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -39,11 +74,19 @@ export const styles = StyleSheet.create({
     width: 250,
     borderRadius: 5,
   },
-  loginButton: {
-    backgroundColor: color.palette.darkOrange,
-    marginBottom: 5
+  errorList: {
+    width: 300,
+    marginBottom: 15,
   },
-  loginText: {
+  errorListText: {
+    color: '#fff',
+    backgroundColor: 'red',
+    padding: 8,
+    marginBottom: 10,
+    borderRadius: 4,
+  },
+  debugText: {
     color: 'white',
-  }
+    opacity: .3,
+  },
 });

@@ -1,3 +1,4 @@
+require("../app/components/signup-form/signup-form.story")
 require("../app/components/bargraph/bargraph.story")
 require("../app/components/camera/camera.story")
 require("../app/components/messages/messages.story")

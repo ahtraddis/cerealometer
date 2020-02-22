@@ -1,5 +1,7 @@
 'use strict';
 
+const APP_NAME = 'Cerealometer';
+
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require('firebase-functions');
 
@@ -343,6 +345,18 @@ exports.portsDeviceCreated = functions.database.ref('/ports/{device_id}')
 );
 
 /**
+ * Recalc user metrics when new item is created 
+ */
+exports.itemCreated = functions.database.ref('/items/{item_id}')
+  .onCreate(async (snap, context) => {
+    const { item_id } = context.params
+    const item = snap.val()
+    await updateMetricsForUserId(item.user_id)
+    return null
+  }
+);
+
+/**
  * Update metrics for user
  * 
  * @param {*} user_id 
@@ -357,7 +371,9 @@ async function updateMetricsForUserId(user_id) {
 
   let totalKg = 0
   let totalNetWeightKg = 0
-
+  let favoriteCount = 0
+  // tally stats from user's items
+  // [eschwartz-TODO] totalNetWeightKg is ending up negative!
   if (items) {
     Object.keys(items).forEach(key => {
       let item = items[key]
@@ -365,21 +381,42 @@ async function updateMetricsForUserId(user_id) {
         totalNetWeightKg += item.last_known_weight_kg - (itemDefinitions[item.item_definition_id].tare_weight_kg ? itemDefinitions[item.item_definition_id].tare_weight_kg : 0)
         totalKg += itemDefinitions[item.item_definition_id].net_weight_kg
       }
+      if (item.favorite) {
+        favoriteCount += 1
+      }
     })
   }
-  let overallPercentage = totalKg ? getBoundedPercentage(totalNetWeightKg, totalKg) : 0
+  let quantityScore = totalKg ? Math.min(Math.max(1.0 * totalNetWeightKg / totalKg, 0.0), 1.0) : 0.0
+  let varietyScore = getVarietyScore(items ? Object.keys(items).length : 0)
+  // [eschwartz-TODO] Find a meaningful measure of favoritity
+  let favoritityScore = (items && favoriteCount) ? (1.0 * favoriteCount / Object.keys(items).length) : 1
+  // Overall score is the weighted average of individual scores
+  let overall = (0.5 * quantityScore) + (0.25 * varietyScore) + (0.25 * favoritityScore)
+
   let metrics = {
     itemCount: items ? Object.keys(items).length : 0,
     totalKg: totalKg,
     totalNetWeightKg: totalNetWeightKg,
-    overallPercentage: overallPercentage,
-    crunchiness: Math.random(),
-    sweetness: Math.random(),
-    favoriteness: Math.random(),
+    quantity: quantityScore,
+    variety: varietyScore,
+    favoritity: favoritityScore,
+    overall: overall,
   }
   await admin.database().ref(`/users/${user_id}/metrics`).set(metrics)
   //console.log(`updated metrics for user_id '${user_id}':`, JSON.stringify(metrics, null, 2))
-  addMessage(user_id, overallPercentage)  
+  addMessage(user_id, 100.0 * overall)  
+}
+
+function getVarietyScore(itemCount) {
+  if (itemCount == 0) {
+    return 0
+  } else if (itemCount >= 1 && itemCount < 3) {
+    return 0.25
+  } else if (itemCount >= 3 && itemCount < 5) {
+    return 0.5
+  } else if (itemCount >= 5) {
+    return 1
+  }
 }
 
 /**
@@ -596,9 +633,16 @@ const mailTransport = nodemailer.createTransport({
   },
 });
 
-// Your company name to include in the emails
-// TODO: Change this to your app or company name to customize the email sent.
-const APP_NAME = 'Cerealometer';
+/**
+ * Create user profile entry upon registration
+ */
+exports.createUserProfile = functions.auth.user().onCreate(async (user) => {
+  const newData = {
+    create_time: getEpoch(),
+  }
+  const userId = user.uid
+  await admin.database().ref(`/users/${userId}`).set(newData)
+});
 
 /**
  * Sends a welcome email to new user.

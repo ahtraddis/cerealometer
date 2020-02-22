@@ -264,15 +264,15 @@ PODS:
     - React-cxxreact (= 0.61.2)
     - React-jsi (= 0.61.2)
   - React-jsinspector (0.61.2)
-  - react-native-camera (3.17.0):
+  - react-native-camera (3.15.1):
     - React
-    - react-native-camera/RCT (= 3.17.0)
-    - react-native-camera/RN (= 3.17.0)
-  - react-native-camera/RCT (3.17.0):
+    - react-native-camera/RCT (= 3.15.1)
+    - react-native-camera/RN (= 3.15.1)
+  - react-native-camera/RCT (3.15.1):
     - React
-  - react-native-camera/RN (3.17.0):
+  - react-native-camera/RN (3.15.1):
     - React
-  - react-native-safe-area-context (0.6.4):
+  - react-native-safe-area-context (0.6.2):
     - React
   - react-native-splash-screen (3.1.1):
     - React
@@ -336,7 +336,7 @@ PODS:
     - React
   - RNLocalize (1.3.1):
     - React
-  - RNReanimated (1.7.0):
+  - RNReanimated (1.4.0):
     - React
   - RNScreens (2.0.0-alpha.22):
     - React
@@ -536,8 +536,8 @@ SPEC CHECKSUMS:
   React-jsi: 32285a21b1b24c36060493ed3057a34677d58d09
   React-jsiexecutor: 8909917ff7d8f21a57e443a866fd8d4560e50c65
   React-jsinspector: 111d7d342b07a904c400592e02a2b958f1098b60
-  react-native-camera: c549d50495c989688ef1819dab49441c7dc7c17d
-  react-native-safe-area-context: 52342d2d80ea8faadd0ffa76d83b6051f20c5329
+  react-native-camera: d5b131588a2d1f0ad377a321793f58794dbdc768
+  react-native-safe-area-context: a1d322930b8c5d04ebeb77cc47cc97575ad27203
   react-native-splash-screen: 353334c5ae82d8c74501ea7cbb916cb7cb20c8bf
   React-RCTActionSheet: 89b037c0fb7d2671607cb645760164e7e0c013f6
   React-RCTAnimation: e3cefa93c38c004c318f7ec04b883eb14b8b8235
@@ -549,18 +549,18 @@ SPEC CHECKSUMS:
   React-RCTText: e3ef6191cdb627855ff7fe8fa0c1e14094967fb8
   React-RCTVibration: fb54c732fd20405a76598e431aa2f8c2bf527de9
   ReactCommon: 5848032ed2f274fcb40f6b9ec24067787c42d479
-  ReactNativeART: c580fba2f7d188d8fa4418ce78db8130654ed10f
-  RNCAsyncStorage: 44395cb9c7c1523104c2b499eb426ef7aff82bca
-  RNCMaskedView: a88953beefbd347a29072d9eba90e42945fe291e
+  ReactNativeART: c496c53089b3149663215d74d6f1adb3a62e07eb
+  RNCAsyncStorage: 8539fc80a0075fcc9c8e2dff84cd22dc5bf1dacf
+  RNCMaskedView: e5b99bc191945f157adeede68da9d424462de177
   RNFBApp: 5b215aacc09105a1761de31b9a0eb2abcce06253
   RNFBAuth: 61673c0d38ce225c315e7be13a1b494904baedd2
   RNFBDatabase: 267f476097111054553ecb99208201945961efa5
   RNGestureHandler: 946a7691e41df61e2c4b1884deab41a4cdc3afff
   RNKeychain: c658833a9cb2cbcba6423bdd6e16cce59e27da0e
-  RNLocalize: 07eb7a91d10021cdf59d80061ebf3adb8a5b5688
-  RNReanimated: 031fe8d9ea93c2bd689a40f05320ef9d96f74d7f
+  RNLocalize: c117094a6c5a955c94e65520ad4c726e3a0f4ed6
+  RNReanimated: b2ab0b693dddd2339bd2f300e770f6302d2e960c
   RNScreens: 6adf01eb4080f44af6cca551207c6b0505066857
-  RNSound: da030221e6ac7e8290c6b43f2b5f2133a8e225b0
+  RNSound: c980916b596cc15c8dcd2f6ecd3b13c4881dbe20
   RNSVG: 67f1f12dae2cef6ed59a42cae74a6b8f5a9e7b46
   RNVectorIcons: 0bb4def82230be1333ddaeee9fcba45f0b288ed4
   Yoga: 14927e37bd25376d216b150ab2a561773d57911f

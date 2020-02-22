@@ -10,10 +10,10 @@
   },
 
   "itemScreen": {
-    "header": "Cerealometer",
+    "header": "Shelf",
   },
   "overstockScreen": {
-    "header": "Overstock"
+    "header": "Items"
   },
   "deviceScreen": {
     "header": "Devices",
@@ -50,15 +50,24 @@
     "header": "Forgot"
   },
   "meterScreen": {
-    "header": "Meter"
+    "header": "Cerealometer"
   },
 
   "loginRequired": {
     "message": "Login is required to access this page",
-    "buttonLabel": "Login"
+    "buttonLabel": "Log In"
   },
   "login": {
-    "loginButton": "Login"
+    "loginButton": "Log In",
+    "logoutButton": "Log Out",
+    "alreadySignedUpLabel": "Already signed up?",
+    "loginHereLabel": "Log in here",
+    "troubleLoggingIn": "Trouble logging in?",
+    "registerLabel": "Register",
+    "logoutLabel": "Log Out"
+  },
+  "signup": {
+    "signupButton": "Sign Up"
   },
 
   "port": {
@@ -67,7 +76,7 @@
     "clearingMessage": "Waiting for slot %{slot} to clear...",
     "vacantTitle": "Slot available",
     "vacantNoItemsTitle": "No cereal!",
-    "vacantMessage": "To select item, tap Overstock.",
+    "vacantMessage": "To install cereal, tap Items.",
     "vacantNoItemsMessage": "To resolve, tap Scan."
   },
   "item": {
@@ -76,6 +85,10 @@
     "installed": "INSTALLED",
     "deleteButtonLabel": "ATE IT",
     "updateTareWeightButtonLabel": "SET TARE",
+  },
+  "items": {
+    "noItemsTitle": "Oh no!",
+    "noItemsMessage": "To add cereal, tap Scan."
   },
   "messages": {
     "emptyLabel": "No alarms. Cool!",
@@ -87,7 +100,13 @@
   "camera": {
     "notAuthorized": "Camera not authorized"
   },
-  
+  "meter": {
+    "header": "CEREAL STATUS TODAY",
+  },
+  "bargraph": {
+    "header": "Metrics",
+  },
+
   "storybook": {
     "placeholder": "Placeholder",
     "field": "Field"
