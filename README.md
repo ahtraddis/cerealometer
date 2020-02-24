@@ -1,8 +1,8 @@
-<div align="center" class="test">
-Introducing...
-<br>
-<img width="500" src="app/static/logo.png" alt="Cerealometer logo" />
-<p>“Think What's Inside the Box”</p>
+<div align="center">
+  Introducing...
+  <br>
+  <img width="500" src="app/static/logo.png" alt="Cerealometer logo" />
+  <p>“Think What's Inside the Box”</p>
 </div>
 
 Fires. Floods. Famine. A whole lot of F. We live in uncertain times. But one thing is certain: you've gotta start the day (or at least end it) with a good breakfast. So when you open the cupboard and find yourself facing the same set of uninspiring, unsatisfying, unsweetened cereals — or worse, none at all — it's time to ask yourself, “HOW DID I LET THIS HAPPEN?!”	
@@ -14,10 +14,10 @@ Cerealometer is a realtime breakfast cereal monitoring solution designed to ensu
 
 ## What does it do?
 
-<p align="left">
-  <img width="175" src="images/screenshots/ScanScreen.png" />
-  <img width="175" src="images/screenshots/ShelfScreen.png" />
-  <img width="175" src="images/screenshots/MetricsScreen.png" />
+<p>
+  <img width="200" src="images/screenshots/ScanScreen.png" />
+  <img width="200" src="images/screenshots/ShelfScreen.png" />
+  <img width="200" src="images/screenshots/MetricsScreen.png" />
   <br>
   <sub>Screenshots from the app</sub>
 </p>
