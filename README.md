@@ -15,9 +15,9 @@ Cerealometer is a realtime breakfast cereal monitoring solution designed to ensu
 ## What does it do?
 
 <p>
-  <a href="images/screenshots/ScanScreen.png"><img width="200" src="images/screenshots/ScanScreen.png" /></a>
-  <a href="images/screenshots/ShelfScreen.png"><img width="200" src="images/screenshots/ShelfScreen.png" /></a>
-  <a href="images/screenshots/MetricsScreen.png"><img width="200" src="images/screenshots/MetricsScreen.png" /></a>
+  <img width="200" src="images/screenshots/ScanScreen.png" />
+  <img width="200" src="images/screenshots/ShelfScreen.png" />
+  <img width="200" src="images/screenshots/MetricsScreen.png" />
   <br>
   <sub>Screenshots from the app, which makes use of Google Firebase, Mobile Vision API, and more.</sub>
 </p>
@@ -33,8 +33,8 @@ By now you must be asking, HOW DOES IT KNOW how much cereal I have left?
 ## Weight Weight... Don't Tell Me!
 
 <p align="left">
-<a href="images/hardware/CerealometerPantry.jpg"><img src="images/hardware/CerealometerPantry.jpg" width=350 /></a>
-<a href="images/hardware/CerealometerCircuitry.jpg"><img src="images/hardware/CerealometerCircuitry.jpg" width=350 /></a>
+<img src="images/hardware/CerealometerPantry.jpg" width=350 />
+<img src="images/hardware/CerealometerCircuitry.jpg" width=350 />
 <br>
 <sub>The Shelf and its innards</sub>
 </p>
@@ -42,7 +42,7 @@ By now you must be asking, HOW DOES IT KNOW how much cereal I have left?
 The app communicates with a [DIY IoT device](https://github.com/ahtraddis/cerealometer-hardware) I like to call the Shelf, for reasons that will become obvious once you see that... it's a shelf.
 At the heart of the circuitry is a nicely-groomed nest of breadboard wires. Oh, and also the [SparkFun ESP8266 Thing Dev Board](https://www.sparkfun.com/products/13711). Load cells inside the Shelf track the net weight of each cereal box<sup>*</sup>, and the WiFi-connected microcontroller uploads this vital data to the cloud. Also, a dazzling LED display communicates status for each, uh, cereal port.
 
-<a href="images/hardware/grahams.jpg"><img align="right" src="images/hardware/grahams.jpg" height="75" /></a>
+<img align="right" src="images/hardware/grahams.jpg" height="75" />
 
 <sup>*</sup>Accurate to within about five grahams</sub>
 
