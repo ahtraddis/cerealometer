@@ -25,6 +25,9 @@ const getBoundedPercentage = (numerator, denominator) => {
   return Math.min(Math.max(parseInt(100.0 * numerator / denominator), 0.0), 100.0);
 }
 
+
+
+
 /**
  * Update weight_kg and last_update_time upon POST from hardware device.
  * Returns port data including status to update LED state.
@@ -42,6 +45,29 @@ exports.setWeight = functions.https.onRequest(async (req, res) => {
     // [eschwartz-TODO] Result needs to get the updated value after slotWeightChanged() has run 
     let result = portsSnap.val()
     res.status(200).send(result)
+  } catch(error) {
+    console.log("error: ", error)
+    res.status(400).send(error)
+  }
+});
+
+// [eschwartz-TODO] Merge with getPorts() below
+exports.getDevice = functions.https.onRequest(async (req, res) => {
+  // abort if unexpected method
+  if (req.method != "GET") {
+    return res.status(405).end()
+  }
+  try {
+    const deviceId = req.query.device_id
+    const statusRequested = req.query.status
+    const portsSnap = await admin.database().ref(`/ports/${deviceId}`).once('value')
+    let response
+    if (statusRequested) {
+      response = portsSnap.val().data.map(slot => slot.status)
+    } else {
+      response = portsSnap.val()
+    }
+    res.status(200).send(response)
   } catch(error) {
     console.log("error: ", error)
     res.status(400).send(error)
@@ -404,7 +430,7 @@ async function updateMetricsForUserId(user_id) {
   }
   await admin.database().ref(`/users/${user_id}/metrics`).set(metrics)
   //console.log(`updated metrics for user_id '${user_id}':`, JSON.stringify(metrics, null, 2))
-  addMessage(user_id, 100.0 * overall)  
+  //addMessage(user_id, 100.0 * overall)  
 }
 
 function getVarietyScore(itemCount) {
