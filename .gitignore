@@ -34,6 +34,7 @@ local.properties
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
+.firebaserc
 
 # Local project files
 workspace/*

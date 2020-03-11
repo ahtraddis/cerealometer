@@ -2,7 +2,7 @@
   Introducing...
   <br>
   <img width="500" src="app/static/logo.png" alt="Cerealometer logo" />
-  <p>“Think What's Inside the Box”</p>
+  <p>Think Inside the Box.</p>
 </div>
 
 Fires. Floods. Famine. A whole lot of F. We live in uncertain times. But one thing is certain: you've gotta start the day (or at least end it) with a good breakfast. So when you open the cupboard and find yourself facing the same set of uninspiring, unsatisfying, unsweetened cereals — or worse, none at all — it's time to ask yourself, “HOW DID I LET THIS HAPPEN?!”	
@@ -10,7 +10,7 @@ Fires. Floods. Famine. A whole lot of F. We live in uncertain times. But one thi
 You are not alone. Every day, dozens of people the world over encounter this dreadful disappointment. And of those dozens, a small subset reflects upon this further and at least THREE of them definitely wish it didn't have to be this way. Well, it doesn't.
 
 ## Okay, okay! What is it?
-Cerealometer is a realtime breakfast cereal monitoring solution designed to ensure uninterrupted delivery of your essential daily vitamins, minerals, yellow moons, green clovers, and so on. Inspired by my cereal-crazy nephews, Cerealometer combines IoT technology with kitchen cabinetry to produce a fun, strange combination of IoT technology and kitchen cabinetry.
+Cerealometer is a realtime breakfast cereal monitoring solution designed to ensure uninterrupted delivery of your essential daily vitamins, minerals, yellow moons, green clovers, and so on. Inspired by my cereal-crazy nephews, Cerealometer combines IoT technology and kitchen cabinetry to produce, well, a fun, strange combination of IoT technology and kitchen cabinetry.
 
 ## What does it do?
 
@@ -19,28 +19,28 @@ Cerealometer is a realtime breakfast cereal monitoring solution designed to ensu
   <img width="200" src="images/screenshots/ShelfScreen.png" />
   <img width="200" src="images/screenshots/MetricsScreen.png" />
   <br>
-  <sub>Screenshots from the app</sub>
+  <sub>Screenshots from the app, which makes use of Google Firebase, Mobile Vision API, and more.</sub>
 </p>
 
 The Cerealometer app...
 * Scans your cereal, grocery checkout-style. It even makes the "be-BOOP"!
 * Tracks remaining quantity and other important cereal metrics.
 * Sends alerts when quantity or variety become dangerously low.
-* Manages users and item inventory via Google Firebase.
+* Manages users and item inventory via the cloud (☁️).
 
 By now you must be asking, HOW DOES IT KNOW how much cereal I have left?
 
 ## Weight Weight... Don't Tell Me!
 
 <p align="left">
-<img src="images/hardware/pantry.jpg" width=250 />
-<img src="images/hardware/inside.jpg" width=250 />
+<img src="images/hardware/CerealometerPantry.jpg" width=350 />
+<img src="images/hardware/CerealometerCircuitry.jpg" width=350 />
 <br>
 <sub>The Shelf and its innards</sub>
 </p>
 
-The app communicates with a [homemade IoT device](https://github.com/ahtraddis/cerealometer-hardware) I like to call the Shelf, for reasons that will become obvious once you see that... it's a shelf.
-At the heart of the circuitry is a nicely-groomed nest of breadboard wires. Oh, and also the [SparkFun ESP8266 Thing Dev Board](https://www.sparkfun.com/products/13711). Load cells inside the Shelf track the net weight of each cereal box<sup>*</sup>, and the WiFi-connected microcontroller uploads this vital data to the cloud. Also, RGB LEDs communicate status for each, uh, cereal port.
+The app communicates with a [DIY IoT device](https://github.com/ahtraddis/cerealometer-hardware) I like to call the Shelf, for reasons that will become obvious once you see that... it's a shelf.
+At the heart of the circuitry is a nicely-groomed nest of breadboard wires. Oh, and also the [SparkFun ESP8266 Thing Dev Board](https://www.sparkfun.com/products/13711). Load cells inside the Shelf track the net weight of each cereal box<sup>*</sup>, and the WiFi-connected microcontroller uploads this vital data to the cloud. Also, a dazzling LED display communicates status for each, uh, cereal port.
 
 <img align="right" src="images/hardware/grahams.jpg" height="75" />
 
