@@ -65,4 +65,4 @@ I share it as an evolving example of a full stack, serverless IoT system which I
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## About the author
-Eric Schwartz is a self-described cereal entrepreneur who enjoys cereal, entrepreneuring, and describing himself in the third person. Write to him at eric@cerealometer.com for more details.
+Eric Schwartz is a self-described cereal entrepreneur who enjoys cereal, entrepreneuring, and describing himself in the third person. Write to him at eric@cerealometer.com for the address to which you should send all of your money.
