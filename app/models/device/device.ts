@@ -8,9 +8,8 @@ export const DeviceModel = types
   .model("Device")
   .props({
     id: types.string,
-    led_state: types.integer,
     name: types.maybe(types.string),
-    port_count: types.integer,
+    demo_state: types.integer,
     user_id: types.string,
   })
   //.extend(withEnvironment)

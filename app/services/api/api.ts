@@ -208,6 +208,36 @@ export class Api {
   }
 
   /**
+   * Add (create) new device for the current user
+   * For now this just creates a blank entry and sends the ID to the user to manually
+   * enter in the device's web settings
+   * @param user_id 
+   */
+  async addDevice(user_id: string): Promise<Types.AddDeviceResult> {
+    if (!user_id) {
+      __DEV__ && console.tron.log('missing user_id')
+      return null
+    }
+    let data = {
+      user_id: user_id,
+      demo_state: 0
+    }
+    const response: ApiResponse<any> = await this.apisauce.post(`/devices.json`, data)
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      const rawDevice = response.data
+      __DEV__ && console.tron.log(`API: addDevice(): rawDevice: `, rawDevice)
+      return { kind: "ok", device: rawDevice }
+    } catch (e) {
+      __DEV__ && console.tron.log(e.message)
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
    * Add (create) item(s) for the current user
    */
   async addItem(user_id: string, item_definition_id: string, quantity: number): Promise<Types.AddItemResult> {

@@ -9,19 +9,21 @@ import { styles } from "./device.styles"
 export interface DeviceProps {
   id: string
   name: string
-  led_state: number
-  port_count: number
+  demo_state: number
   user_id: string
 }
 
 export const Device: React.FunctionComponent<DeviceProps> = props => {
-  const { id } = props
+  const { id, name, demo_state, user_id } = props
   const { deviceStore } = useStores()
   const [device, setDevice] = useState(null);
 
   function onDeviceChange(snapshot) {
-    __DEV__ && console.tron.log("onDeviceChange()", snapshot.val())
-    setDevice(snapshot.val());
+    __DEV__ && console.tron.log("onDeviceChange()", snapshot.val(), id)
+    setDevice({
+      ...snapshot.val(),
+      id: id
+    });
     deviceStore.updateDevice(id, snapshot.val())
   }
 
@@ -36,19 +38,28 @@ export const Device: React.FunctionComponent<DeviceProps> = props => {
     return () => ref.off('value', onDeviceChange)
   }, []);
 
+  
+
   return (
     <View style={styles.device}>
-      <View style={styles.name}>
-        <Text style={styles.text}>
-          {device.name}
-        </Text>
-        <Text>
-          port_count: {device.port_count}
-        </Text>
-        <Text>
-          led_state: {device.led_state}
-        </Text>
-      </View>
+      { device &&
+        <View style={styles.name}>
+          { ("name" in device) && device.name &&
+            <Text style={styles.text}>
+              name={device.name}
+            </Text>
+          }
+          <Text style={styles.text}>
+            demo_state={device.demo_state}
+          </Text>
+          <Text style={styles.text}>
+            device_id={device.id}
+          </Text>
+          <Text style={styles.text}>
+            user_id={device.user_id}
+          </Text>
+        </View>
+      }
     </View>
   )
 }

@@ -19,7 +19,8 @@
     "header": "Devices",
     "navigate": "Other screen",
     "goToScanScreen": "Go to Scan Screen",
-    "emptyLabel": "No devices detected"
+    "emptyLabel": "No devices registered",
+    "addDevice": "Add Device",
   },
   "scanScreen": {
     "header": "Scan your cereal",

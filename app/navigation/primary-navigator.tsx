@@ -6,6 +6,8 @@ import {
   ScanScreen,
   AlarmScreen,
   MeterScreen,
+  SettingsScreen,
+  DeviceScreen,
 } from "../screens"
 import { Icon } from 'react-native-elements'
 
@@ -81,6 +83,36 @@ export const PrimaryNavigator = createBottomTabNavigator(
         headerTitleAlign: 'center',
       }),
     },
+
+    settings: {
+      screen: SettingsScreen,
+      navigationOptions: ( {navigation }) => ({
+        title: "Settings",
+        tabBarIcon: ({ tintColor }) =>
+          <Icon
+            size={22}
+            type="material-community"
+            name="settings-outline"
+            color={tintColor}
+          />,
+        headerTitleAlign: 'center',
+      }),
+    },
+    device: {
+      screen: DeviceScreen,
+      navigationOptions: ( {navigation }) => ({
+        title: "Device",
+        tabBarIcon: ({ tintColor }) =>
+          <Icon
+            size={22}
+            type="material-community"
+            name="settings-outline"
+            color={tintColor}
+          />,
+        headerTitleAlign: 'center',
+      }),
+    },
+
   },
   {
     initialRouteName: "item",
@@ -112,4 +144,4 @@ export const PrimaryNavigator = createBottomTabNavigator(
  * Anything not on this list will be a standard `back` action in
  * react-navigation.
  */
-export const exitRoutes: string[] = ["item", "overstock", "scan", "alarm", "meter"]
+export const exitRoutes: string[] = ["item", "overstock", "scan", "alarm", "meter", "settings", "device"]

@@ -1,7 +1,7 @@
 import { Instance, SnapshotOut, types, flow } from "mobx-state-tree"
 import { DeviceModel, DeviceSnapshot, Device } from "../device/device"
 import { withEnvironment } from "../extensions"
-import { GetDevicesResult } from "../../services/api"
+import { GetDevicesResult, AddDeviceResult } from "../../services/api"
 import update from 'immutability-helper';
 
 /**
@@ -32,10 +32,28 @@ export const DeviceStoreModel = types
   }))
   .actions(self => ({
     updateDevice: flow(function*(in_device_id: string, snapshot: DeviceSnapshot) {
-      const new_snapshot = update(snapshot, {$merge: {}});
-      new_snapshot['id'] = in_device_id
+      // if snapshot is null, device has been deleted
+      // find element index in store (whether updating or deleting)
       const index = self.devices.findIndex(device => device.id == in_device_id)
-      self.devices[index] = new_snapshot
+      if (snapshot != null) {
+        const new_snapshot = update(snapshot, {$merge: {}});
+        new_snapshot['id'] = in_device_id
+        self.devices[index] = new_snapshot
+      } else {
+        // remove deleted device
+        self.devices.splice(index, 1)
+      }
+    }),
+  }))
+  .actions(self => ({
+    addDevice: flow(function*(user_id: string) {
+      const result: AddDeviceResult = yield self.environment.api.addDevice(user_id)
+      if (result.kind === "ok") {
+        self.getDevices(user_id)
+        return result.device
+      } else {
+        __DEV__ && console.tron.log(result.kind)
+      }
     }),
   }))
   .actions(self => ({

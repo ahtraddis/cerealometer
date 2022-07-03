@@ -8,6 +8,7 @@ import { MessageSnapshot } from "../../models/message"
 
 export type GetItemsResult = { kind: "ok"; items: ItemSnapshot[] } | GeneralApiProblem
 export type GetDevicesResult = { kind: "ok"; devices: DeviceSnapshot[] } | GeneralApiProblem
+export type AddDeviceResult = { kind: "ok"; device: DeviceSnapshot[] } | GeneralApiProblem
 export type GetPortsResult = { kind: "ok"; ports: PortSnapshot[] } | GeneralApiProblem
 export type SetPortItemResult = { kind: "ok"; port: PortSnapshot } | GeneralApiProblem
 export type ClearPortItemResult = { kind: "ok"; port: PortSnapshot } | GeneralApiProblem

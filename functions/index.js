@@ -25,9 +25,6 @@ const getBoundedPercentage = (numerator, denominator) => {
   return Math.min(Math.max(parseInt(100.0 * numerator / denominator), 0.0), 100.0);
 }
 
-
-
-
 /**
  * Update weight_kg and last_update_time upon POST from hardware device.
  * Returns port data including status to update LED state.
@@ -39,12 +36,18 @@ exports.setWeight = functions.https.onRequest(async (req, res) => {
   }
   try {
     const { device_id, slot, weight_kg } = req.body
-    await admin.database().ref(`/ports/${device_id}/data/${slot}/weight_kg`).set(weight_kg)
-    await admin.database().ref(`/ports/${device_id}/data/${slot}/last_update_time`).set(getEpoch())
-    const portsSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}`).once('value')
-    // [eschwartz-TODO] Result needs to get the updated value after slotWeightChanged() has run 
-    let result = portsSnap.val()
-    res.status(200).send(result)
+    const deviceSnap = await admin.database().ref(`/devices/${device_id}`).once('value')
+    if (deviceSnap.val() == null) {
+      // forbid port update if device_id no longer exists
+      res.status(403).send("Forbidden")
+    } else {
+      await admin.database().ref(`/ports/${device_id}/data/${slot}/weight_kg`).set(weight_kg)
+      await admin.database().ref(`/ports/${device_id}/data/${slot}/last_update_time`).set(getEpoch())
+      const portsSnap = await admin.database().ref(`/ports/${device_id}/data/${slot}`).once('value')
+      // [eschwartz-TODO] Result needs to get the updated value after slotWeightChanged() has run 
+      let result = portsSnap.val()
+      res.status(200).send(result)
+    }
   } catch(error) {
     console.log("error: ", error)
     res.status(400).send(error)
@@ -488,6 +491,14 @@ exports.itemDefinitionChanged = functions.database.ref('/item_definitions/{item_
 );
 
 /**
+ * Delete associated ports when a device is deleted
+ */
+exports.deviceDeleted = functions.database.ref('/devices/{device_id}').onDelete(async (snap, context) => {
+  const { device_id } = context.params
+  return admin.database().ref(`/ports/${device_id}`).remove();  
+});
+
+/**
  * Delete associated user items when an item definition is deleted
  */
 exports.itemDefinitionDeleted = functions.database.ref('/item_definitions/{item_definition_id}').onDelete(async (snap, context) => {
@@ -499,7 +510,7 @@ exports.itemDefinitionDeleted = functions.database.ref('/item_definitions/{item_
   itemsAffectedSnap.forEach(item => {
     updates[item.key] = null;
   });
-  // execute all updates in one go and return the result ot end the function
+  // execute all updates in one go and return the result at end the function
   return admin.database().ref('/items').update(updates);
 });
 
